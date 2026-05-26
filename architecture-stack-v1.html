@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Musical Studio Architecture</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #64748b;
+      --line: #d9e2ec;
+      --paper: #f6f8fb;
+      --panel: #ffffff;
+      --navy: #18324b;
+      --teal: #138a86;
+      --teal-soft: #dff5f2;
+      --blue-soft: #e8f1fb;
+      --amber-soft: #fff4d7;
+      --rose-soft: #ffe9ee;
+      --green-soft: #e8f8ef;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", "Noto Sans KR", Arial, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      letter-spacing: 0;
+    }
+
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+    }
+
+    h2 {
+      margin: 24px 0 12px;
+      font-size: 18px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: 1fr 1.35fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .lane {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfdff;
+    }
+
+    .lane h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: var(--navy);
+    }
+
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px;
+      margin-bottom: 9px;
+      background: white;
+    }
+
+    .box strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .box span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .box.teal { background: var(--teal-soft); border-color: #9bd9d2; }
+    .box.blue { background: var(--blue-soft); border-color: #b8d4f1; }
+    .box.amber { background: var(--amber-soft); border-color: #f3d489; }
+    .box.rose { background: var(--rose-soft); border-color: #f0b6c1; }
+    .box.green { background: var(--green-soft); border-color: #afdcbc; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      align-items: center;
+    }
+
+    .step {
+      min-height: 104px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      padding: 10px;
+      position: relative;
+    }
+
+    .step::after {
+      content: "→";
+      position: absolute;
+      right: -17px;
+      top: 38%;
+      color: var(--teal);
+      font-weight: 900;
+      font-size: 20px;
+    }
+
+    .step:last-child::after { content: ""; }
+
+    .step b {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      padding: 8px 9px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f8fafc;
+      color: var(--muted);
+      font-weight: 850;
+    }
+
+    .tag {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 3px 7px;
+      background: var(--teal-soft);
+      color: #0f766e;
+      font-size: 11px;
+      font-weight: 850;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 900px) {
+      main { padding: 14px; }
+      .architecture, .flow { grid-template-columns: 1fr; }
+      .step::after { content: "↓"; right: 50%; top: auto; bottom: -20px; }
+      .step:last-child::after { content: ""; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Musical Studio 아키텍처 & 개발 스택</h1>
+    <div class="sub">A+B 3일 파일럿 / 2주 MVP 기준. C+D 확장을 막지 않는 구조로 설계합니다.</div>
+
+    <h2>1. 전체 시스템 아키텍처</h2>
+    <section class="panel architecture">
+      <div class="lane">
+        <h3>Client · Next.js App</h3>
+        <div class="box teal"><strong>Dashboard</strong><span>뮤지컬 넘버 카드, 전체 합창/대표본 미니 재생</span></div>
+        <div class="box teal"><strong>Work</strong><span>내 배역 넘버 현황, 악보 페이지, 녹음, 연습 로그, 제출</span></div>
+        <div class="box teal"><strong>Director View</strong><span>주차별 제출 현황, 제출 음원 재생, 하위 코멘트</span></div>
+        <div class="box blue"><strong>Audio UI State</strong><span>Zustand: playback, recording, selected role, selected number</span></div>
+      </div>
+
+      <div class="lane">
+        <h3>Application Layer</h3>
+        <div class="box blue"><strong>Next.js Server Actions / Route Handlers</strong><span>Google Drive 파일 메타데이터 조회, Supabase DB mutation, signed URL 발급</span></div>
+        <div class="box amber"><strong>Audio Services</strong><span>MVP: HTMLAudio + WAV recording. Phase 2: Tone.Transport sync, latency offset</span></div>
+        <div class="box amber"><strong>Score Services</strong><span>OSMD MusicXML rendering, PDF fallback, role/part visibility mapping</span></div>
+        <div class="box green"><strong>Validation</strong><span>파일 확장자/MIME type, Google email allowlist, role permission, assignment status</span></div>
+      </div>
+
+      <div class="lane">
+        <h3>External / Backend</h3>
+        <div class="box rose"><strong>Google OAuth</strong><span>Google 이메일 로그인. Supabase Auth Provider 사용</span></div>
+        <div class="box rose"><strong>Google Drive API</strong><span>MusicXML/PDF/MR 원본 파일 참조 또는 가져오기</span></div>
+        <div class="box green"><strong>Supabase PostgreSQL</strong><span>users, musical_numbers, member_roles, recordings, assignments, comments</span></div>
+        <div class="box green"><strong>Supabase Storage</strong><span>사용자 WAV 원본 녹음, 추후 MP3 export 파일</span></div>
+      </div>
+    </section>
+
+    <h2>2. 핵심 흐름</h2>
+    <section class="panel flow">
+      <div class="step">
+        <b>1. Google 로그인</b>
+        <p>Supabase Auth Google Provider로 로그인하고 users.role로 권한을 결정합니다.</p>
+      </div>
+      <div class="step">
+        <b>2. Drive 파일 등록</b>
+        <p>관리자가 Drive의 MusicXML/PDF/MR 파일을 연결하고 file id, mime type을 저장합니다.</p>
+      </div>
+      <div class="step">
+        <b>3. Work 연습</b>
+        <p>부원은 본인 배역 넘버에서 악보를 넘기며 MR을 듣고 연습합니다.</p>
+      </div>
+      <div class="step">
+        <b>4. WAV 녹음 저장</b>
+        <p>동기화 기준 원본은 WAV로 Supabase Storage에 저장합니다.</p>
+      </div>
+      <div class="step">
+        <b>5. 숙제 제출/피드백</b>
+        <p>연습 녹음 중 하나를 제출하고, 연출가는 제출현황과 코멘트를 관리합니다.</p>
+      </div>
+    </section>
+
+    <h2>3. 개발 스택 역할 분리</h2>
+    <section class="panel">
+      <table>
+        <thead>
+          <tr>
+            <th>영역</th>
+            <th>기술</th>
+            <th>역할</th>
+            <th>MVP 구현 기준</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Frontend</td>
+            <td><span class="tag">Next.js 14</span><span class="tag">TypeScript</span><span class="tag">Tailwind</span><span class="tag">Shadcn UI</span></td>
+            <td>웹앱 화면, 라우팅, UI 컴포넌트</td>
+            <td>Dashboard, Work, Submit, Director 화면을 App Router로 구성</td>
+          </tr>
+          <tr>
+            <td>Client State</td>
+            <td><span class="tag">Zustand</span></td>
+            <td>재생/녹음/선택 배역/선택 넘버 상태</td>
+            <td>서버 데이터는 Supabase, 순간 UI 상태만 Zustand</td>
+          </tr>
+          <tr>
+            <td>Auth</td>
+            <td><span class="tag">Supabase Auth</span><span class="tag">Google OAuth</span></td>
+            <td>Google 이메일 로그인, 역할 분기</td>
+            <td>허용 이메일/도메인 + users.role 체크</td>
+          </tr>
+          <tr>
+            <td>Files</td>
+            <td><span class="tag">Google Drive API</span><span class="tag">Supabase Storage</span></td>
+            <td>악보/MR 원본 연동, 녹음 파일 저장</td>
+            <td>Drive는 원본 참조, 사용자 녹음은 WAV로 Storage 저장</td>
+          </tr>
+          <tr>
+            <td>Sheet Music</td>
+            <td><span class="tag">OSMD</span><span class="tag">PDF fallback</span></td>
+            <td>MusicXML 렌더링, A4 페이지 악보 보기</td>
+            <td>3일 파일럿은 PDF fallback 허용, 2주 MVP에서 파트 필터 강화</td>
+          </tr>
+          <tr>
+            <td>Audio</td>
+            <td><span class="tag">MediaRecorder</span><span class="tag">WAV encoder</span><span class="tag">Tone.js</span></td>
+            <td>MR 재생, WAV 녹음, 후속 sync engine</td>
+            <td>MVP는 WAV 원본 저장. Tone.Transport는 Phase 2 동기화에서 정밀 도입</td>
+          </tr>
+          <tr>
+            <td>Feedback</td>
+            <td><span class="tag">Wavesurfer.js</span></td>
+            <td>파형, 타임라인 코멘트</td>
+            <td>D 단계. MVP에서는 제출물 하위 comment 구조만 준비</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h2>4. 데이터/파일 기준</h2>
+    <section class="panel">
+      <table>
+        <thead>
+          <tr>
+            <th>대상</th>
+            <th>위치</th>
+            <th>주 포맷</th>
+            <th>설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>MusicXML 악보</td>
+            <td>Google Drive 또는 Supabase Storage</td>
+            <td>.musicxml / .xml / .mxl</td>
+            <td>OSMD 렌더링. 파일별 파트명 매핑 검증 필요</td>
+          </tr>
+          <tr>
+            <td>PDF 악보</td>
+            <td>Google Drive 또는 Supabase Storage</td>
+            <td>.pdf</td>
+            <td>3일 파일럿 fallback. A4 페이지 UI와 잘 맞음</td>
+          </tr>
+          <tr>
+            <td>MR/반주</td>
+            <td>Google Drive 또는 Supabase Storage</td>
+            <td>.mp3 우선, .wav/.m4a 허용</td>
+            <td>브라우저 재생 호환성을 위해 mp3 권장</td>
+          </tr>
+          <tr>
+            <td>사용자 녹음 원본</td>
+            <td>Supabase Storage</td>
+            <td>.wav</td>
+            <td>동기화 기준 원본. MR/가이드는 파일에 포함하지 않음</td>
+          </tr>
+          <tr>
+            <td>다운로드/외부 업로드</td>
+            <td>Supabase Storage</td>
+            <td>.mp3</td>
+            <td>공유용 파생 파일. 정밀 sync 원본으로는 비권장</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

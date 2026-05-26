@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Musical Studio · Dev Dashboard</title>
+<style>
+:root {
+  --ink: #0f172a; --muted: #64748b; --line: #e2e8f0;
+  --paper: #f8fafc; --panel: #ffffff;
+  --navy: #1e3a5f; --teal: #0d9488;
+  --rose: #e11d48; --amber: #d97706; --green: #16a34a; --blue: #2563eb;
+}
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif; margin: 0; background: var(--paper); color: var(--ink); }
+main { max-width: 1280px; margin: 0 auto; padding: 24px; }
+header { background: linear-gradient(135deg, #1e3a5f, #0d9488); color: white; padding: 28px 24px; margin: 0 -24px 24px; border-radius: 0 0 16px 16px; }
+header h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.02em; }
+header p { margin: 0; opacity: 0.9; font-size: 14px; }
+.grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.stat .num { font-size: 32px; font-weight: 800; color: var(--teal); line-height: 1; }
+.stat .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 6px; font-weight: 700; }
+.stat.warning .num { color: var(--amber); }
+.stat.danger .num { color: var(--rose); }
+.stat.success .num { color: var(--green); }
+.progress-bar { width: 100%; height: 28px; background: var(--line); border-radius: 14px; overflow: hidden; margin: 12px 0 24px; position: relative; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--green)); display: flex; align-items: center; justify-content: flex-end; padding-right: 14px; color: white; font-size: 13px; font-weight: 700; transition: width 0.6s; }
+
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px 26px; margin-bottom: 22px; }
+section h2 { margin: 0 0 16px; font-size: 18px; color: var(--navy); border-bottom: 2px solid var(--teal); display: inline-block; padding-bottom: 4px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { background: #f1f5f9; font-weight: 700; color: var(--navy); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+tr:last-child td { border-bottom: none; }
+td .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.tag.done { background: #dcfce7; color: var(--green); }
+.tag.progress { background: #fef3c7; color: var(--amber); }
+.tag.pending { background: #f1f5f9; color: var(--muted); }
+.tag.blocked { background: #fee2e2; color: var(--rose); }
+
+.phase { display: grid; grid-template-columns: 60px 1fr 100px 80px; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 8px; margin-bottom: 6px; background: #f8fafc; font-size: 13px; }
+.phase .id { font-weight: 700; color: var(--navy); }
+.phase .name { color: var(--ink); }
+.phase .deps { color: var(--muted); font-size: 11px; }
+.phase .status { text-align: right; }
+.phase.done { background: #f0fdf4; }
+.phase.in_progress { background: #fef3c7; }
+.phase.blocked { background: #fef2f2; }
+
+.timeline { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
+.day { padding: 10px 6px; border-radius: 8px; background: var(--line); text-align: center; font-size: 11px; }
+.day b { display: block; font-size: 13px; color: var(--navy); }
+.day.done { background: #dcfce7; }
+.day.today { background: var(--amber); color: white; }
+.day.future { background: #f1f5f9; }
+
+.callout { padding: 12px 16px; border-left: 4px solid var(--blue); background: #dbeafe; border-radius: 6px; margin: 12px 0; font-size: 13px; }
+
+footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 40px; padding: 20px 0; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>📊 Musical Studio · 개발 진행 대시보드</h1>
+  <p>2주 MVP · D-day 2026-06-09 (단축 목표 2026-06-05) · Apache-2.0 · 2인 협업 + 멀티 AI 에이전트</p>
+</header>
+
+<!-- 핵심 지표 -->
+<div class="grid-stats">
+  <div class="stat success">
+    <div class="num" id="completed-count">19</div>
+    <div class="lbl">Completed Tasks</div>
+  </div>
+  <div class="stat warning">
+    <div class="num" id="progress-count">1</div>
+    <div class="lbl">In Progress</div>
+  </div>
+  <div class="stat">
+    <div class="num" id="pending-count">25</div>
+    <div class="lbl">Pending</div>
+  </div>
+  <div class="stat danger">
+    <div class="num" id="blocked-count">2</div>
+    <div class="lbl">Async/Blocked</div>
+  </div>
+  <div class="stat">
+    <div class="num">9</div>
+    <div class="lbl">Days to D-day</div>
+  </div>
+</div>
+
+<!-- 진척률 -->
+<section>
+  <h2>전체 진척률</h2>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress-fill" style="width: 42%;">42%</div>
+  </div>
+  <p style="font-size: 13px; color: var(--muted); margin: 0;">Phase 0~3 완료 / Phase 5~9 진행 중 / MVP 본격 코딩 직전.</p>
+</section>
+
+<!-- Phase 별 진척 -->
+<section>
+  <h2>Phase 별 진척</h2>
+  <div class="phase done">
+    <div class="id">P0</div>
+    <div class="name">개발 환경 + Sandbox (gh, WSL, Docker)</div>
+    <div class="deps">T01-T04, T28-T29</div>
+    <div class="status"><span class="tag done">완료</span></div>
+  </div>
+  <div class="phase done">
+    <div class="id">P1</div>
+    <div class="name">리포지토리 부트스트랩</div>
+    <div class="deps">T05, T07, T08, T17, T47</div>
+    <div class="status"><span class="tag in_progress">진행 중</span></div>
+  </div>
+  <div class="phase done">
+    <div class="id">P2</div>
+    <div class="name">AI 그라운드 룰 + 온보딩 가이드</div>
+    <div class="deps">T09-T14, T18, T34-T36</div>
+    <div class="status"><span class="tag done">완료</span></div>
+  </div>
+  <div class="phase">
+    <div class="id">P3</div>
+    <div class="name">협업 인프라 (worktree 문서, Husky pre-push)</div>
+    <div class="deps">T15 ✓, T16</div>
+    <div class="status"><span class="tag pending">대기</span></div>
+  </div>
+  <div class="phase done">
+    <div class="id">P4</div>
+    <div class="name">Soundslice ADR</div>
+    <div class="deps">T19-T21 모두 완료</div>
+    <div class="status"><span class="tag done">완료</span></div>
+  </div>
+  <div class="phase">
+    <div class="id">P5</div>
+    <div class="name">프로젝트 스캐폴딩 (Next.js + Supabase)</div>
+    <div class="deps">T22-T25, T30</div>
+    <div class="status"><span class="tag pending">대기</span></div>
+  </div>
+  <div class="phase">
+    <div class="id">P6</div>
+    <div class="name">개발 웹서버 외부 노출</div>
+    <div class="deps">T33, T43, T44, T46</div>
+    <div class="status"><span class="tag pending">대기</span></div>
+  </div>
+  <div class="phase">
+    <div class="id">P7</div>
+    <div class="name">테스트 인프라</div>
+    <div class="deps">T39-T42</div>
+    <div class="status"><span class="tag pending">대기</span></div>
+  </div>
+  <div class="phase">
+    <div class="id">P8</div>
+    <div class="name">MVP 본격 작업 (P0 요구사항)</div>
+    <div class="deps">T26-T27</div>
+    <div class="status"><span class="tag pending">대기</span></div>
+  </div>
+  <div class="phase blocked">
+    <div class="id">⏸</div>
+    <div class="name">파트너 비동기 대기</div>
+    <div class="deps">T06, T48</div>
+    <div class="status"><span class="tag blocked">비동기</span></div>
+  </div>
+</section>
+
+<!-- 일정 -->
+<section>
+  <h2>D-day 카운트다운 (2주 MVP)</h2>
+  <div class="timeline">
+    <div class="day done"><b>05-23</b>D0 시작 (지남)</div>
+    <div class="day done"><b>05-25</b>D2 (생략)</div>
+    <div class="day today"><b>05-27</b>오늘 P5 시작</div>
+    <div class="day future"><b>05-29</b>W1-1 끝</div>
+    <div class="day future"><b>06-02</b>W2-1</div>
+    <div class="day future"><b>06-05</b>단축 목표</div>
+    <div class="day future"><b>06-09</b>MVP D-day</div>
+  </div>
+</section>
+
+<!-- 핵심 결정사항 -->
+<section>
+  <h2>주요 결정사항</h2>
+  <table>
+    <tr><th>항목</th><th>결정</th><th>근거</th></tr>
+    <tr><td>License</td><td>Apache-2.0</td><td>특허권 명시 부여, 협업 안전</td></tr>
+    <tr><td>Soundslice</td><td>자체 구현 (OSMD + Tone.js)</td><td>AUP 위반 회피, 비용 0</td></tr>
+    <tr><td>외부 노출</td><td>WSL2 + 공유기 포트포워딩 + DDNS</td><td>별도 SaaS 솔루션 거부</td></tr>
+    <tr><td>리포 visibility</td><td>Public</td><td>오픈소스 협업</td></tr>
+    <tr><td>Vercel</td><td>보류</td><td>일관성 — 추후 재검토</td></tr>
+    <tr><td>D-day</td><td>2026-06-09 (단축 목표 06-05)</td><td>xlsx 일정 회복 가능</td></tr>
+    <tr><td>AI 에이전트</td><td>Claude + Antigravity + Codex 모두 호환</td><td>AGENTS.md SSoT</td></tr>
+  </table>
+</section>
+
+<!-- 다음 단계 -->
+<section>
+  <h2>다음 단계 (현재 + 24h)</h2>
+  <ol>
+    <li><strong>T05 GitHub 리포 생성</strong> + 초기 commit + push</li>
+    <li><strong>T07 main 브랜치 보호 규칙</strong></li>
+    <li><strong>T22 Next.js 14 스캐폴딩</strong> (TypeScript + Tailwind + Shadcn + Zustand)</li>
+    <li><strong>T25 Supabase 스키마 마이그레이션</strong> (7개 테이블 + RLS)</li>
+    <li><strong>T39-T42 테스트 인프라</strong> (Vitest + Playwright + 샘플 fixture)</li>
+    <li><strong>T44, T46 dev server 보안</strong> (middleware 토큰 + mkcert HTTPS)</li>
+    <li><strong>T27 MVP P0 첫 PR</strong> (REQ-A-001 MusicXML 렌더링)</li>
+  </ol>
+</section>
+
+<div class="callout">
+  <strong>📌 알림:</strong> 이 페이지는 정적 HTML. 진행에 따라 수동 업데이트 (또는 CI에서 자동 생성 — post-MVP).
+  실시간 task 상태는 GitHub Issues + Projects 또는 AI 에이전트의 TaskList 참조.
+</div>
+
+<footer>
+  Musical Studio · 2026-05-27 · 모든 진행은 <code>main</code> 브랜치 + PR 단위
+</footer>
+</main>
+</body>
+</html>

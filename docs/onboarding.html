@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Musical Studio · Onboarding</title>
+<style>
+:root {
+  --ink: #0f172a; --muted: #64748b; --line: #e2e8f0;
+  --paper: #f8fafc; --panel: #ffffff;
+  --navy: #1e3a5f; --teal: #0d9488; --teal-soft: #ccfbf1;
+  --rose: #e11d48; --rose-soft: #ffe4e6;
+  --amber: #d97706; --amber-soft: #fef3c7;
+  --green: #16a34a; --green-soft: #dcfce7;
+  --blue: #2563eb; --blue-soft: #dbeafe;
+}
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif; margin: 0; background: var(--paper); color: var(--ink); line-height: 1.55; }
+main { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
+header { background: linear-gradient(135deg, var(--navy), var(--teal)); color: white; padding: 36px 24px; margin: 0 -24px 32px; border-radius: 0 0 16px 16px; }
+header h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.02em; }
+header p { margin: 0; opacity: 0.92; font-size: 15px; }
+h2 { margin-top: 40px; padding-bottom: 8px; border-bottom: 2px solid var(--teal); display: inline-block; font-size: 22px; }
+h3 { margin-top: 28px; font-size: 17px; color: var(--navy); }
+code, pre { font-family: 'SF Mono', Consolas, monospace; font-size: 13px; }
+pre { background: #0f172a; color: #e2e8f0; padding: 14px 16px; border-radius: 8px; overflow-x: auto; line-height: 1.5; }
+code.inline { background: #f1f5f9; color: #334155; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+.step { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--teal); border-radius: 10px; padding: 18px 22px; margin: 16px 0; }
+.step h3 { margin-top: 0; }
+.step.warning { border-left-color: var(--amber); background: linear-gradient(to right, var(--amber-soft) 0%, white 8%); }
+.step.danger { border-left-color: var(--rose); background: linear-gradient(to right, var(--rose-soft) 0%, white 8%); }
+.step.success { border-left-color: var(--green); background: linear-gradient(to right, var(--green-soft) 0%, white 8%); }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.badge.required { background: var(--rose-soft); color: var(--rose); }
+.badge.optional { background: var(--blue-soft); color: var(--blue); }
+.badge.auto { background: var(--green-soft); color: var(--green); }
+.badge.user { background: var(--amber-soft); color: var(--amber); }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { background: #f1f5f9; font-weight: 700; color: var(--navy); }
+ul.checklist { list-style: none; padding-left: 0; }
+ul.checklist li { padding: 6px 0 6px 28px; position: relative; }
+ul.checklist li::before { content: "☐"; position: absolute; left: 0; color: var(--teal); font-weight: 700; font-size: 18px; }
+ul.checklist li.done::before { content: "✓"; color: var(--green); }
+.toc { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; margin-bottom: 32px; }
+.toc h3 { margin: 0 0 10px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.toc ol { margin: 0; padding-left: 22px; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--navy); text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 18px 0; }
+.flow-step { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px; text-align: center; position: relative; }
+.flow-step b { display: block; font-size: 22px; color: var(--teal); margin-bottom: 4px; }
+.callout { background: var(--blue-soft); border-left: 4px solid var(--blue); padding: 12px 16px; border-radius: 6px; margin: 12px 0; font-size: 14px; }
+.callout strong { color: var(--blue); }
+.footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>🎵 Musical Studio · Onboarding 가이드</h1>
+  <p>새 개발자(또는 새 AI 에이전트)가 GitHub URL만 알면 0에서 운영 가능한 dev 환경까지.</p>
+</header>
+
+<nav class="toc">
+  <h3>목차</h3>
+  <ol>
+    <li><a href="#prereq">사전 요구사항</a></li>
+    <li><a href="#clone">리포지토리 클론</a></li>
+    <li><a href="#secrets">환경변수 설정</a></li>
+    <li><a href="#install">의존성 설치</a></li>
+    <li><a href="#supabase">Supabase 로컬</a></li>
+    <li><a href="#run">개발 서버 실행</a></li>
+    <li><a href="#access">외부 접속 (LAN/WAN)</a></li>
+    <li><a href="#testing">테스트 실행</a></li>
+    <li><a href="#troubleshoot">문제 해결</a></li>
+  </ol>
+</nav>
+
+<h2 id="prereq">1. 사전 요구사항</h2>
+<div class="step">
+  <h3>필수 도구</h3>
+  <table>
+    <tr><th>도구</th><th>최소 버전</th><th>설치 방법 (Windows)</th></tr>
+    <tr><td>Node.js</td><td>20+</td><td><code class="inline">winget install OpenJS.NodeJS</code></td></tr>
+    <tr><td>pnpm</td><td>9+</td><td><code class="inline">npm install -g pnpm</code></td></tr>
+    <tr><td>git</td><td>2.40+</td><td><code class="inline">winget install Git.Git</code></td></tr>
+    <tr><td>gh CLI</td><td>2.50+</td><td><code class="inline">winget install GitHub.cli</code></td></tr>
+    <tr><td>WSL2 (Ubuntu)</td><td>24.04 권장</td><td><code class="inline">wsl --install -d Ubuntu-24.04</code> (관리자)</td></tr>
+    <tr><td>Docker Desktop</td><td>최신</td><td><a href="https://www.docker.com/products/docker-desktop">docker.com</a> + WSL Integration ON</td></tr>
+  </table>
+  <div class="callout">
+    <strong>⚠ 중요:</strong> WSL2의 mirrored networking 모드 활성화 권장. <code class="inline">C:\Users\&lt;you&gt;\.wslconfig</code>에 <code class="inline">networkingMode=mirrored</code> 추가.
+  </div>
+</div>
+
+<h2 id="clone">2. 리포지토리 클론 <span class="badge auto">AUTO</span></h2>
+<div class="step">
+  <h3>WSL2 ext4에 클론 (반드시 /home 아래)</h3>
+  <p>Windows 측 <code class="inline">/mnt/c/</code>는 HMR이 10배 느림. 반드시 <code class="inline">~/projects/</code> 사용.</p>
+<pre>cd ~/projects
+git clone https://github.com/Dadora-Lee/musical-studio.git
+cd musical-studio</pre>
+  <p>SSH 키 등록되어 있다면 SSH URL도 가능:</p>
+<pre>git clone git@github.com:Dadora-Lee/musical-studio.git</pre>
+</div>
+
+<h2 id="secrets">3. 환경변수 설정 <span class="badge user">USER</span></h2>
+<div class="step warning">
+  <h3>두 가지 파일 — 차이 명확히</h3>
+  <table>
+    <tr><th>파일</th><th>용도</th><th>커밋?</th></tr>
+    <tr><td><code class="inline">.env.example</code></td><td>placeholder 템플릿</td><td>YES</td></tr>
+    <tr><td><code class="inline">.env.local</code></td><td>실제 시크릿 값 (Next.js 자동 로드)</td><td>NO (.gitignore)</td></tr>
+    <tr><td><code class="inline">.env/secrets.env</code></td><td>마스터 시크릿 보관 (선택)</td><td>NO (.gitignore)</td></tr>
+  </table>
+  <p>다음 명령으로 시작:</p>
+<pre>cp .env.example .env.local
+# 그 후 .env.local 을 메모장이나 nano로 열어 값 채우기</pre>
+</div>
+
+<div class="step">
+  <h3>채워야 할 값들</h3>
+  <ul class="checklist">
+    <li>GitHub Fine-grained PAT (Contents/Administration/PR write)</li>
+    <li>Supabase: URL, anon key, service_role key, JWT secret, DB password</li>
+    <li>Google OAuth: Client ID, Client Secret, redirect URIs 설정</li>
+    <li>HOST_LAN_IP (PowerShell <code class="inline">ipconfig</code>로 확인)</li>
+    <li>DDNS_HOSTNAME (외부 접근 시)</li>
+  </ul>
+  <p>각 값의 출처는 <code class="inline">.env.example</code> 주석 참조.</p>
+</div>
+
+<h2 id="install">4. 의존성 설치 <span class="badge auto">AUTO</span></h2>
+<div class="step success">
+<pre>pnpm install</pre>
+  <p>최초 1회는 5-10분. 이후 캐시.</p>
+</div>
+
+<h2 id="supabase">5. Supabase 로컬 스택 <span class="badge optional">선택</span></h2>
+<div class="step">
+  <p>클라우드 Supabase에 바로 붙어도 되지만, 마이그레이션/seed 실험은 로컬에서. Docker Desktop 실행 중이어야 함.</p>
+<pre>pnpm supabase:start          # Docker 컨테이너 5개 띄움 (1-2분)
+# Studio: http://localhost:54323
+# API:    http://localhost:54321
+# DB:     postgresql://postgres:postgres@localhost:54322/postgres</pre>
+</div>
+
+<h2 id="run">6. 개발 서버 실행 <span class="badge auto">AUTO</span></h2>
+<div class="step success">
+<pre>pnpm dev                     # → http://localhost:3000</pre>
+  <p>Next.js Fast Refresh 작동. 코드 저장 즉시 반영.</p>
+</div>
+
+<h2 id="access">7. 외부 접속 (LAN/WAN) <span class="badge optional">선택</span></h2>
+<div class="step">
+  <h3>같은 LAN (사무실/집 같은 WiFi)</h3>
+<pre>pnpm dev -- --hostname 0.0.0.0          # 또는 next.config.ts 설정
+# 파트너 접속: http://&lt;본인 PC LAN IP&gt;:3000</pre>
+</div>
+<div class="step">
+  <h3>다른 LAN (인터넷 너머)</h3>
+  <p>준비물: 공유기 포트포워딩 + DDNS</p>
+  <ol>
+    <li>공유기 admin → 포트포워딩: 외부 3000 → 내부 &lt;PC LAN IP&gt;:3000</li>
+    <li>DDNS 등록: <a href="https://freedynamicdns.net/">freedynamicdns.net</a> 또는 noip/duckdns</li>
+    <li>접속: <code class="inline">http://musicalstudio.freedynamicdns.net:3000</code></li>
+  </ol>
+  <div class="callout">
+    <strong>보안:</strong> Next.js middleware로 dev 환경 토큰 인증 적용. 토큰은 <code class="inline">.env.local</code>의 <code class="inline">DEV_ACCESS_TOKEN</code> 참조.
+  </div>
+</div>
+
+<h2 id="testing">8. 테스트 실행 <span class="badge auto">AUTO</span></h2>
+<div class="step">
+<pre>pnpm test                 # Vitest (단위 + 통합)
+pnpm test:watch           # watch mode
+pnpm test:e2e             # Playwright (headless)
+pnpm test:e2e:ui          # Playwright UI mode</pre>
+  <p>자세한 전략: <code class="inline">docs/testing.md</code>.</p>
+</div>
+
+<h2 id="troubleshoot">9. 문제 해결</h2>
+<div class="step danger">
+  <h3>pnpm install 실패</h3>
+  <p>Node 버전 확인: <code class="inline">node --version</code> ≥ 20. 미달이면 <code class="inline">nvm install 20</code> 또는 winget으로 업그레이드.</p>
+</div>
+<div class="step danger">
+  <h3>Supabase start 실패</h3>
+  <p>Docker Desktop 실행 중인지. WSL Integration ON인지 확인.</p>
+</div>
+<div class="step danger">
+  <h3>dev server port 충돌</h3>
+<pre>lsof -i :3000                 # 사용 중인 프로세스 확인
+kill -9 &lt;PID&gt;
+# 또는 다른 포트: pnpm dev -- --port 3001</pre>
+</div>
+<div class="step danger">
+  <h3>Google OAuth callback 실패</h3>
+  <ol>
+    <li>Google Cloud Console → Credentials → Redirect URIs 확인</li>
+    <li>Supabase → Authentication → URL Configuration 확인</li>
+    <li>브라우저 쿠키/localStorage 비우고 재시도</li>
+  </ol>
+</div>
+
+<div class="footer">
+  Musical Studio · Apache-2.0 · <a href="https://github.com/Dadora-Lee/musical-studio">GitHub</a> · 최종 업데이트: 2026-05-27
+</div>
+</main>
+</body>
+</html>

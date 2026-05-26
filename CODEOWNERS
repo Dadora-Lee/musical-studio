@@ -1,0 +1,27 @@
+# CODEOWNERS — 코드 영역별 review 필수자
+# 형식: <path> <owner1> <owner2>
+# 양 개발자 모두 등록. 핵심 영역은 양방 review 필수.
+
+# ─── 전 영역 기본 ─────────────────────────
+* @Dadora-Lee
+
+# ─── 핵심 모듈 (양방 review) ──────────────
+/src/lib/musicxml/    @Dadora-Lee
+/src/lib/audio-engine/ @Dadora-Lee
+/src/lib/supabase/    @Dadora-Lee
+/src/lib/auth/        @Dadora-Lee
+/supabase/migrations/ @Dadora-Lee
+/.github/             @Dadora-Lee
+/.husky/              @Dadora-Lee
+
+# ─── 룰 문서 (양방 review 필수) ──────────
+/AGENTS.md            @Dadora-Lee
+/CLAUDE.md            @Dadora-Lee
+/GEMINI.md            @Dadora-Lee
+/AGENTS.override.md   @Dadora-Lee
+/CONTEXT.md           @Dadora-Lee
+/docs/adr/            @Dadora-Lee
+/CODEOWNERS           @Dadora-Lee
+
+# ※ 파트너 GitHub username 받으면 이 파일에 추가
+# 예시: /src/lib/musicxml/ @Dadora-Lee @partner-username
