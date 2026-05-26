@@ -202,14 +202,26 @@ pnpm lint && pnpm typecheck && pnpm test
 
 ## Progressive Disclosure (자세한 내용)
 
+### AI 에이전트용 (.md)
 - AI 협업 워크플로: `docs/adr/0001-multi-agent-workflow.md`
 - Soundslice 정책: `docs/adr/0002-soundslice-vs-self-host.md`
 - Git worktree: `docs/agents/worktree.md`
 - Soundslice 레퍼런스 워크플로: `docs/agents/soundslice-reference-workflow.md`
 - 일정 단축 전략: `docs/agents/schedule-optimization.md`
 - 테스트 전략: `docs/testing.md`
+- sudo 자동화: `docs/agents/local-sudo-setup.md`
+- SSH 워크플로: `docs/agents/ssh-workflow.md`
+- 협업 책임 분리 (Owner vs Collaborator): `docs/agents/collaborator-roles.md`
+
+### 사람용 (.html, 시각적)
 - 사람용 셋업: `docs/onboarding.html`
+- SSH 가이드: `docs/ssh-guide.html`
+- 협업 책임 분리: `docs/collaborator-roles.html`
 - 진행 대시보드: `docs/dev-dashboard.html`
+
+### Bootstrap 스크립트
+- 일반 셋업: `scripts/setup.sh` / `scripts/setup.ps1`
+- sudo 1회 자동화: `scripts/sudo-bootstrap.sh` (SSH 서버 + Playwright deps + mkcert + sudoers NOPASSWD)
 
 ---
 

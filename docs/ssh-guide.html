@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Musical Studio · SSH 워크플로 가이드</title>
+<style>
+:root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --paper:#f8fafc; --panel:#fff; --navy:#1e3a5f; --teal:#0d9488; --teal-soft:#ccfbf1; --rose:#e11d48; --amber:#d97706; --green:#16a34a; --blue:#2563eb; --rose-soft:#ffe4e6; --amber-soft:#fef3c7; --green-soft:#dcfce7; --blue-soft:#dbeafe; }
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif; margin: 0; background: var(--paper); color: var(--ink); line-height: 1.55; }
+main { max-width: 980px; margin: 0 auto; padding: 32px 24px 80px; }
+header { background: linear-gradient(135deg, var(--navy), var(--teal)); color: white; padding: 32px 24px; margin: 0 -24px 28px; border-radius: 0 0 16px 16px; }
+header h1 { margin: 0 0 6px; font-size: 26px; }
+header p { margin: 0; opacity: 0.92; font-size: 14px; }
+h2 { margin-top: 36px; padding-bottom: 8px; border-bottom: 2px solid var(--teal); display: inline-block; font-size: 20px; }
+h3 { margin-top: 22px; font-size: 16px; color: var(--navy); }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px 26px; margin-bottom: 18px; }
+.step { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--teal); border-radius: 10px; padding: 16px 22px; margin: 14px 0; }
+.step.warning { border-left-color: var(--amber); background: linear-gradient(to right, var(--amber-soft) 0%, white 8%); }
+.step.danger { border-left-color: var(--rose); background: linear-gradient(to right, var(--rose-soft) 0%, white 8%); }
+pre { background: #0f172a; color: #e2e8f0; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-family: 'SF Mono', Consolas, monospace; font-size: 13px; line-height: 1.5; }
+code.inline { background: #f1f5f9; color: #334155; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', Consolas, monospace; }
+.role { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-right: 6px; }
+.role.owner { background: var(--teal-soft); color: var(--teal); }
+.role.partner { background: var(--blue-soft); color: var(--blue); }
+.role.both { background: #fef3c7; color: var(--amber); }
+table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+th, td { padding: 8px 11px; border-bottom: 1px solid var(--line); text-align: left; }
+th { background: #f1f5f9; font-weight: 700; color: var(--navy); }
+.callout { padding: 12px 16px; border-left: 4px solid var(--blue); background: var(--blue-soft); border-radius: 6px; margin: 12px 0; font-size: 14px; }
+.callout strong { color: var(--blue); }
+.callout.warning { border-left-color: var(--amber); background: var(--amber-soft); }
+footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 40px; padding: 20px 0; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>🔐 SSH 워크플로 가이드</h1>
+  <p>공동 개발자가 dev 서버에 SSH로 접근해서 작업하는 방법.</p>
+</header>
+
+<section>
+  <h2>아키텍처</h2>
+<pre>[Collaborator PC]
+  ssh -p 2222 soswolf@musicalstudio.freedynamicdns.net
+                                  ↓ (인터넷, 공유기 2222 forwarding)
+[Owner Windows PC]
+  └── WSL2 Ubuntu 24.04
+       ├── sshd :2222              ← SSH 서버
+       ├── pnpm dev :3000          ← Next.js dev server
+       └── ~/projects/musical-studio</pre>
+</section>
+
+<section>
+  <h2>1. Owner 측 1회 셋업 <span class="role owner">Owner</span></h2>
+  <div class="step">
+    <h3>WSL 안에서 sudo-bootstrap 실행</h3>
+<pre>cd ~/projects/musical-studio
+bash scripts/sudo-bootstrap.sh</pre>
+    <p>이 스크립트가 자동 수행:</p>
+    <ul>
+      <li>sudoers NOPASSWD 룰 추가 (apt-get, service, mkcert 등)</li>
+      <li>openssh-server 설치</li>
+      <li>/etc/ssh/sshd_config.d/musical-studio.conf 작성 (port 2222, 키 only)</li>
+      <li>Playwright deps + mkcert + libnss3-tools 설치</li>
+      <li>GitHub SSH key import (<code class="inline">ssh-import-id gh:Dadora-Lee</code>)</li>
+      <li>WSL boot시 SSH 자동 시작 설정</li>
+    </ul>
+  </div>
+
+  <div class="step warning">
+    <h3>Windows 측 Firewall + Port Forwarding</h3>
+    <p><strong>관리자 권한 PowerShell:</strong></p>
+<pre>New-NetFirewallRule -DisplayName "WSL SSH 2222" `
+  -Direction Inbound -Protocol TCP -LocalPort 2222 -Action Allow</pre>
+    <p>공유기 admin에 포트포워딩 추가:</p>
+    <ul>
+      <li>외부 포트: 2222 (TCP)</li>
+      <li>내부 IP: 192.168.31.101 (= HOST_LAN_IP)</li>
+      <li>내부 포트: 2222</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <h3>파트너 GitHub key import (파트너 합류 시)</h3>
+<pre>ssh-import-id gh:&lt;partner-github-username&gt;</pre>
+    <p>파트너의 github.com/&lt;username&gt;.keys 에 등록된 SSH 공개키가 ~/.ssh/authorized_keys에 자동 추가됨.</p>
+  </div>
+</section>
+
+<section>
+  <h2>2. Collaborator 측 접속 <span class="role partner">Partner</span></h2>
+
+  <div class="step">
+    <h3>사전 준비: SSH key를 GitHub에 등록</h3>
+    <p>본인 PC에서:</p>
+<pre>ssh-keygen -t ed25519 -C "you@example.com"          # 없으면 생성
+cat ~/.ssh/id_ed25519.pub                            # 출력 복사
+# github.com → Settings → SSH and GPG keys → New SSH key → 붙여넣기</pre>
+    <p>등록 확인: <code class="inline">curl https://github.com/&lt;username&gt;.keys</code> 에서 본인 공개키 보이면 OK.</p>
+  </div>
+
+  <div class="step">
+    <h3>접속</h3>
+<pre># 같은 LAN
+ssh -p 2222 soswolf@192.168.31.101
+
+# 인터넷 (다른 LAN)
+ssh -p 2222 soswolf@musicalstudio.freedynamicdns.net</pre>
+    <p>최초 접속 시 fingerprint 확인 prompt 나오면 <code class="inline">yes</code>.</p>
+  </div>
+
+  <div class="step">
+    <h3>접속 후 일반 워크플로</h3>
+<pre># 최신 main 받기
+cd ~/projects/musical-studio
+git pull origin main
+
+# 새 브랜치
+git worktree add -b ai/codex/my-feature ../musical-studio-my-feature main
+cd ../musical-studio-my-feature
+
+# 작업 + 커밋 + push (gh credential helper 통해 자동 인증)
+git add &lt;files&gt;
+git commit -m "feat: ..."
+git push -u origin ai/codex/my-feature
+
+# Draft PR 생성
+gh pr create --draft --title "..." --body "..."</pre>
+  </div>
+</section>
+
+<section>
+  <h2>3. VSCode Remote SSH (편의)</h2>
+  <div class="step">
+    <h3>설치</h3>
+    <p>VSCode → Extensions → "Remote - SSH" 검색 → Install.</p>
+  </div>
+  <div class="step">
+    <h3>접속</h3>
+    <p>Cmd/Ctrl+Shift+P → "Remote-SSH: Connect to Host" → "Add New SSH Host" →</p>
+<pre>ssh -p 2222 soswolf@musicalstudio.freedynamicdns.net</pre>
+    <p>접속 후 File → Open Folder → <code class="inline">/home/soswolf/projects/musical-studio</code></p>
+    <p>이제 VSCode 안에서 원격 파일 직접 편집 + 터미널 사용 가능. Native 같은 경험.</p>
+  </div>
+</section>
+
+<section>
+  <h2>4. dev server 재시작 / 로그 보기 <span class="role both">Owner/Partner</span></h2>
+  <div class="step">
+    <h3>dev server 시작 (background)</h3>
+<pre>cd ~/projects/musical-studio
+nohup pnpm dev --hostname 0.0.0.0 > /tmp/dev.log 2>&amp;1 &amp;
+disown
+echo "PID: $!"</pre>
+  </div>
+  <div class="step">
+    <h3>로그 보기</h3>
+<pre>tail -f /tmp/dev.log</pre>
+  </div>
+  <div class="step">
+    <h3>중지</h3>
+<pre>pkill -f "next dev"
+pkill -f "next-server"</pre>
+  </div>
+</section>
+
+<section>
+  <h2>5. 트러블슈팅</h2>
+
+  <div class="step danger">
+    <h3>접속 거부 (Connection refused)</h3>
+    <ol>
+      <li>Owner 측 WSL이 켜져있는지 (<code class="inline">wsl --list -v</code>로 Running 상태)</li>
+      <li>SSH 서비스 동작 중인지 (Owner: <code class="inline">sudo service ssh status</code>)</li>
+      <li>Windows Firewall 룰 있는지 (관리자 PowerShell: <code class="inline">Get-NetFirewallRule -DisplayName "WSL SSH 2222"</code>)</li>
+      <li>공유기 포트포워딩 활성화됐는지</li>
+    </ol>
+  </div>
+
+  <div class="step danger">
+    <h3>Permission denied (publickey)</h3>
+    <ol>
+      <li>본인 SSH 공개키가 GitHub에 등록되어 있는지 (<code class="inline">curl https://github.com/&lt;you&gt;.keys</code>)</li>
+      <li>Owner가 본인 username을 import했는지 (Owner: <code class="inline">ssh-import-id gh:&lt;you&gt;</code>)</li>
+      <li>~/.ssh 권한이 700인지 (본인 PC: <code class="inline">chmod 700 ~/.ssh; chmod 600 ~/.ssh/id_*</code>)</li>
+    </ol>
+  </div>
+
+  <div class="step warning">
+    <h3>DDNS IP 변경됨</h3>
+    <p>공유기 DDNS 클라이언트가 자동 갱신 안 됐을 가능성. 새 IP 확인:</p>
+<pre># Owner WSL에서
+curl -s ifconfig.me/ip</pre>
+    <p>freedynamicdns.net 사이트에서 수동 갱신 또는 공유기 DDNS 재인증.</p>
+  </div>
+</section>
+
+<section>
+  <h2>6. 보안 룰</h2>
+  <div class="callout">
+    <strong>SSH 설정:</strong>
+    <ul style="margin: 6px 0 0; padding-left: 20px;">
+      <li>Password 인증 비활성화 (키 only)</li>
+      <li>Root 로그인 금지</li>
+      <li>AllowUsers soswolf (다른 계정 차단)</li>
+      <li>포트 2222 (default 22 회피)</li>
+    </ul>
+  </div>
+  <div class="callout warning">
+    <strong>파트너 이탈 시:</strong>
+    <ol style="margin: 6px 0 0; padding-left: 20px;">
+      <li>Owner WSL: <code class="inline">~/.ssh/authorized_keys</code>에서 해당 키 제거</li>
+      <li>GitHub collaborator 제거 (<code class="inline">gh api --method DELETE /repos/Dadora-Lee/musical-studio/collaborators/&lt;username&gt;</code>)</li>
+      <li>Google Test users에서 제거</li>
+      <li>(필요시) Secret 회전</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  Musical Studio · 2026-05-27 · <a href="onboarding.html">셋업 가이드</a> · <a href="collaborator-roles.html">협업 책임</a> · <a href="dev-dashboard.html">대시보드</a>
+</footer>
+</main>
+</body>
+</html>

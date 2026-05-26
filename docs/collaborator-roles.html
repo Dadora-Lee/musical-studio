@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Musical Studio · 협업 책임 분리</title>
+<style>
+:root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --paper:#f8fafc; --panel:#fff; --navy:#1e3a5f; --teal:#0d9488; --teal-soft:#ccfbf1; --rose:#e11d48; --amber:#d97706; --green:#16a34a; --blue:#2563eb; --rose-soft:#ffe4e6; --amber-soft:#fef3c7; --green-soft:#dcfce7; --blue-soft:#dbeafe; }
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif; margin: 0; background: var(--paper); color: var(--ink); line-height: 1.55; }
+main { max-width: 980px; margin: 0 auto; padding: 32px 24px 80px; }
+header { background: linear-gradient(135deg, var(--navy), var(--teal)); color: white; padding: 32px 24px; margin: 0 -24px 28px; border-radius: 0 0 16px 16px; }
+header h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.02em; }
+header p { margin: 0; opacity: 0.92; font-size: 14px; }
+h2 { margin-top: 36px; padding-bottom: 8px; border-bottom: 2px solid var(--teal); display: inline-block; font-size: 20px; }
+h3 { margin-top: 22px; font-size: 16px; color: var(--navy); }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px 26px; margin-bottom: 18px; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 14px; }
+th, td { padding: 9px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { background: #f1f5f9; font-weight: 700; color: var(--navy); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.required { color: var(--rose); font-weight: 700; }
+.optional { color: var(--blue); font-weight: 700; }
+.notneeded { color: var(--muted); font-weight: 400; }
+.yes { color: var(--green); font-weight: 700; }
+pre { background: #0f172a; color: #e2e8f0; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-family: 'SF Mono', Consolas, monospace; font-size: 13px; line-height: 1.5; }
+code.inline { background: #f1f5f9; color: #334155; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', Consolas, monospace; }
+.callout { padding: 12px 16px; border-left: 4px solid var(--blue); background: var(--blue-soft); border-radius: 6px; margin: 12px 0; font-size: 14px; }
+.callout strong { color: var(--blue); }
+.callout.warning { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.warning strong { color: var(--amber); }
+.callout.danger { border-left-color: var(--rose); background: var(--rose-soft); }
+.callout.danger strong { color: var(--rose); }
+.role-card { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 12px 0; }
+.role-box { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.role-box.owner { border-left: 4px solid var(--teal); }
+.role-box.partner { border-left: 4px solid var(--blue); }
+.role-box h4 { margin: 0 0 8px; font-size: 14px; color: var(--navy); text-transform: uppercase; letter-spacing: 0.04em; }
+.role-box ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; }
+footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 40px; padding: 20px 0; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>👥 협업 책임 분리</h1>
+  <p>누가 무엇을 가입하고 셋업하나요? Owner vs Collaborator 명확히.</p>
+</header>
+
+<section>
+  <h2>한눈에 보기</h2>
+  <table>
+    <tr>
+      <th>항목</th>
+      <th>Owner (Dadora-Lee)</th>
+      <th>Collaborator (파트너)</th>
+    </tr>
+    <tr>
+      <td><strong>GitHub 계정</strong></td>
+      <td><span class="yes">✅ 본인 + repo 소유</span></td>
+      <td><span class="required">필수 (본인 계정)</span></td>
+    </tr>
+    <tr>
+      <td><strong>GitHub PAT</strong></td>
+      <td><span class="yes">✅ 발급</span></td>
+      <td><span class="required">본인 PAT 필요</span></td>
+    </tr>
+    <tr>
+      <td><strong>Google Cloud Console</strong></td>
+      <td><span class="yes">✅ OAuth Client 발급</span></td>
+      <td><span class="notneeded">불필요</span></td>
+    </tr>
+    <tr>
+      <td><strong>본인 Gmail (앱 로그인)</strong></td>
+      <td><span class="yes">✅ Test users 등록됨</span></td>
+      <td><span class="required">본인 Gmail (Owner가 Test users로 추가)</span></td>
+    </tr>
+    <tr>
+      <td><strong>Supabase 가입</strong></td>
+      <td><span class="yes">✅ 가입 + 프로젝트</span></td>
+      <td><span class="notneeded">불필요 (anon key만 받음)</span></td>
+    </tr>
+    <tr>
+      <td><strong>Supabase Dashboard</strong></td>
+      <td><span class="yes">✅ 필수 (스키마 작업)</span></td>
+      <td><span class="optional">선택 (필요시 Owner가 멤버 초대)</span></td>
+    </tr>
+    <tr>
+      <td><strong>Vercel</strong></td>
+      <td colspan="2" style="text-align:center;color:var(--muted)">현재 보류</td>
+    </tr>
+    <tr>
+      <td><strong>WSL2 + Docker</strong></td>
+      <td><span class="yes">✅ 본인 PC 설치</span></td>
+      <td>시나리오에 따라 (아래 참조)</td>
+    </tr>
+    <tr>
+      <td><strong>DDNS 가입</strong></td>
+      <td><span class="yes">✅ Owner (dev server hosting)</span></td>
+      <td><span class="notneeded">불필요</span></td>
+    </tr>
+    <tr>
+      <td><strong>공유기 포트포워딩</strong></td>
+      <td><span class="yes">✅ Owner</span></td>
+      <td><span class="notneeded">불필요</span></td>
+    </tr>
+  </table>
+
+  <div class="callout">
+    <strong>핵심 원칙:</strong> 개발 인프라(DB/Auth/DDNS)는 Owner 단독 관리. Collaborator는 본인 GitHub 계정만 필수.
+  </div>
+</section>
+
+<section>
+  <h2>시나리오 A — Collaborator가 본인 PC에서 개발</h2>
+  <div class="role-card">
+    <div class="role-box partner">
+      <h4>Collaborator 자기 PC에 설치</h4>
+      <ul>
+        <li>Node 20+</li>
+        <li>pnpm</li>
+        <li>git</li>
+        <li>gh CLI</li>
+        <li>WSL2 + Docker (Windows 시)</li>
+      </ul>
+    </div>
+    <div class="role-box owner">
+      <h4>Owner 측 작업</h4>
+      <ul>
+        <li>GitHub collaborator 초대</li>
+        <li>Google Test users 추가</li>
+        <li>.env.local 값 안전 채널로 전달</li>
+        <li>(선택) Supabase 멤버 초대</li>
+      </ul>
+    </div>
+  </div>
+  <h3>Collaborator 셋업 명령</h3>
+<pre>git clone https://github.com/Dadora-Lee/musical-studio.git
+cd musical-studio
+cp .env.example .env.local        # 값 채우기 (Owner가 전달)
+pnpm install
+pnpm dev                          # → http://localhost:3000</pre>
+  <p>자세한 단계: <a href="onboarding.html">onboarding.html</a></p>
+</section>
+
+<section>
+  <h2>시나리오 B — Collaborator가 SSH로 Owner PC 접속</h2>
+  <div class="role-card">
+    <div class="role-box partner">
+      <h4>Collaborator 자기 PC에 설치</h4>
+      <ul>
+        <li>SSH 클라이언트 (Windows OpenSSH, macOS/Linux 기본)</li>
+        <li>GitHub SSH 키 (github.com/&lt;you&gt;.keys 에 등록되어 있어야 함)</li>
+        <li>(선택) VSCode Remote SSH extension</li>
+      </ul>
+    </div>
+    <div class="role-box owner">
+      <h4>Owner 측 작업</h4>
+      <ul>
+        <li>WSL2 안에서 <code class="inline">bash scripts/sudo-bootstrap.sh</code> 실행 (1회)</li>
+        <li>공유기에 포트 2222 포트포워딩 추가</li>
+        <li>Windows Firewall 2222 inbound 허용</li>
+        <li>Owner WSL에서 <code class="inline">ssh-import-id gh:&lt;partner&gt;</code></li>
+      </ul>
+    </div>
+  </div>
+  <h3>Collaborator 접속 명령</h3>
+<pre># LAN 안 (같은 WiFi)
+ssh -p 2222 soswolf@192.168.31.101
+
+# 인터넷 (다른 LAN)
+ssh -p 2222 soswolf@musicalstudio.freedynamicdns.net
+
+# 접속 후 작업
+cd ~/projects/musical-studio
+git pull
+pnpm dev</pre>
+  <p>자세한 SSH 워크플로: <a href="ssh-guide.html">ssh-guide.html</a></p>
+</section>
+
+<section>
+  <h2>신규 파트너 합류 시 Owner 1회 명령</h2>
+<pre># Owner WSL 안에서
+PARTNER=&lt;partner-github-username&gt;
+
+# 1) GitHub collaborator
+gh api --method PUT /repos/Dadora-Lee/musical-studio/collaborators/$PARTNER -f permission=push
+
+# 2) SSH key 자동 등록
+ssh-import-id "gh:$PARTNER"
+
+# 3) Google Test users는 Web에서 직접:
+#    console.cloud.google.com → Audience → Test users → ADD USERS
+
+# 4) .env.local 값을 안전 채널(Bitwarden/1Password)로 공유
+echo "✅ $PARTNER 합류 완료"</pre>
+</section>
+
+<section>
+  <h2>FAQ</h2>
+  <h3>Q. 공동 개발자도 Supabase 가입해야 하나요?</h3>
+  <p>아니요. Owner가 만든 프로젝트의 anon key만 받아서 사용하면 됩니다.</p>
+
+  <h3>Q. Google Cloud Console에 추가되어야 하나요?</h3>
+  <p>불필요. 본인 Gmail이 Test users에 등록되어 있으면 OAuth 로그인 가능.</p>
+
+  <h3>Q. 공동 개발자가 본인 PC에서 dev server를 띄울 수 있나요?</h3>
+  <p>가능합니다. .env.local 셋업 후 <code class="inline">pnpm dev</code>. Owner의 Supabase 프로젝트에 붙어 동작.</p>
+
+  <h3>Q. 공동 개발자가 자기만의 dev 환경을 만들려면?</h3>
+  <p>자기 Supabase 프로젝트 + Google OAuth Client를 별도 발급하면 가능. 단, DB가 분리되어 협업 데이터 공유 불가. MVP 단계엔 비추.</p>
+</section>
+
+<section>
+  <h2>보안</h2>
+  <div class="callout danger">
+    <strong>절대 금지:</strong>
+    <ul style="margin: 6px 0 0; padding-left: 20px;">
+      <li>.env.local / .env/secrets.env를 GitHub에 push</li>
+      <li>service_role_key를 클라이언트 코드에 사용</li>
+      <li>secret을 채팅/이메일 평문으로 전달</li>
+    </ul>
+  </div>
+  <div class="callout warning">
+    <strong>권장:</strong> Secret 전달은 Bitwarden / 1Password 공유 또는 직접 face-to-face.
+  </div>
+</section>
+
+<footer>
+  Musical Studio · 2026-05-27 · <a href="onboarding.html">셋업 가이드</a> · <a href="ssh-guide.html">SSH 가이드</a> · <a href="dev-dashboard.html">진행 대시보드</a>
+</footer>
+</main>
+</body>
+</html>

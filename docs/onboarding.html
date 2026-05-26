@@ -70,12 +70,14 @@ ul.checklist li.done::before { content: "✓"; color: var(--green); }
     <li><a href="#clone">리포지토리 클론</a></li>
     <li><a href="#secrets">환경변수 설정</a></li>
     <li><a href="#install">의존성 설치</a></li>
+    <li><a href="#sudo">sudo 1회 자동화 (Owner만)</a></li>
     <li><a href="#supabase">Supabase 로컬</a></li>
     <li><a href="#run">개발 서버 실행</a></li>
     <li><a href="#access">외부 접속 (LAN/WAN)</a></li>
     <li><a href="#testing">테스트 실행</a></li>
     <li><a href="#troubleshoot">문제 해결</a></li>
   </ol>
+  <p style="margin-top:10px;font-size:13px;color:var(--muted)">관련 문서: <a href="ssh-guide.html">SSH 원격 접속</a> · <a href="collaborator-roles.html">협업 책임 분리</a> · <a href="dev-dashboard.html">진행 대시보드</a></p>
 </nav>
 
 <h2 id="prereq">1. 사전 요구사항</h2>
@@ -136,6 +138,15 @@ cd musical-studio</pre>
 <div class="step success">
 <pre>pnpm install</pre>
   <p>최초 1회는 5-10분. 이후 캐시.</p>
+</div>
+
+<h2 id="sudo">4.5 sudo 1회 자동화 <span class="badge user">USER (Owner)</span></h2>
+<div class="step warning">
+  <h3>1줄 명령으로 SSH 서버 + Playwright deps + mkcert 자동 설치</h3>
+<pre>cd ~/projects/musical-studio
+bash scripts/sudo-bootstrap.sh</pre>
+  <p>sudo 비밀번호 1회 입력 → 이후 모든 sudo 작업 자동화. 자세한 내용: <code class="inline">docs/agents/local-sudo-setup.md</code></p>
+  <p>Collaborator는 이 단계 SKIP (Owner가 1회만 처리).</p>
 </div>
 
 <h2 id="supabase">5. Supabase 로컬 스택 <span class="badge optional">선택</span></h2>

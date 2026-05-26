@@ -5,9 +5,11 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![CI](https://github.com/Dadora-Lee/musical-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/Dadora-Lee/musical-studio/actions)
 
-## 사람용 안내
+## 사람용 안내 (브라우저로 열기)
 
-- **셋업 가이드**: `docs/onboarding.html` (브라우저로 열기)
+- **셋업 가이드**: `docs/onboarding.html`
+- **SSH 워크플로**: `docs/ssh-guide.html` (원격 dev server 접근)
+- **협업 책임 분리**: `docs/collaborator-roles.html` (Owner vs Collaborator)
 - **진행 대시보드**: `docs/dev-dashboard.html`
 - **테스트 전략**: `docs/testing.md`
 

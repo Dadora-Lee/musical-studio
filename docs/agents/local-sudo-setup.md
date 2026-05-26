@@ -1,52 +1,54 @@
-# 로컬 sudo 필요 작업
+# 로컬 sudo 자동화 (1회 실행 → 이후 모두 자동화)
 
-AI 에이전트의 자동화 권한 외 사용자가 직접 1회 실행해야 하는 시스템 패키지 설치들. WSL2 안에서 한 번만 실행.
-
-## 1. Playwright system libraries (E2E 테스트 실행에 필요)
+## TL;DR — 1줄 명령
 
 ```bash
-# WSL Ubuntu 안에서
 cd ~/projects/musical-studio
-sudo pnpm exec playwright install-deps chromium webkit
+bash scripts/sudo-bootstrap.sh
 ```
 
-또는 수동:
+sudo 비밀번호 1회 입력 → 이후 모든 sudo 작업 자동화 (NOPASSWD 룰 추가).
+
+## 무엇이 자동 설정되나
+
+1. **sudoers NOPASSWD** — 특정 명령만 비밀번호 없이 실행 가능 (`/etc/sudoers.d/musical-studio-<user>`)
+   - `apt-get install/update/autoremove`
+   - `service ssh *`, `systemctl ssh*`
+   - `/usr/local/bin/mkcert`
+   - `ssh-import-id`
+2. **openssh-server** 설치 + 키 only 인증 (port 2222)
+3. **Playwright deps**: libnspr4, libatk-bridge2.0-0 등 ~18개 패키지
+4. **mkcert** + libnss3-tools (HTTPS dev 인증서 발급)
+5. **GitHub SSH key import** (`ssh-import-id gh:Dadora-Lee`)
+6. **WSL boot 시 SSH 자동 시작** (~/.profile + /etc/wsl.conf)
+
+## 실행 후 다음 단계
+
+스크립트 끝에 안내됨. 요약:
+
+```powershell
+# Windows 관리자 PowerShell
+New-NetFirewallRule -DisplayName "WSL SSH 2222" `
+  -Direction Inbound -Protocol TCP -LocalPort 2222 -Action Allow
+```
+
+공유기 admin → 포트포워딩 → 외부 2222 → 192.168.31.101:2222
+
+## 신규 파트너 합류 시 자동 명령
 
 ```bash
-sudo apt-get update
-sudo apt-get install -y libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 \
-  libcups2 libdrm2 libdbus-1-3 libxkbcommon0 libatspi2.0-0 libx11-6 \
-  libxcomposite1 libxdamage1 libxext6 libxfixes3 libxrandr2 libgbm1 \
-  libpango-1.0-0 libcairo2 libasound2t64
+PARTNER=<partner-github-username>
+gh api --method PUT /repos/Dadora-Lee/musical-studio/collaborators/$PARTNER -f permission=push
+ssh-import-id "gh:$PARTNER"
 ```
 
-검증: `pnpm exec playwright test tests/e2e/smoke.spec.ts --project chromium`
+자세한 SSH 워크플로: `docs/ssh-guide.html`
 
-## 2. mkcert (모바일 마이크 권한용 HTTPS dev)
+## 알려진 한계
 
-```bash
-sudo apt install libnss3-tools
-curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
-chmod +x mkcert-v*-linux-amd64
-sudo mv mkcert-v*-linux-amd64 /usr/local/bin/mkcert
-mkcert -install
-cd ~/projects/musical-studio
-mkcert localhost 127.0.0.1 192.168.31.101 musicalstudio.freedynamicdns.net
-# → localhost+3.pem, localhost+3-key.pem 생성됨
-```
+- **NAT loopback**: 같은 LAN에서 DDNS hostname으로 접근 시 일부 공유기에서 작동 안 함. LAN 안에선 LAN IP 사용.
+- **WSL2 systemd**: WSL2 + systemd 환경이 아니면 `sudo service ssh start`로 fallback.
 
-이후 dev server:
+## 보안
 
-```bash
-pnpm dev:https
-# 또는
-pnpm exec next dev --experimental-https \
-  --experimental-https-key ./localhost+3-key.pem \
-  --experimental-https-cert ./localhost+3.pem
-```
-
-**모바일에서 trust**: 모바일에서 `http://<LAN_IP>:8080/rootCA.pem` 같은 식으로 mkcert root CA를 install (자세한 방법 [mkcert mobile docs](https://github.com/FiloSottile/mkcert#mobile-devices)).
-
-## 3. 알려진 한계
-
-- **NAT loopback**: 같은 LAN에서 DDNS hostname (musicalstudio.freedynamicdns.net)으로 접근 시 일부 공유기는 작동 안 함. LAN 안에선 `http://192.168.31.101:3000` 사용. 다른 LAN에선 DDNS 사용.
+sudoers 룰은 **특정 명령**만 NOPASSWD 허용. `sudo bash` 같은 광범위한 권한은 여전히 비밀번호 필요. 자세한 룰은 `/etc/sudoers.d/musical-studio-<user>` 참조.
