@@ -71,24 +71,24 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4
 <!-- 핵심 지표 -->
 <div class="grid-stats">
   <div class="stat success">
-    <div class="num" id="completed-count">19</div>
+    <div class="num" id="completed-count">44</div>
     <div class="lbl">Completed Tasks</div>
   </div>
   <div class="stat warning">
     <div class="num" id="progress-count">1</div>
-    <div class="lbl">In Progress</div>
+    <div class="lbl">In Progress (MVP)</div>
   </div>
   <div class="stat">
-    <div class="num" id="pending-count">25</div>
+    <div class="num" id="pending-count">0</div>
     <div class="lbl">Pending</div>
   </div>
   <div class="stat danger">
     <div class="num" id="blocked-count">2</div>
-    <div class="lbl">Async/Blocked</div>
+    <div class="lbl">Async (T06, T48 — 파트너)</div>
   </div>
   <div class="stat">
-    <div class="num">9</div>
-    <div class="lbl">Days to D-day</div>
+    <div class="num">13</div>
+    <div class="lbl">Days to D-day (06-09)</div>
   </div>
 </div>
 
@@ -96,9 +96,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4
 <section>
   <h2>전체 진척률</h2>
   <div class="progress-bar">
-    <div class="progress-fill" id="progress-fill" style="width: 42%;">42%</div>
+    <div class="progress-fill" id="progress-fill" style="width: 94%;">94%</div>
   </div>
-  <p style="font-size: 13px; color: var(--muted); margin: 0;">Phase 0~3 완료 / Phase 5~9 진행 중 / MVP 본격 코딩 직전.</p>
+  <p style="font-size: 13px; color: var(--muted); margin: 0;">Phase 0~8 완료 / MVP 본격 코딩 단계 (T27 진행 중) — REQ-A-001 OSMD 데모 작동.</p>
 </section>
 
 <!-- Phase 별 진척 -->
@@ -114,7 +114,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4
     <div class="id">P1</div>
     <div class="name">리포지토리 부트스트랩</div>
     <div class="deps">T05, T07, T08, T17, T47</div>
-    <div class="status"><span class="tag in_progress">진행 중</span></div>
+    <div class="status"><span class="tag done">완료</span></div>
   </div>
   <div class="phase done">
     <div class="id">P2</div>
@@ -122,11 +122,11 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4
     <div class="deps">T09-T14, T18, T34-T36</div>
     <div class="status"><span class="tag done">완료</span></div>
   </div>
-  <div class="phase">
+  <div class="phase done">
     <div class="id">P3</div>
     <div class="name">협업 인프라 (worktree 문서, Husky pre-push)</div>
-    <div class="deps">T15 ✓, T16</div>
-    <div class="status"><span class="tag pending">대기</span></div>
+    <div class="deps">T15 ✓, T16 ✓</div>
+    <div class="status"><span class="tag done">완료</span></div>
   </div>
   <div class="phase done">
     <div class="id">P4</div>
@@ -134,29 +134,29 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4
     <div class="deps">T19-T21 모두 완료</div>
     <div class="status"><span class="tag done">완료</span></div>
   </div>
-  <div class="phase">
+  <div class="phase done">
     <div class="id">P5</div>
-    <div class="name">프로젝트 스캐폴딩 (Next.js + Supabase)</div>
+    <div class="name">프로젝트 스캐폴딩 (Next.js 16 + Supabase)</div>
     <div class="deps">T22-T25, T30</div>
-    <div class="status"><span class="tag pending">대기</span></div>
+    <div class="status"><span class="tag done">완료</span></div>
   </div>
-  <div class="phase">
+  <div class="phase done">
     <div class="id">P6</div>
-    <div class="name">개발 웹서버 외부 노출</div>
+    <div class="name">개발 웹서버 외부 노출 (LAN OK · DDNS docs)</div>
     <div class="deps">T33, T43, T44, T46</div>
-    <div class="status"><span class="tag pending">대기</span></div>
+    <div class="status"><span class="tag done">완료</span></div>
   </div>
-  <div class="phase">
+  <div class="phase done">
     <div class="id">P7</div>
-    <div class="name">테스트 인프라</div>
+    <div class="name">테스트 인프라 (Vitest 12 pass · Playwright 셋업)</div>
     <div class="deps">T39-T42</div>
-    <div class="status"><span class="tag pending">대기</span></div>
+    <div class="status"><span class="tag done">완료</span></div>
   </div>
-  <div class="phase">
+  <div class="phase in_progress">
     <div class="id">P8</div>
-    <div class="name">MVP 본격 작업 (P0 요구사항)</div>
-    <div class="deps">T26-T27</div>
-    <div class="status"><span class="tag pending">대기</span></div>
+    <div class="name">MVP 본격 작업 (REQ-A-001 ScoreViewer 완료, A-002 진행)</div>
+    <div class="deps">T26 ✓, T27 ⏳</div>
+    <div class="status"><span class="tag progress">진행 중</span></div>
   </div>
   <div class="phase blocked">
     <div class="id">⏸</div>
@@ -170,13 +170,13 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4
 <section>
   <h2>D-day 카운트다운 (2주 MVP)</h2>
   <div class="timeline">
-    <div class="day done"><b>05-23</b>D0 시작 (지남)</div>
+    <div class="day done"><b>05-23</b>D0 (지남)</div>
     <div class="day done"><b>05-25</b>D2 (생략)</div>
-    <div class="day today"><b>05-27</b>오늘 P5 시작</div>
-    <div class="day future"><b>05-29</b>W1-1 끝</div>
-    <div class="day future"><b>06-02</b>W2-1</div>
-    <div class="day future"><b>06-05</b>단축 목표</div>
-    <div class="day future"><b>06-09</b>MVP D-day</div>
+    <div class="day today"><b>05-27</b>오늘 — 인프라 94% 완료</div>
+    <div class="day future"><b>05-29</b>REQ-A 완료 목표</div>
+    <div class="day future"><b>06-02</b>REQ-B 완료 목표</div>
+    <div class="day future"><b>06-05</b>단축 목표 MVP</div>
+    <div class="day future"><b>06-09</b>D-day</div>
   </div>
 </section>
 
@@ -197,15 +197,15 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4
 
 <!-- 다음 단계 -->
 <section>
-  <h2>다음 단계 (현재 + 24h)</h2>
+  <h2>다음 단계 (MVP 본격)</h2>
   <ol>
-    <li><strong>T05 GitHub 리포 생성</strong> + 초기 commit + push</li>
-    <li><strong>T07 main 브랜치 보호 규칙</strong></li>
-    <li><strong>T22 Next.js 14 스캐폴딩</strong> (TypeScript + Tailwind + Shadcn + Zustand)</li>
-    <li><strong>T25 Supabase 스키마 마이그레이션</strong> (7개 테이블 + RLS)</li>
-    <li><strong>T39-T42 테스트 인프라</strong> (Vitest + Playwright + 샘플 fixture)</li>
-    <li><strong>T44, T46 dev server 보안</strong> (middleware 토큰 + mkcert HTTPS)</li>
-    <li><strong>T27 MVP P0 첫 PR</strong> (REQ-A-001 MusicXML 렌더링)</li>
+    <li><strong>사용자 1회 작업</strong>: <code>docs/agents/local-sudo-setup.md</code> 참조 — Playwright deps + mkcert (sudo 필요)</li>
+    <li><strong>Supabase 클라우드 마이그레이션 적용</strong>: <code>supabase db push</code> (cloud DB에 7테이블+RLS)</li>
+    <li><strong>REQ-A-001 컴포넌트 테스트 보강</strong>: ScoreViewer + 실제 fixture 통합 테스트</li>
+    <li><strong>REQ-AUTH-001/002</strong>: Google OAuth 로그인 + role 분기 (Supabase Auth Provider)</li>
+    <li><strong>REQ-A-004/005/006</strong>: MR 재생 + WAV 녹음 + Storage 업로드</li>
+    <li><strong>REQ-B-001/002</strong>: 숙제 제출 UI + Director 대시보드</li>
+    <li><strong>파트너 GitHub username 수령 시</strong>: T06 자동 실행 (collaborator 초대)</li>
   </ol>
 </section>
 
