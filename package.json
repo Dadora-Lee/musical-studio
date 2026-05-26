@@ -1,0 +1,62 @@
+{
+  "name": "musical-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "아마추어 뮤지컬 배우용 넘버 연습 웹앱 - MusicXML + MR + 녹음 + 숙제 제출",
+  "license": "Apache-2.0",
+  "repository": "github:Dadora-Lee/musical-studio",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "dev:host": "next dev --hostname 0.0.0.0",
+    "dev:https": "next dev --experimental-https",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "supabase:reset": "supabase db reset",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.49.4",
+    "next": "16.2.6",
+    "opensheetmusicdisplay": "^1.9.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tone": "^15.1.22",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.1",
+    "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^3.0.5",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "husky": "^9.1.7",
+    "jsdom": "^26.0.0",
+    "supabase": "^2.6.8",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^3.0.5"
+  }
+}

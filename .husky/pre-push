@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+# Pre-push hook — push 전 강제 검증.
+# lint + typecheck + test 통과해야 push.
+# 우회 절대 금지 (AGENTS.md Safety Rules 참조).
+
+echo "[pre-push] Running lint + typecheck + test..."
+
+# lint
+echo "[pre-push] 1/3 lint..."
+pnpm lint || {
+  echo "[pre-push] ❌ lint failed. Push 중단."
+  exit 1
+}
+
+# typecheck
+echo "[pre-push] 2/3 typecheck..."
+pnpm typecheck || {
+  echo "[pre-push] ❌ typecheck failed. Push 중단."
+  exit 1
+}
+
+# test
+echo "[pre-push] 3/3 test..."
+pnpm test || {
+  echo "[pre-push] ❌ test failed. Push 중단."
+  exit 1
+}
+
+echo "[pre-push] ✅ 모든 검증 통과. Push 진행."
