@@ -211,17 +211,21 @@ pnpm lint && pnpm typecheck && pnpm test
 - 테스트 전략: `docs/testing.md`
 - sudo 자동화: `docs/agents/local-sudo-setup.md`
 - SSH 워크플로: `docs/agents/ssh-workflow.md`
+- **개발 워크플로 (Local-First 결정)**: `docs/agents/dev-workflow.md`
 - 협업 책임 분리 (Owner vs Collaborator): `docs/agents/collaborator-roles.md`
 
 ### 사람용 (.html, 시각적)
 - 사람용 셋업: `docs/onboarding.html`
 - SSH 가이드: `docs/ssh-guide.html`
+- **개발 워크플로**: `docs/dev-workflow.html`
 - 협업 책임 분리: `docs/collaborator-roles.html`
 - 진행 대시보드: `docs/dev-dashboard.html`
+- 초기 자료: `docs/init_docs/` (xlsx, html)
 
 ### Bootstrap 스크립트
 - 일반 셋업: `scripts/setup.sh` / `scripts/setup.ps1`
 - sudo 1회 자동화: `scripts/sudo-bootstrap.sh` (SSH 서버 + Playwright deps + mkcert + sudoers NOPASSWD)
+- **env 동기화**: `scripts/sync-env.sh` (`.env/secrets.env` → `.env.local`)
 
 ---
 

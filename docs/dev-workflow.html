@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Musical Studio · 개발 워크플로</title>
+<style>
+:root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --paper:#f8fafc; --panel:#fff; --navy:#1e3a5f; --teal:#0d9488; --rose:#e11d48; --amber:#d97706; --green:#16a34a; --blue:#2563eb; --rose-soft:#ffe4e6; --amber-soft:#fef3c7; --green-soft:#dcfce7; --blue-soft:#dbeafe; --teal-soft:#ccfbf1; }
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif; margin: 0; background: var(--paper); color: var(--ink); line-height: 1.55; }
+main { max-width: 980px; margin: 0 auto; padding: 32px 24px 80px; }
+header { background: linear-gradient(135deg, var(--navy), var(--teal)); color: white; padding: 32px 24px; margin: 0 -24px 28px; border-radius: 0 0 16px 16px; }
+header h1 { margin: 0 0 6px; font-size: 26px; }
+header p { margin: 0; opacity: 0.92; font-size: 14px; }
+.decision { background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 2px solid var(--amber); border-radius: 12px; padding: 22px 26px; margin: 0 0 24px; }
+.decision h2 { margin: 0 0 8px; font-size: 18px; color: var(--amber); }
+.decision strong { color: var(--ink); }
+h2 { margin-top: 36px; padding-bottom: 8px; border-bottom: 2px solid var(--teal); display: inline-block; font-size: 20px; }
+h3 { margin-top: 22px; font-size: 16px; color: var(--navy); }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px 26px; margin-bottom: 18px; }
+table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14px; }
+th, td { padding: 9px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { background: #f1f5f9; font-weight: 700; color: var(--navy); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.win { color: var(--green); font-weight: 700; }
+.lose { color: var(--rose); }
+.warn { color: var(--amber); }
+pre { background: #0f172a; color: #e2e8f0; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-family: 'SF Mono', Consolas, monospace; font-size: 13px; line-height: 1.5; }
+code.inline { background: #f1f5f9; color: #334155; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', Consolas, monospace; }
+.flow { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+.flow-box { padding: 16px 20px; border-radius: 10px; }
+.flow-box h3 { margin-top: 0; }
+.flow-box.local { background: var(--teal-soft); border-left: 5px solid var(--teal); }
+.flow-box.devserver { background: var(--blue-soft); border-left: 5px solid var(--blue); }
+.callout { padding: 12px 16px; border-left: 4px solid var(--blue); background: var(--blue-soft); border-radius: 6px; margin: 12px 0; font-size: 14px; }
+.callout strong { color: var(--blue); }
+footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 40px; padding: 20px 0; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>⚙️ 개발 워크플로</h1>
+  <p>로컬에서 빠르게 개발, dev server는 통합 테스트·QA·데모 전용.</p>
+</header>
+
+<div class="decision">
+  <h2>📌 결론</h2>
+  <p><strong>Local-First</strong> — 둘 다 자기 PC에서 빠른 iteration, <strong>dev server는 모바일 QA · 데모 · 디버그 페어링용</strong>.</p>
+  <p><strong>이유</strong>: AI 멀티 에이전트 환경에선 동시 작업 충돌 회피가 최우선. 빠른 HMR, 각자 worktree, 같은 Supabase DB로 협업.</p>
+</div>
+
+<section>
+  <h2>Local vs SSH-only 비교</h2>
+  <table>
+    <tr><th>시나리오</th><th>Local-First (채택)</th><th>SSH-only</th></tr>
+    <tr><td>두 명이 동시 작업</td><td><span class="win">✅ 충돌 0</span></td><td><span class="warn">⚠ 같은 dev server 경합</span></td></tr>
+    <tr><td>HMR 속도</td><td><span class="win">⚡ 즉시</span></td><td><span class="lose">🐢 네트워크 latency</span></td></tr>
+    <tr><td>AI 에이전트 병렬</td><td><span class="win">✅ 3 worktree 동시</span></td><td><span class="warn">⚠ shell 경합</span></td></tr>
+    <tr><td>본인 PC 꺼졌을 때</td><td><span class="win">✅ 영향 없음</span></td><td><span class="lose">❌ dev server 중단</span></td></tr>
+    <tr><td>환경 일관성</td><td><span class="warn">⚠ OS 차이 가능</span></td><td><span class="win">✅ 동일 환경</span></td></tr>
+    <tr><td>통합 테스트·모바일</td><td>dev server에 합류</td><td><span class="win">✅ 자연스러움</span></td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>역할 분담</h2>
+  <div class="flow">
+    <div class="flow-box local">
+      <h3>🖥️ 각자 PC (Local-First)</h3>
+      <ul>
+        <li>실제 코딩</li>
+        <li>HMR 빠른 iteration</li>
+        <li>Unit/Integration 테스트</li>
+        <li>git worktree 작업</li>
+        <li>PR 작성</li>
+      </ul>
+    </div>
+    <div class="flow-box devserver">
+      <h3>🌐 Dev Server (Owner WSL)</h3>
+      <ul>
+        <li>main 브랜치 hosting</li>
+        <li>통합 환경 (모두 같은 Supabase DB)</li>
+        <li>모바일 QA (DDNS hostname)</li>
+        <li>외부 데모 (배우 3-5명 테스트)</li>
+        <li>SSH 페어 프로그래밍 (옵션)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>표준 일일 워크플로 (양 개발자 공통)</h2>
+<pre># 자기 PC에서
+cd ~/projects/musical-studio
+git pull --rebase origin main
+
+# 작업 worktree
+git worktree add -b ai/<agent>/<task> ../musical-studio-<task> main
+cd ../musical-studio-<task>
+
+# 로컬 dev (자기 localhost:3000)
+pnpm dev
+
+# 테스트
+pnpm test            # vitest
+pnpm test:e2e        # playwright
+
+# 푸시 + PR
+git push -u origin ai/<agent>/<task>
+gh pr create --draft
+
+# 머지 후 정리
+cd ../musical-studio
+git worktree remove ../musical-studio-<task></pre>
+</section>
+
+<section>
+  <h2>Dev Server 접속</h2>
+
+  <h3>1. 브라우저 (테스트/데모)</h3>
+<pre># 같은 LAN: http://192.168.31.101:3000?token=&lt;DEV_ACCESS_TOKEN&gt;
+# 다른 LAN: http://musicalstudio.freedynamicdns.net:3000?token=&lt;DEV_ACCESS_TOKEN&gt;
+# 모바일: 위 URL 그대로</pre>
+  <p>첫 접속 시 <code class="inline">?token=...</code> 쿼리 → 쿠키로 저장 → 이후 자동.</p>
+
+  <h3>2. SSH (디버그/페어링)</h3>
+<pre>ssh -p 2222 soswolf@musicalstudio.freedynamicdns.net
+cd ~/projects/musical-studio
+git pull
+pkill -f "next dev"
+pnpm dev --hostname 0.0.0.0 &amp;</pre>
+  <p>자세한 SSH 가이드: <a href="ssh-guide.html">ssh-guide.html</a></p>
+</section>
+
+<section>
+  <h2>환경변수 (.env) 동기화</h2>
+  <div class="callout">
+    <strong>마스터</strong>: <code class="inline">.env/secrets.env</code> (gitignored) — Owner가 관리.<br>
+    <strong>Next.js 자동 로드</strong>: <code class="inline">.env.local</code> — <code class="inline">scripts/sync-env.sh</code>로 자동 생성.
+  </div>
+<pre># Owner가 secrets.env 수정 후
+bash scripts/sync-env.sh
+pkill -f "next dev" && pnpm dev &amp;     # 새 env로 재시작
+
+# Partner가 자기 PC에 secrets.env 받았을 때
+# (Owner가 Bitwarden/1Password로 공유)
+cp ~/secrets-from-owner.env .env/secrets.env
+bash scripts/sync-env.sh
+pnpm dev</pre>
+</section>
+
+<section>
+  <h2>DB 일관성</h2>
+  <p>본인+파트너+dev server 모두 <strong>같은 Supabase 클라우드 프로젝트</strong>를 가리킴.</p>
+  <ul>
+    <li>한 명이 추가한 데이터를 다른 명이 즉시 봄</li>
+    <li>마이그레이션은 Owner만 실행 (<code class="inline">supabase db push</code>)</li>
+    <li>RLS로 사용자별 권한 분리</li>
+  </ul>
+  <div class="callout" style="border-left-color: var(--rose); background: var(--rose-soft);">
+    <strong style="color: var(--rose);">파괴적 작업 금지:</strong> DROP TABLE, TRUNCATE 등은 PR + 양방 review 후 Owner가 실행.
+  </div>
+</section>
+
+<footer>
+  Musical Studio · 2026-05-27 · <a href="onboarding.html">셋업</a> · <a href="ssh-guide.html">SSH</a> · <a href="collaborator-roles.html">협업 책임</a> · <a href="dev-dashboard.html">대시보드</a>
+</footer>
+</main>
+</body>
+</html>

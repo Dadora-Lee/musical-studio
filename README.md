@@ -8,10 +8,12 @@
 ## 사람용 안내 (브라우저로 열기)
 
 - **셋업 가이드**: `docs/onboarding.html`
+- **개발 워크플로** (Local-First): `docs/dev-workflow.html`
 - **SSH 워크플로**: `docs/ssh-guide.html` (원격 dev server 접근)
 - **협업 책임 분리**: `docs/collaborator-roles.html` (Owner vs Collaborator)
 - **진행 대시보드**: `docs/dev-dashboard.html`
 - **테스트 전략**: `docs/testing.md`
+- **초기 자료**: `docs/init_docs/` (요구사항 xlsx, 아키텍처 html)
 
 ## AI 에이전트용 안내
 
