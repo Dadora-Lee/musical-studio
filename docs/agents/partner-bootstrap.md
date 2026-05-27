@@ -302,6 +302,33 @@ AI Agent는 자체적으로 다음 작업 금지:
 → `docs/agents/dev-workflow.md` (Local-First) 정독
 → `docs/agents/worktree.md` 워크플로 익히기
 → `AGENTS.md` SSoT + `CONTEXT.md` 용어집 확인
+→ **`docs/agents/agent-coordination.md` — AI 협업 조율 시스템 (필독)**
+
+## 12. AI 에이전트 협업 조율 시스템 (요약)
+
+본 프로젝트는 GitHub Actions로 자동 협업 로그를 관리:
+
+- `docs/agent-log/` — **GitHub Actions가 자동 생성** (main push 시 변경 사항 AI 요약). 직접 쓰지 말 것.
+- `docs/agent-handoff/open/` — 미해결 인수인계 (다음 agent가 처리)
+- `docs/agent-decisions/` — 가벼운 architectural 결정
+
+### 매 세션 시작 시 (필수)
+
+```bash
+cd ~/projects/musical-studio
+git pull --rebase origin main
+cat docs/agent-log/$(date -u +%Y-%m-%d).md 2>/dev/null
+ls docs/agent-handoff/open/ 2>/dev/null | grep -v gitkeep
+```
+
+### 매 세션 종료 시
+
+- 미해결 작업 → `docs/agent-handoff/open/YYYY-MM-DD-<slug>.md` 작성
+- 새 결정 → `docs/agent-decisions/YYYY-MM-DD-<slug>.md`
+- commit message에 `Co-Authored-By: <Agent Name>` trailer
+- `git push` → Actions가 알아서 다음 agent용 요약 append
+
+자세한 내용 `docs/agents/agent-coordination.md` 참조.
 
 ---
 

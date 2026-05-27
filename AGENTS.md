@@ -190,6 +190,42 @@ pnpm lint && pnpm typecheck && pnpm test
 - **사용자 녹음 파일은 Supabase Storage `recordings` 버킷**에만 저장. Google Drive에 쓰기 금지.
 - **MusicXML/MR 파일은 절대 git에 커밋 금지** (저작권 + 용량). Google Drive 또는 Supabase Storage 사용.
 
+## 🔄 AI 에이전트 협업 조율 (필독 — 세션 시작 시)
+
+본 프로젝트는 2명의 개발자가 다른 AI 에이전트를 동시에 사용. 비동기 협업을 위해 **git-native 협업 시스템** 채택. 자세한 내용 `docs/agents/agent-coordination.md`.
+
+### 세션 시작 체크리스트 (5단계)
+
+```bash
+cd ~/projects/musical-studio
+git pull --rebase origin main
+
+# 1. 오늘 로그 (다른 agent가 한 일)
+cat docs/agent-log/$(date -u +%Y-%m-%d).md 2>/dev/null
+
+# 2. 직전 1~2일 로그
+ls -1 docs/agent-log/*.md 2>/dev/null | grep -v README | tail -3
+
+# 3. 미해결 handoff — **반드시 확인**
+ls docs/agent-handoff/open/ 2>/dev/null | grep -v gitkeep
+
+# 4. 최근 결정
+ls -1 docs/agent-decisions/*.md 2>/dev/null | grep -v README | tail -3
+
+# 5. AGENTS.md (이 파일) — 늘 첫 로드
+```
+
+### 세션 종료 시
+
+1. 미해결 작업 → `docs/agent-handoff/open/YYYY-MM-DD-<slug>.md`
+2. 새 결정 → `docs/agent-decisions/YYYY-MM-DD-<slug>.md`
+3. commit에 `Co-Authored-By: <Agent Name>` trailer
+4. push 후 GitHub Actions가 `docs/agent-log/`에 자동 요약 append
+
+### 절대 직접 쓰지 말 것
+
+- `docs/agent-log/*.md` (GitHub Actions가 자동 관리)
+
 ## When to Ask the User (Don't Just Decide)
 
 - 새 외부 의존성 (npm 패키지) 추가
@@ -214,6 +250,8 @@ pnpm lint && pnpm typecheck && pnpm test
 - **개발 워크플로 (Local-First 결정)**: `docs/agents/dev-workflow.md`
 - 협업 책임 분리 (Owner vs Collaborator): `docs/agents/collaborator-roles.md`
 - **Partner 합류 자동 셋업** (Partner AI 첫 실행): `docs/agents/partner-bootstrap.md`
+- **🔄 AI 에이전트 협업 조율 시스템** (필독): `docs/agents/agent-coordination.md`
+- Dev server 운영: `docs/agents/dev-server-ops.md`
 
 ### 사람용 (.html, 시각적)
 - 사람용 셋업: `docs/onboarding.html`

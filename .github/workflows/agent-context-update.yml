@@ -1,0 +1,222 @@
+name: Agent Context Update
+
+# main 브랜치에 push되면 자동으로 변경 사항을 요약하여
+# docs/agent-log/YYYY-MM-DD.md 에 append + commit-back.
+# GitHub Models (무료 inference) 사용 — 외부 서비스 의존 0개.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/agent-log/**'    # 자기 자신 commit으로 무한 루프 방지
+      - 'docs/agent-handoff/**'
+      - 'docs/agent-decisions/**'
+
+permissions:
+  contents: write              # commit-back
+  models: read                 # GitHub Models inference
+
+concurrency:
+  group: agent-context-update
+  cancel-in-progress: false    # 순차 처리 (로그 인터리브 방지)
+
+jobs:
+  summarize:
+    name: Summarize changes for next agent
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0       # 전체 history (이전 log 기준 diff용)
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute diff since last log entry
+        id: diff
+        run: |
+          set -e
+          # 가장 최근 agent-log 파일의 commit SHA 찾기
+          LAST_LOG=$(git ls-files docs/agent-log/ | grep -E '\.md$' | sort | tail -1 || echo "")
+          if [ -z "$LAST_LOG" ]; then
+            SINCE="HEAD~5"
+            echo "No previous log. Using HEAD~5."
+          else
+            SINCE=$(git log -n 1 --pretty=format:%H -- "$LAST_LOG" 2>/dev/null || echo "HEAD~5")
+            echo "Last log: $LAST_LOG (commit: $SINCE)"
+          fi
+
+          # diff 범위 결정
+          if ! git rev-parse "$SINCE" >/dev/null 2>&1; then
+            SINCE="HEAD~5"
+          fi
+
+          # commit 목록 (Co-Authored-By 포함)
+          {
+            echo "## Commits since $SINCE"
+            echo ""
+            git log "$SINCE..HEAD" \
+              --pretty=format:"- %h %an: %s%n%b" \
+              --no-merges \
+              --max-count=20 2>&1 | head -200
+          } > /tmp/commits.txt
+
+          # 변경 파일 통계
+          {
+            echo ""
+            echo "## Files changed"
+            echo ""
+            git diff "$SINCE..HEAD" --stat 2>&1 | head -50
+          } > /tmp/stat.txt
+
+          # actor + commit count
+          COMMIT_COUNT=$(git log "$SINCE..HEAD" --oneline | wc -l)
+          echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+          echo "since=$SINCE" >> $GITHUB_OUTPUT
+
+      - name: Skip if no commits
+        if: steps.diff.outputs.commit_count == '0'
+        run: |
+          echo "::notice::No new commits to summarize."
+          exit 0
+
+      - name: Summarize with GitHub Models
+        id: summary
+        if: steps.diff.outputs.commit_count != '0'
+        uses: actions/ai-inference@v1
+        with:
+          model: openai/gpt-4o-mini
+          system-prompt: |
+            당신은 Musical Studio 프로젝트의 AI 에이전트 협업 로그 요약 봇입니다.
+
+            여러 AI 에이전트(Claude Code, Antigravity, Codex CLI)와 사람 개발자가
+            함께 작업하는 환경에서, 한 명이 push한 변경 사항을 다른 에이전트가
+            이어받을 때 필요한 정보만 한국어 markdown으로 정리하세요.
+
+            출력 형식 (이 4개 섹션만, 다른 텍스트 금지):
+
+            ### 변경 요약
+            (3-5 bullet, 기술 변경 중심. Co-Authored-By trailer로 어떤 에이전트가 했는지 식별)
+
+            ### 다음 에이전트가 알아야 할 영향
+            (있으면 bullet. 없으면 "없음")
+            - side effect (API 변경, 신규 의존성, breaking change 등)
+            - 새로 필요한 환경변수 / secret
+            - 영향받는 파일 영역
+
+            ### 후속 작업 / blocker
+            (있으면 bullet. 없으면 "없음")
+            - 명시적 handoff (`docs/agent-handoff/open/`) 있으면 언급
+            - TODO 또는 FIXME 코멘트 추가됨
+
+            ### 새 결정 사항
+            (있으면 bullet. 없으면 "없음")
+            - architectural 결정, naming convention 변경 등
+
+            톤: 간결, 실용적. 추측 금지. 사실만.
+          prompt: |
+            다음은 Musical Studio repo의 최근 push에 포함된 commit과 변경 사항입니다.
+
+            === COMMITS ===
+            ${{ steps.diff.outputs.since }}부터 HEAD까지의 ${{ steps.diff.outputs.commit_count }}개 commit:
+
+            (commits.txt와 stat.txt 내용은 다음 step에서 inline으로 추가됨 — 이 prompt는 placeholder)
+          max-tokens: 1000
+
+      - name: Read context files into prompt + re-run AI
+        id: ai-summary
+        if: steps.diff.outputs.commit_count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # GitHub Models는 actions/ai-inference action을 통해 호출하지만
+          # action input에 file 내용을 직접 못 넣음 → curl로 직접 호출
+          COMMITS=$(cat /tmp/commits.txt /tmp/stat.txt)
+
+          # GitHub Models endpoint
+          REQUEST=$(jq -n \
+            --arg sys "당신은 Musical Studio 프로젝트의 AI 에이전트 협업 로그 요약 봇입니다. 여러 AI 에이전트(Claude Code, Antigravity, Codex CLI)와 사람 개발자가 함께 작업하는 환경에서, 한 명이 push한 변경 사항을 다른 에이전트가 이어받을 때 필요한 정보만 한국어 markdown으로 정리하세요. 출력 형식 (정확히 이 4섹션만): ### 변경 요약 / ### 다음 에이전트가 알아야 할 영향 / ### 후속 작업 또는 blocker / ### 새 결정 사항. 각 섹션은 3-5 bullet, 없으면 \"없음\". Co-Authored-By trailer로 어떤 에이전트가 했는지 식별. 추측 금지, 사실만." \
+            --arg usr "다음 commit과 파일 변경을 위 형식대로 요약해주세요:
+
+$COMMITS" \
+            '{
+              messages: [
+                { role: "system", content: $sys },
+                { role: "user", content: $usr }
+              ],
+              model: "openai/gpt-4o-mini",
+              max_tokens: 1000,
+              temperature: 0.2
+            }')
+
+          RESPONSE=$(curl -sS https://models.github.ai/inference/chat/completions \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -d "$REQUEST")
+
+          # parse response
+          echo "$RESPONSE" | jq -r '.choices[0].message.content // .error.message // "AI summary failed."' > /tmp/summary.md
+
+          # validate
+          if [ ! -s /tmp/summary.md ]; then
+            echo "AI 요약 실패. 원본 응답:" > /tmp/summary.md
+            echo '```' >> /tmp/summary.md
+            echo "$RESPONSE" >> /tmp/summary.md
+            echo '```' >> /tmp/summary.md
+          fi
+
+          echo "=== AI Summary ==="
+          cat /tmp/summary.md
+
+      - name: Append to today's agent log
+        if: steps.diff.outputs.commit_count != '0'
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          TIME=$(date -u +%H:%M)
+          LOG="docs/agent-log/${DATE}.md"
+          mkdir -p docs/agent-log
+
+          # 첫 entry이면 header
+          if [ ! -f "$LOG" ]; then
+            cat > "$LOG" <<EOF
+          # Agent Log — ${DATE}
+
+          > 자동 생성됨. main 브랜치 push마다 GitHub Actions가 추가.
+          > 사람 편집 가능 (단 history 보존을 위해 기존 entry 삭제 금지).
+
+          EOF
+          fi
+
+          # 새 entry append
+          {
+            echo "## ${TIME} UTC — push \`${GITHUB_SHA:0:7}\` by **${GITHUB_ACTOR}**"
+            echo ""
+            cat /tmp/summary.md
+            echo ""
+            echo "<details><summary>📋 raw commits + stats</summary>"
+            echo ""
+            echo '```'
+            cat /tmp/commits.txt
+            cat /tmp/stat.txt
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "---"
+            echo ""
+          } >> "$LOG"
+
+          echo "=== Updated log ==="
+          tail -50 "$LOG"
+
+      - name: Commit and push log
+        if: steps.diff.outputs.commit_count != '0'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(agent-log): summary for ${{ github.sha }}"
+          commit_user_name: "agent-log-bot"
+          commit_user_email: "agent-log-bot@users.noreply.github.com"
+          file_pattern: 'docs/agent-log/*.md'
+          # bot commit이 새 workflow를 trigger 안 함 (paths-ignore와 중복 안전망)
