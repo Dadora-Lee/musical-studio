@@ -87,7 +87,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // /api/health 는 인프라 모니터링용 (Partner/외부 monitor가 토큰 없이 접근).
+  // _next 정적 자원 + favicon + 미디어 파일도 middleware 제외.
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?|mp3|wav|m4a|mxl|musicxml)$).*)',
+    '/((?!api/health|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?|mp3|wav|m4a|mxl|musicxml)$).*)',
   ],
 };
