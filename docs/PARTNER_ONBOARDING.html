@@ -590,7 +590,47 @@ wc -l ~/.ssh/authorized_keys    # 1줄 이상이면 성공</pre>
     <li><a href="https://github.com/Dadora-Lee/musical-studio/blob/main/docs/collaborator-roles.html" target="_blank">협업 책임 분리</a></li>
     <li><a href="https://github.com/Dadora-Lee/musical-studio/blob/main/docs/ssh-guide.html" target="_blank">SSH 가이드 (옵션)</a></li>
     <li><a href="https://github.com/Dadora-Lee/musical-studio/blob/main/docs/dev-dashboard.html" target="_blank">진행 대시보드</a></li>
+    <li><strong><a href="https://github.com/Dadora-Lee/musical-studio/blob/main/docs/agents/agent-coordination.md" target="_blank">AI 에이전트 협업 조율 시스템</a></strong> ← 필독 (매 세션 시작 시 사용)</li>
   </ul>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<h2 id="agent-coord">📡 AI 에이전트 협업 조율 시스템 (합류 후 매 세션) <span class="who ai">AI</span></h2>
+<div class="step info">
+  <h3><span class="step-num">i</span>왜 필요한가</h3>
+  <p>2명의 개발자가 다른 AI 에이전트(Claude/Antigravity/Codex)로 동시 작업하므로 서로의 작업을 자동으로 인지해야 합니다. GitHub Actions가 자동 처리.</p>
+</div>
+<div class="step ai">
+  <h3><span class="step-num">1</span>자동 동작 (당신이 신경 쓸 일 X)</h3>
+  <p>당신 또는 Owner가 main에 push하면:</p>
+  <ol>
+    <li>GitHub Actions가 변경 사항을 AI(GitHub Models)로 요약</li>
+    <li><code class="inline">docs/agent-log/YYYY-MM-DD.md</code>에 자동 append + bot commit</li>
+    <li>다른 사람이 다음 세션 시작 시 <code class="inline">git pull</code> 하면 자동 인지</li>
+  </ol>
+</div>
+<div class="step ai">
+  <h3><span class="step-num">2</span>당신의 AI Agent가 매 세션 시작 시 자동 실행</h3>
+<pre>cd ~/projects/musical-studio
+git pull --rebase origin main
+
+# 오늘 다른 agent가 한 일
+cat docs/agent-log/$(date -u +%Y-%m-%d).md 2>/dev/null
+
+# 미해결 인수인계 — 반드시 확인
+ls docs/agent-handoff/open/ 2>/dev/null</pre>
+</div>
+<div class="step ai">
+  <h3><span class="step-num">3</span>당신의 AI Agent가 매 세션 종료 시 자동 처리</h3>
+  <ul>
+    <li>미해결 작업 있으면 → <code class="inline">docs/agent-handoff/open/YYYY-MM-DD-&lt;slug&gt;.md</code> 작성 후 commit</li>
+    <li>새 architectural 결정 있으면 → <code class="inline">docs/agent-decisions/YYYY-MM-DD-&lt;slug&gt;.md</code> 작성</li>
+    <li>commit message에 <code class="inline">Co-Authored-By: &lt;Agent Name&gt;</code> trailer</li>
+    <li><code class="inline">git push</code> → GitHub Actions가 알아서 다른 agent용 요약 append</li>
+  </ul>
+</div>
+<div class="callout">
+  <strong>중요:</strong> <code class="inline">docs/agent-log/</code>는 GitHub Actions가 자동 관리. AI Agent가 직접 쓰지 말 것 (무한 루프 방지를 위해 paths-ignore 처리됨).
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════ -->

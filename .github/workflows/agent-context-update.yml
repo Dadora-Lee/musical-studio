@@ -1,0 +1,160 @@
+name: Agent Context Update
+
+# main 브랜치에 push되면 자동으로 변경 사항을 요약하여
+# docs/agent-log/YYYY-MM-DD.md 에 append + commit-back.
+# GitHub Models (무료 inference) 사용 — 외부 서비스 의존 0개.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/agent-log/**'
+      - 'docs/agent-handoff/**'
+      - 'docs/agent-decisions/**'
+
+permissions:
+  contents: write
+  models: read
+
+concurrency:
+  group: agent-context-update
+  cancel-in-progress: false
+
+jobs:
+  summarize:
+    name: Summarize changes for next agent
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # main branch protection 우회 위해 Owner PAT 사용
+          # (기본 GITHUB_TOKEN은 admin 아니라 push 차단됨)
+          token: ${{ secrets.REPO_PUSH_TOKEN }}
+
+      - name: Compute diff and build context
+        id: ctx
+        shell: bash
+        run: |
+          set -e
+          LAST_LOG=$(git ls-files docs/agent-log/ | grep -E '\.md$' | sort | tail -1 || true)
+          if [ -z "$LAST_LOG" ]; then
+            SINCE="HEAD~5"
+          else
+            SINCE=$(git log -n 1 --pretty=format:%H -- "$LAST_LOG" 2>/dev/null || echo "HEAD~5")
+          fi
+          if ! git rev-parse "$SINCE" >/dev/null 2>&1; then
+            SINCE="HEAD~5"
+          fi
+          COMMIT_COUNT=$(git log "$SINCE..HEAD" --oneline 2>/dev/null | wc -l)
+          echo "since=$SINCE" >> "$GITHUB_OUTPUT"
+          echo "count=$COMMIT_COUNT" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Commits from $SINCE to HEAD"
+            echo ""
+            git log "$SINCE..HEAD" --pretty=format:"- %h %an: %s%n%b" --no-merges --max-count=20
+            echo ""
+            echo ""
+            echo "## Files changed"
+            echo ""
+            git diff "$SINCE..HEAD" --stat | head -50
+          } > /tmp/context.txt
+          echo "=== context.txt size: $(wc -c < /tmp/context.txt) bytes ==="
+
+      - name: Write system prompt
+        if: steps.ctx.outputs.count != '0'
+        run: |
+          cat > /tmp/system.txt <<'SYS_EOF'
+          당신은 Musical Studio 프로젝트의 AI 에이전트 협업 로그 요약 봇입니다.
+          여러 AI 에이전트(Claude Code, Antigravity, Codex CLI)와 사람이 함께
+          작업하는 환경에서, 한 명이 push한 변경 사항을 다른 에이전트가 이어받을
+          때 필요한 정보만 한국어 markdown으로 정리하세요.
+
+          출력 형식 (정확히 이 4섹션만, 추가 텍스트 금지):
+
+          ### 변경 요약
+          3-5개 bullet, 기술 변경 중심. Co-Authored-By trailer로 어떤 에이전트가
+          했는지 식별. 없으면 사람 작업으로 표시.
+
+          ### 다음 에이전트가 알아야 할 영향
+          - side effect (API 변경, 신규 의존성, breaking change)
+          - 새 환경변수 / secret
+          - 영향받는 파일 영역
+          없으면 "없음" 한 줄.
+
+          ### 후속 작업 / blocker
+          - 명시적 handoff
+          - TODO / FIXME
+          없으면 "없음" 한 줄.
+
+          ### 새 결정 사항
+          - architectural 결정, naming convention 변경
+          없으면 "없음" 한 줄.
+
+          톤: 간결, 사실 기반. 추측 금지.
+          SYS_EOF
+
+      - name: AI Summary via GitHub Models
+        id: ai
+        if: steps.ctx.outputs.count != '0'
+        uses: actions/ai-inference@v1
+        with:
+          model: openai/gpt-4o-mini
+          prompt-file: /tmp/context.txt
+          system-prompt-file: /tmp/system.txt
+          max-tokens: 1200
+
+      - name: Append summary to today's log
+        if: steps.ctx.outputs.count != '0'
+        shell: bash
+        env:
+          AI_RESPONSE: ${{ steps.ai.outputs.response }}
+          SHORT_SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          TIME=$(date -u +%H:%M)
+          LOG="docs/agent-log/${DATE}.md"
+          mkdir -p docs/agent-log
+
+          if [ ! -f "$LOG" ]; then
+            {
+              echo "# Agent Log — ${DATE}"
+              echo ""
+              echo "> 자동 생성됨. main 브랜치 push마다 GitHub Actions가 추가."
+              echo "> 사람 편집 가능 (단 history 보존을 위해 기존 entry 삭제 금지)."
+              echo ""
+            } > "$LOG"
+          fi
+
+          {
+            echo "## ${TIME} UTC — push \`${SHORT_SHA:0:7}\` by **${ACTOR}**"
+            echo ""
+            printf '%s\n' "$AI_RESPONSE"
+            echo ""
+            echo "<details><summary>📋 raw commits + stats</summary>"
+            echo ""
+            echo '```'
+            cat /tmp/context.txt
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "---"
+            echo ""
+          } >> "$LOG"
+
+          echo "=== Appended to $LOG ==="
+          tail -40 "$LOG"
+
+      - name: Commit and push log
+        if: steps.ctx.outputs.count != '0'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(agent-log): auto-summary for ${{ github.sha }}"
+          commit_user_name: agent-log-bot
+          commit_user_email: agent-log-bot@users.noreply.github.com
+          file_pattern: 'docs/agent-log/*.md'
