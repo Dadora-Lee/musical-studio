@@ -7,7 +7,8 @@
 
 ## 사람용 안내 (브라우저로 열기)
 
-- **셋업 가이드**: `docs/onboarding.html`
+- **셋업 가이드** (Owner 본인): `docs/onboarding.html`
+- **Partner 합류 가이드** (Partner 본인): `docs/PARTNER_ONBOARDING.html`
 - **개발 워크플로** (Local-First): `docs/dev-workflow.html`
 - **SSH 워크플로**: `docs/ssh-guide.html` (원격 dev server 접근)
 - **협업 책임 분리**: `docs/collaborator-roles.html` (Owner vs Collaborator)

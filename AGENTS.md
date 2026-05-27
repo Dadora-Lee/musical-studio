@@ -213,6 +213,7 @@ pnpm lint && pnpm typecheck && pnpm test
 - SSH 워크플로: `docs/agents/ssh-workflow.md`
 - **개발 워크플로 (Local-First 결정)**: `docs/agents/dev-workflow.md`
 - 협업 책임 분리 (Owner vs Collaborator): `docs/agents/collaborator-roles.md`
+- **Partner 합류 자동 셋업** (Partner AI 첫 실행): `docs/agents/partner-bootstrap.md`
 
 ### 사람용 (.html, 시각적)
 - 사람용 셋업: `docs/onboarding.html`
@@ -220,6 +221,7 @@ pnpm lint && pnpm typecheck && pnpm test
 - **개발 워크플로**: `docs/dev-workflow.html`
 - 협업 책임 분리: `docs/collaborator-roles.html`
 - 진행 대시보드: `docs/dev-dashboard.html`
+- **Partner 합류 가이드** (Partner 본인 1회 확인): `docs/PARTNER_ONBOARDING.html`
 - 초기 자료: `docs/init_docs/` (xlsx, html)
 
 ### Bootstrap 스크립트
