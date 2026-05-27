@@ -71,20 +71,20 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4
 <!-- 핵심 지표 -->
 <div class="grid-stats">
   <div class="stat success">
-    <div class="num" id="completed-count">44</div>
+    <div class="num" id="completed-count">52</div>
     <div class="lbl">Completed Tasks</div>
   </div>
   <div class="stat warning">
     <div class="num" id="progress-count">1</div>
-    <div class="lbl">In Progress (MVP)</div>
+    <div class="lbl">In Progress (T27 MVP)</div>
   </div>
   <div class="stat">
-    <div class="num" id="pending-count">0</div>
-    <div class="lbl">Pending</div>
+    <div class="num" id="pending-count">3</div>
+    <div class="lbl">Pending (next session)</div>
   </div>
-  <div class="stat danger">
-    <div class="num" id="blocked-count">2</div>
-    <div class="lbl">Async (T06, T48 — 파트너)</div>
+  <div class="stat" style="border-top: 4px solid var(--green);">
+    <div class="num" style="color: var(--green);">100%</div>
+    <div class="lbl">Infra Complete</div>
   </div>
   <div class="stat">
     <div class="num">13</div>
@@ -96,9 +96,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4
 <section>
   <h2>전체 진척률</h2>
   <div class="progress-bar">
-    <div class="progress-fill" id="progress-fill" style="width: 94%;">94%</div>
+    <div class="progress-fill" id="progress-fill" style="width: 98%;">98%</div>
   </div>
-  <p style="font-size: 13px; color: var(--muted); margin: 0;">Phase 0~8 완료 / MVP 본격 코딩 단계 (T27 진행 중) — REQ-A-001 OSMD 데모 작동.</p>
+  <p style="font-size: 13px; color: var(--muted); margin: 0;">인프라 100% (Phase 0~10) + AI 협업 자동화 가동 / 다음 세션: 전체 검증 + Partner 프롬프트 + MVP 본격 시작.</p>
 </section>
 
 <!-- Phase 별 진척 -->
@@ -152,17 +152,29 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4
     <div class="deps">T39-T42</div>
     <div class="status"><span class="tag done">완료</span></div>
   </div>
-  <div class="phase in_progress">
+  <div class="phase done">
     <div class="id">P8</div>
-    <div class="name">MVP 본격 작업 (REQ-A-001 ScoreViewer 완료, A-002 진행)</div>
-    <div class="deps">T26 ✓, T27 ⏳</div>
-    <div class="status"><span class="tag progress">진행 중</span></div>
+    <div class="name">SSH 서버 + 자동화 + Partner 합류 인프라</div>
+    <div class="deps">T49 ✓, T50 ✓, T51 ✓, T06 ✓, T48 ✓, T52 ✓</div>
+    <div class="status"><span class="tag done">완료</span></div>
   </div>
-  <div class="phase blocked">
-    <div class="id">⏸</div>
-    <div class="name">파트너 비동기 대기</div>
-    <div class="deps">T06, T48</div>
-    <div class="status"><span class="tag blocked">비동기</span></div>
+  <div class="phase done">
+    <div class="id">P9</div>
+    <div class="name">Dev server systemd + env sync + middleware 수정</div>
+    <div class="deps">env unify, sync-env.sh v2, health middleware exempt</div>
+    <div class="status"><span class="tag done">완료</span></div>
+  </div>
+  <div class="phase done">
+    <div class="id">P10</div>
+    <div class="name">🔄 AI 에이전트 협업 조율 시스템 (Pattern A)</div>
+    <div class="deps">agent-log/, handoff/, decisions/, GitHub Actions auto-commit</div>
+    <div class="status"><span class="tag done">완료 (검증됨)</span></div>
+  </div>
+  <div class="phase in_progress">
+    <div class="id">P11</div>
+    <div class="name">MVP 본격 작업 (REQ-A-001 ScoreViewer + 다음 세션 검증)</div>
+    <div class="deps">T27, T53, T54, T55</div>
+    <div class="status"><span class="tag progress">진행 중</span></div>
   </div>
 </section>
 
@@ -192,20 +204,20 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4
     <tr><td>Vercel</td><td>보류</td><td>일관성 — 추후 재검토</td></tr>
     <tr><td>D-day</td><td>2026-06-09 (단축 목표 06-05)</td><td>xlsx 일정 회복 가능</td></tr>
     <tr><td>AI 에이전트</td><td>Claude + Antigravity + Codex 모두 호환</td><td>AGENTS.md SSoT</td></tr>
+    <tr><td><strong>Dev Workflow</strong></td><td>Local-First (옵션 C)</td><td>각자 PC에서 코딩, dev server는 통합 테스트/QA/데모 전용</td></tr>
+    <tr><td><strong>AI 협업</strong></td><td>Pattern A: AGENTS.md + agent-log/ Actions auto-commit</td><td>Linux Foundation 표준, 외부 의존 0</td></tr>
+    <tr><td><strong>Dev Server 운영</strong></td><td>systemd user service</td><td>Linger=yes로 WSL 재진입 후 자동 시작</td></tr>
   </table>
 </section>
 
 <!-- 다음 단계 -->
 <section>
-  <h2>다음 단계 (MVP 본격)</h2>
+  <h2>다음 세션 작업 (handoff: docs/agent-handoff/open/2026-05-27-session-end-to-next.md)</h2>
   <ol>
-    <li><strong>사용자 1회 작업</strong>: <code>docs/agents/local-sudo-setup.md</code> 참조 — Playwright deps + mkcert (sudo 필요)</li>
-    <li><strong>Supabase 클라우드 마이그레이션 적용</strong>: <code>supabase db push</code> (cloud DB에 7테이블+RLS)</li>
-    <li><strong>REQ-A-001 컴포넌트 테스트 보강</strong>: ScoreViewer + 실제 fixture 통합 테스트</li>
-    <li><strong>REQ-AUTH-001/002</strong>: Google OAuth 로그인 + role 분기 (Supabase Auth Provider)</li>
-    <li><strong>REQ-A-004/005/006</strong>: MR 재생 + WAV 녹음 + Storage 업로드</li>
-    <li><strong>REQ-B-001/002</strong>: 숙제 제출 UI + Director 대시보드</li>
-    <li><strong>파트너 GitHub username 수령 시</strong>: T06 자동 실행 (collaborator 초대)</li>
+    <li><strong>T53 전체 검증</strong>: typecheck/lint/test/build/dev server health 모두 통과 확인 + decision 문서 작성</li>
+    <li><strong>T54 Partner 합류 프롬프트</strong>: jieun0610에게 전달할 메시지 + AI Agent 프롬프트 작성 (PARTNER_ONBOARDING.html 활용)</li>
+    <li><strong>T55 MVP T27 본격 진행</strong> (다음+ 세션): REQ-AUTH-001/002 → REQ-A-004/005/006 → REQ-B-001/002</li>
+    <li><strong>매 세션 시작 시</strong>: <code>git pull</code> + <code>cat docs/agent-log/$(date).md</code> + <code>ls docs/agent-handoff/open/</code></li>
   </ol>
 </section>
 
