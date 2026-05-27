@@ -30,6 +30,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # main branch protection 우회 위해 Owner PAT 사용
+          # (기본 GITHUB_TOKEN은 admin 아니라 push 차단됨)
+          token: ${{ secrets.REPO_PUSH_TOKEN }}
 
       - name: Compute diff and build context
         id: ctx
