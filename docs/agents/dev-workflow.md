@@ -2,6 +2,23 @@
 
 > **결론**: 공동 개발자는 **본인 PC에서 로컬 개발**하고, **dev server는 통합 테스트·QA·모바일 검증·데모 용도로만** 사용. SSH 접속은 옵션 (디버깅·페어 프로그래밍).
 
+## ⚠ Owner의 특수 사항 (옵션 C 적용)
+
+Owner의 PC는 1대이므로 **Owner의 본인 PC = dev server hosting PC**가 동일 머신. 따라서:
+
+- Owner의 "본인 PC 로컬 작업 공간" = WSL2 안의 `/home/soswolf/projects/musical-studio` (WSL ext4)
+- 같은 디렉토리가 **외부에 노출된 dev server 역할도 겸함** (Next.js dev :3000, SSH :2222)
+- 즉 Owner는 "local"과 "dev server"라는 두 논리적 역할을 **하나의 디렉토리로 통합**해서 운영
+
+Partner와의 비대칭은 본질이 아닌 머신 개수 차이 (Partner는 2대처럼 owner PC를 외부 dev server로 보지만, Owner는 1대에 모두 있음). Partner의 워크플로는 변함없이 Local-First.
+
+### Windows 측 `C:\Users\7H9Z1\ClaudeCowork\FanLetter\MusicalStudio` 디렉토리
+
+- **STALE** (초기 staging 용도였음, 현재 git 추적 안 됨)
+- Owner는 그 디렉토리를 사용하지 않음. WSL ext4가 단일 진실 공급원.
+- 자세한 안내는 같은 디렉토리의 `STALE_README.txt` 참조.
+- 정리 옵션: 그대로 두기(참조용) / 삭제(시크릿은 WSL에 동일 사본 있음).
+
 ## 왜 Local-First인가
 
 | 시나리오 | Local-First | SSH-only |
