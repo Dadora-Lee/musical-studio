@@ -3,25 +3,25 @@
 # 양 개발자 모두 등록. 핵심 영역은 양방 review 필수.
 
 # ─── 전 영역 기본 ─────────────────────────
-* @Dadora-Lee
+* @Dadora-Lee @jieun0610
 
 # ─── 핵심 모듈 (양방 review) ──────────────
-/src/lib/musicxml/    @Dadora-Lee
-/src/lib/audio-engine/ @Dadora-Lee
-/src/lib/supabase/    @Dadora-Lee
-/src/lib/auth/        @Dadora-Lee
-/supabase/migrations/ @Dadora-Lee
-/.github/             @Dadora-Lee
-/.husky/              @Dadora-Lee
+/src/lib/musicxml/    @Dadora-Lee @jieun0610
+/src/lib/audio-engine/ @Dadora-Lee @jieun0610
+/src/lib/supabase/    @Dadora-Lee @jieun0610
+/src/lib/auth/        @Dadora-Lee @jieun0610
+/supabase/migrations/ @Dadora-Lee @jieun0610
+/.github/             @Dadora-Lee @jieun0610
+/.husky/              @Dadora-Lee @jieun0610
 
 # ─── 룰 문서 (양방 review 필수) ──────────
-/AGENTS.md            @Dadora-Lee
-/CLAUDE.md            @Dadora-Lee
-/GEMINI.md            @Dadora-Lee
-/AGENTS.override.md   @Dadora-Lee
-/CONTEXT.md           @Dadora-Lee
-/docs/adr/            @Dadora-Lee
-/CODEOWNERS           @Dadora-Lee
+/AGENTS.md            @Dadora-Lee @jieun0610
+/CLAUDE.md            @Dadora-Lee @jieun0610
+/GEMINI.md            @Dadora-Lee @jieun0610
+/AGENTS.override.md   @Dadora-Lee @jieun0610
+/CONTEXT.md           @Dadora-Lee @jieun0610
+/docs/adr/            @Dadora-Lee @jieun0610
+/CODEOWNERS           @Dadora-Lee @jieun0610
 
 # ※ 파트너 GitHub username 받으면 이 파일에 추가
 # 예시: /src/lib/musicxml/ @Dadora-Lee @partner-username
