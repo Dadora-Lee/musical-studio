@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Musical Studio Prototype Schema</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #172033;
+        --muted: #627084;
+        --line: #d9e1ea;
+        --paper: #f5f7fa;
+        --panel: #ffffff;
+        --teal: #0f766e;
+        --amber: #b45309;
+        --blue: #2563eb;
+        --rose: #be123c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Arial, "Noto Sans KR", sans-serif;
+        line-height: 1.55;
+      }
+
+      main {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 48px;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-end;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 18px;
+        margin-bottom: 22px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      .eyebrow {
+        color: var(--teal);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        margin-top: 10px;
+        max-width: 720px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 7px 10px;
+        white-space: nowrap;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .schema-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: 22px;
+      }
+
+      .entity {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        overflow: hidden;
+        min-height: 100%;
+      }
+
+      .entity h2 {
+        color: white;
+        font-size: 16px;
+        padding: 12px 14px;
+      }
+
+      .entity.numbers h2 {
+        background: var(--teal);
+      }
+
+      .entity.members h2 {
+        background: var(--blue);
+      }
+
+      .entity.works h2 {
+        background: var(--amber);
+      }
+
+      .entity.comments h2 {
+        background: var(--rose);
+      }
+
+      .fields {
+        list-style: none;
+        margin: 0;
+        padding: 8px 14px 14px;
+      }
+
+      .fields li {
+        border-bottom: 1px solid #edf1f5;
+        padding: 8px 0;
+        font-size: 13px;
+      }
+
+      .fields li:last-child {
+        border-bottom: 0;
+      }
+
+      code {
+        border-radius: 5px;
+        background: #eef3f7;
+        color: #26364a;
+        padding: 2px 5px;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.92em;
+      }
+
+      .note {
+        color: var(--muted);
+        font-size: 12px;
+        display: block;
+        margin-top: 2px;
+      }
+
+      .section {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 18px;
+        margin-top: 16px;
+      }
+
+      .section h2 {
+        font-size: 18px;
+        margin-bottom: 12px;
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .step {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fbfcfe;
+        padding: 14px;
+        min-height: 118px;
+      }
+
+      .step:not(:last-child)::after {
+        content: ">";
+        position: absolute;
+        right: -10px;
+        top: 42%;
+        color: var(--muted);
+        font-weight: 900;
+      }
+
+      .step strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .step span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      pre {
+        overflow: auto;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #101827;
+        color: #e5edf7;
+        padding: 16px;
+        font-size: 13px;
+      }
+
+      .decision-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .decision {
+        border-left: 4px solid var(--teal);
+        background: #f8fbfb;
+        padding: 10px 12px;
+      }
+
+      @media (max-width: 960px) {
+        header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .schema-grid,
+        .flow {
+          grid-template-columns: 1fr;
+        }
+
+        .step:not(:last-child)::after {
+          content: "";
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">Musical Studio</p>
+          <h1>Prototype Data Schema</h1>
+          <p class="subtitle">
+            Practice Studio 프로토타입을 빠르게 검증하기 위한 단순 스키마입니다. 배역 캐스팅은
+            <code>members.castings</code> 배열에 보관하고, MusicXML Part 이름과 매칭합니다.
+          </p>
+        </div>
+        <span class="badge">Prototype first · normalize later</span>
+      </header>
+
+      <section class="grid schema-grid" aria-label="Prototype schema entities">
+        <article class="entity numbers">
+          <h2>numbers</h2>
+          <ul class="fields">
+            <li><code>id</code> <span class="note">int primary key</span></li>
+            <li><code>title</code> <span class="note">Number 이름</span></li>
+            <li><code>musicxml_url</code> <span class="note">악보 MusicXML</span></li>
+            <li><code>ar_url</code> <span class="note">AR audio</span></li>
+            <li><code>mr_url</code> <span class="note">MR audio</span></li>
+            <li><code>vocal_url</code> <span class="note">MR 제거 Vocal reference</span></li>
+          </ul>
+        </article>
+
+        <article class="entity members">
+          <h2>members</h2>
+          <ul class="fields">
+            <li><code>id</code> <span class="note">int primary key</span></li>
+            <li><code>nickname</code> <span class="note">화면 표시 이름, prototype key</span></li>
+            <li><code>member_type</code> <span class="note">player | direction | guest</span></li>
+            <li><code>castings</code> <span class="note">text[]: Hikaru, Ensemble 등</span></li>
+          </ul>
+        </article>
+
+        <article class="entity works">
+          <h2>works</h2>
+          <ul class="fields">
+            <li><code>id</code> <span class="note">int primary key</span></li>
+            <li><code>number_id</code> <span class="note">numbers.id</span></li>
+            <li><code>member_id</code> <span class="note">members.id</span></li>
+            <li><code>casting_name</code> <span class="note">제출 당시 배역명</span></li>
+            <li><code>file_name</code> <span class="note">take_03.wav</span></li>
+            <li><code>file_url</code> <span class="note">recording storage URL</span></li>
+            <li><code>created_at</code> <span class="note">제출/생성 시각</span></li>
+          </ul>
+        </article>
+
+        <article class="entity comments">
+          <h2>comments</h2>
+          <ul class="fields">
+            <li><code>id</code> <span class="note">int primary key</span></li>
+            <li><code>work_id</code> <span class="note">works.id</span></li>
+            <li><code>member_id</code> <span class="note">작성자 members.id</span></li>
+            <li><code>text</code> <span class="note">피드백 본문</span></li>
+            <li><code>created_at</code> <span class="note">작성 시각</span></li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2>데이터 흐름</h2>
+        <div class="flow">
+          <div class="step">
+            <strong>1. Number 등록</strong>
+            <span>MusicXML, AR, MR, Vocal 파일을 Number에 연결합니다.</span>
+          </div>
+          <div class="step">
+            <strong>2. Part 추출</strong>
+            <span>MusicXML에서 Hikaru, Ensemble 같은 Part 이름을 읽습니다.</span>
+          </div>
+          <div class="step">
+            <strong>3. Member 매칭</strong>
+            <span><code>members.castings</code>가 MusicXML Part 이름과 맞으면 연습 대상으로 봅니다.</span>
+          </div>
+          <div class="step">
+            <strong>4. Work 생성</strong>
+            <span>Member가 Number를 녹음/제출하면 Work가 만들어집니다.</span>
+          </div>
+          <div class="step">
+            <strong>5. Comment 작성</strong>
+            <span>Direction 또는 Member가 제출된 Work에 피드백을 남깁니다.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Prototype 예시</h2>
+        <pre><code>const member = {
+  id: 1,
+  nickname: "tani",
+  member_type: "player",
+  castings: ["Hikaru", "Ensemble"]
+};
+
+const number = {
+  id: 10,
+  title: "빛나는 밤의 약속",
+  musicxml_url: "/storage/numbers/duet.musicxml",
+  ar_url: "/storage/numbers/duet-ar.mp3",
+  mr_url: "/storage/numbers/duet-mr.mp3",
+  vocal_url: "/storage/numbers/duet-vocal.wav"
+};
+
+const work = {
+  id: 100,
+  number_id: 10,
+  member_id: 1,
+  casting_name: "Hikaru",
+  file_name: "take_03.wav",
+  file_url: "/storage/recordings/1/take_03.wav",
+  created_at: "2026-05-29T00:10:00+09:00"
+};
+
+const comment = {
+  id: 1000,
+  work_id: 100,
+  member_id: 2,
+  text: "00:42 진입 박자가 MR보다 조금 늦어요.",
+  created_at: "2026-05-29T00:20:00+09:00"
+};</code></pre>
+      </section>
+
+      <section class="section">
+        <h2>현재 결정</h2>
+        <div class="decision-list">
+          <div class="decision">
+            <strong><code>guest</code> 사용</strong>
+            <p>최소 기능 사용자 타입은 <code>none</code> 대신 <code>guest</code>로 표현합니다.</p>
+          </div>
+          <div class="decision">
+            <strong>캐스팅은 <code>members.castings</code></strong>
+            <p>Prototype에서는 별도 roles/castings 테이블을 만들지 않고 배열로 보관합니다.</p>
+          </div>
+          <div class="decision">
+            <strong>MusicXML Part와 이름 매칭</strong>
+            <p>MusicXML에서 추출한 Part 이름과 <code>members.castings</code> 값을 비교합니다.</p>
+          </div>
+          <div class="decision">
+            <strong>나중에 정규화</strong>
+            <p>더블캐스팅, 공연별 배역 관리, 권한이 복잡해지면 roles/member_castings 테이블로 분리합니다.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
