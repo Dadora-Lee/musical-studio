@@ -562,6 +562,16 @@ wc -l ~/.ssh/authorized_keys    # 1줄 이상이면 성공</pre>
     <li><strong>"Permission denied (publickey)"</strong> — Step 5의 "SSH key 등록 완료" 알림이 Owner에게 전달 안 됐거나 Owner가 아직 처리 안 함. Owner에게 재확인.</li>
     <li><strong>기존 작업물 통합 시 코드 충돌</strong> — 당신의 의도가 필요. AI가 멈추면 어떻게 통합할지 결정 후 알려주기.</li>
     <li><strong>PAT 권한 부족</strong> — Step 3에서 Contents/PR/Issues가 RW로 설정됐는지 다시 확인.</li>
+    <li><strong>새 브랜치 push 거부 (<code class="inline">remote: Permission to ... denied</code> / <code class="inline">could not read Username</code> / 403)</strong> — 권한 자체는 충분(write). 원인은 클라이언트 인증 누락. 즉시 진단:
+      <ol>
+        <li><code class="inline">git remote -v</code> — URL이 <code class="inline">https://</code>인지 <code class="inline">git@github.com:</code>인지 확인</li>
+        <li><code class="inline">gh auth status</code> — 본인 username active 확인 (없으면 Step 4 재실행)</li>
+        <li>HTTPS면 <strong><code class="inline">gh auth setup-git</code></strong> 실행 (git이 PAT를 credential helper로 사용)</li>
+        <li>SSH면 <code class="inline">ssh -T git@github.com</code>으로 GitHub SSH key 등록 확인 (성공 시 "Hi <user>!" 출력)</li>
+        <li>그래도 안 되면 PAT 만료/권한 점검 후 Step 4 재실행</li>
+      </ol>
+      <em>main 브랜치 직접 push는 보호 규칙상 영구 차단. 항상 <code class="inline">ai/&lt;name&gt;/&lt;task&gt;</code> 브랜치 + PR로.</em>
+    </li>
   </ul>
 </div>
 

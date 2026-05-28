@@ -228,6 +228,21 @@ bash scripts/sync-env.sh
 - **`Connection refused`** → Owner dev server SSH 다운 또는 공유기 포트포워딩 미설정.
 - **대안**: Owner가 Bitwarden/1Password로 `.env/secrets.env` 텍스트 공유.
 
+### 새 브랜치 git push 거부 (`remote: Permission to ... denied` / 403 / `could not read Username`)
+
+권한(write/push:true)은 충분. 원인은 클라이언트 인증 누락. 진단 순서:
+
+```bash
+git remote -v                 # URL이 https:// 인지 git@github.com: 인지
+gh auth status                # Partner username active?  (없으면 §3-1 재실행)
+# HTTPS 인 경우:
+gh auth setup-git             # PAT를 git credential helper로 등록
+# SSH 인 경우:
+ssh -T git@github.com         # "Hi <user>!" 나와야 함. 안 나오면 github.com/settings/ssh 등록 누락
+```
+
+그래도 안 되면 PAT 만료/권한 재발급 후 §3-1 재실행. **main 직접 push는 보호 규칙상 영구 차단** — `ai/<agent>/<task>` 브랜치 + PR로만 진행.
+
 ---
 
 ## 7. 의존성 + 검증
