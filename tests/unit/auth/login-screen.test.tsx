@@ -46,4 +46,16 @@ describe('LoginScreen', () => {
       },
     });
   });
+
+  it('keeps the temporary admin unlock available from the signed-out login surface', async () => {
+    render(<LoginScreen />);
+
+    expect(screen.getByRole('button', { name: '임시 관리자 로그인' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: '임시 관리자 로그인' }));
+
+    expect(screen.getByRole('heading', { name: '임시 관리자 로그인' })).toBeInTheDocument();
+    expect(screen.getByLabelText('관리자 비밀번호')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '관리자로 계속' })).toBeInTheDocument();
+  });
 });

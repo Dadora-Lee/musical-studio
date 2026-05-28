@@ -1,14 +1,18 @@
 "use client";
 
-import { LogIn, LogOut, X } from "lucide-react";
+import { KeyRound, LogIn, LogOut, ShieldCheck, X } from "lucide-react";
 import { useState } from "react";
 import { buildSignedOutAuthContext, type AuthContext } from "@/lib/domain/access-control";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export function SidebarGoogleAccount({ authContext = buildSignedOutAuthContext() }: { authContext?: AuthContext }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isDevAdminOpen, setIsDevAdminOpen] = useState(false);
+  const [devAdminPassword, setDevAdminPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [devAdminStatus, setDevAdminStatus] = useState<"idle" | "loading" | "error">("idle");
   const [message, setMessage] = useState(authMessage(authContext));
+  const [devAdminMessage, setDevAdminMessage] = useState("로컬 개발 환경에서만 사용하는 임시 관리자 로그인입니다.");
 
   async function signIn() {
     const supabase = createSupabaseBrowserClient();
@@ -35,9 +39,31 @@ export function SidebarGoogleAccount({ authContext = buildSignedOutAuthContext()
     }
   }
 
+  async function unlockDevAdmin() {
+    setDevAdminStatus("loading");
+    setDevAdminMessage("임시 관리자 권한 확인 중");
+
+    const response = await fetch("/auth/dev-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: devAdminPassword })
+    }).catch(() => null);
+
+    if (!response?.ok) {
+      const body = await response?.json().catch(() => null) as { message?: string } | null;
+      setDevAdminStatus("error");
+      setDevAdminMessage(body?.message ?? "임시 관리자 로그인에 실패했습니다. 비밀번호를 확인해주세요.");
+      return;
+    }
+
+    setDevAdminStatus("idle");
+    setDevAdminMessage("임시 관리자 로그인 완료. 화면을 새로고침합니다.");
+    window.location.href = "/";
+  }
+
   async function signOut() {
     const supabase = createSupabaseBrowserClient();
-    await fetch('/auth/dev-admin', { method: 'DELETE' }).catch(() => null);
+    await fetch("/auth/dev-admin", { method: "DELETE" }).catch(() => null);
     await supabase?.auth.signOut();
     window.location.href = "/";
   }
@@ -57,14 +83,24 @@ export function SidebarGoogleAccount({ authContext = buildSignedOutAuthContext()
         <span className="rounded bg-white/10 px-2 py-1 font-bold text-blue-100">{authStateLabel(authContext)}</span>
       </div>
       {authContext.state === "signed_out" ? (
-        <button
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md bg-white px-3 py-2 font-black text-studio-navy"
-          onClick={() => setIsLoginOpen(true)}
-          type="button"
-        >
-          <LogIn className="h-4 w-4" aria-hidden />
-          {status === "loading" ? "로그인 중" : "Google 로그인"}
-        </button>
+        <div className="mt-3 grid gap-2">
+          <button
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-white px-3 py-2 font-black text-studio-navy"
+            onClick={() => setIsLoginOpen(true)}
+            type="button"
+          >
+            <LogIn className="h-4 w-4" aria-hidden />
+            {status === "loading" ? "로그인 중" : "Google 로그인"}
+          </button>
+          <button
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-white/25 bg-white/10 px-3 py-2 font-black text-white"
+            onClick={() => setIsDevAdminOpen(true)}
+            type="button"
+          >
+            <ShieldCheck className="h-4 w-4" aria-hidden />
+            임시 관리자 로그인
+          </button>
+        </div>
       ) : (
         <button
           className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md bg-white px-3 py-2 font-black text-studio-navy"
@@ -118,6 +154,65 @@ export function SidebarGoogleAccount({ authContext = buildSignedOutAuthContext()
               </button>
               <p className={`text-xs font-bold ${status === "error" ? "text-amber-700" : "text-slate-500"}`}>{message}</p>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isDevAdminOpen ? (
+        <div className="fixed inset-0 z-30 grid place-items-center bg-slate-950/50 p-4 text-slate-900">
+          <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-200 p-4">
+              <div>
+                <h2 className="text-lg font-black">임시 관리자 로그인</h2>
+                <p className="mt-1 text-xs font-bold text-slate-500">
+                  Google 계정 없이 로컬 개발용 관리자 권한을 잠시 사용합니다.
+                </p>
+              </div>
+              <button
+                aria-label="임시 관리자 로그인 닫기"
+                className="rounded-md border border-slate-200 p-2"
+                onClick={() => setIsDevAdminOpen(false)}
+                type="button"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+            <form
+              className="grid gap-3 p-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void unlockDevAdmin();
+              }}
+            >
+              <label className="grid gap-2 text-sm font-black" htmlFor="dev-admin-password">
+                관리자 비밀번호
+                <input
+                  autoComplete="current-password"
+                  className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold outline-none focus:border-teal-600"
+                  id="dev-admin-password"
+                  onChange={(event) => setDevAdminPassword(event.target.value)}
+                  placeholder="관리자 비밀번호 입력"
+                  type="password"
+                  value={devAdminPassword}
+                />
+              </label>
+              <button
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-studio-navy px-4 py-3 text-sm font-black text-white disabled:opacity-60"
+                disabled={devAdminStatus === "loading" || !devAdminPassword}
+                type="submit"
+              >
+                <KeyRound className="h-4 w-4" aria-hidden />
+                {devAdminStatus === "loading" ? "확인 중" : "관리자로 계속"}
+              </button>
+              <button
+                className="rounded-md border border-slate-300 px-4 py-3 text-sm font-black"
+                onClick={() => setIsDevAdminOpen(false)}
+                type="button"
+              >
+                취소
+              </button>
+              <p className={`text-xs font-bold ${devAdminStatus === "error" ? "text-amber-700" : "text-slate-500"}`}>{devAdminMessage}</p>
+            </form>
           </div>
         </div>
       ) : null}
