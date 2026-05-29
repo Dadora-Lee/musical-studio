@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Musical Studio UI 변경 제안 - A4 고정 악보 페이지네이션</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef2f7;
+      --panel: #ffffff;
+      --line: #cbd5e1;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --blue: #2563eb;
+      --teal: #0f766e;
+      --amber: #b45309;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-top: 28px;
+      font-size: 18px;
+    }
+
+    h3 {
+      font-size: 14px;
+    }
+
+    .lead {
+      margin-top: 8px;
+      max-width: 820px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .card header {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      background: #f8fafc;
+    }
+
+    .card .body {
+      padding: 14px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 120px 1fr 150px;
+      gap: 0;
+      height: 360px;
+      border: 1px solid var(--line);
+      background: white;
+    }
+
+    .left,
+    .right {
+      background: #f8fafc;
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #334155;
+    }
+
+    .left {
+      border-right: 1px solid var(--line);
+    }
+
+    .right {
+      border-left: 1px solid var(--line);
+    }
+
+    .center {
+      display: grid;
+      grid-template-rows: 32px 1fr 78px;
+      min-width: 0;
+      background: #dfe5ee;
+    }
+
+    .score-head,
+    .transport {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+      padding: 0 10px;
+      font-size: 11px;
+      font-weight: 900;
+      color: #334155;
+    }
+
+    .transport {
+      border-top: 1px solid var(--line);
+      border-bottom: 0;
+      align-items: flex-start;
+      padding-top: 10px;
+    }
+
+    .scroll-score {
+      overflow-y: auto;
+      padding: 14px;
+    }
+
+    .long-page {
+      width: 210px;
+      height: 980px;
+      margin: 0 auto;
+      border: 1px solid #94a3b8;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          #ffffff 0,
+          #ffffff 42px,
+          #e2e8f0 43px,
+          #ffffff 44px
+        );
+      box-shadow: 0 8px 18px rgb(15 23 42 / 0.16);
+    }
+
+    .fixed-score {
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: 14px;
+    }
+
+    .a4-page {
+      width: min(100%, 210px);
+      aspect-ratio: 210 / 297;
+      max-height: 100%;
+      border: 1px solid #94a3b8;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          #ffffff 0,
+          #ffffff 32px,
+          #e2e8f0 33px,
+          #ffffff 34px
+        );
+      box-shadow: 0 8px 18px rgb(15 23 42 / 0.16);
+    }
+
+    .pager {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pager button {
+      height: 24px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: white;
+      color: #0f172a;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: #334155;
+      font-size: 14px;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    .decision {
+      margin-top: 18px;
+      border: 1px solid #99f6e4;
+      border-radius: 8px;
+      background: #f0fdfa;
+      padding: 14px;
+      color: #134e4a;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .warn {
+      margin-top: 14px;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      background: #fffbeb;
+      padding: 14px;
+      color: #92400e;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 820px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .workspace {
+        grid-template-columns: 84px 1fr 96px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>악보 영역 A4 고정 + 페이지 넘김 변경 제안</h1>
+    <p class="lead">
+      현재 /work 화면의 좌측 Number 목록, HeaderLayout, 하단 MR/AR/악보재생 transport, 우측 제출/Feedback 영역은 유지하고,
+      중앙 MusicXML 악보 표시 방식만 변경한다.
+    </p>
+
+    <h2>변경 전 / 변경 후</h2>
+    <div class="grid">
+      <section class="card">
+        <header>
+          <h3>변경 전: 전체 페이지 세로 나열</h3>
+        </header>
+        <div class="body">
+          <div class="workspace" aria-label="변경 전 와이어프레임">
+            <aside class="left">Number 목록 유지</aside>
+            <section class="center">
+              <div class="score-head">
+                <span>MusicXML 악보</span>
+                <span>1 / 70</span>
+              </div>
+              <div class="scroll-score">
+                <div class="long-page" aria-label="여러 악보 페이지가 길게 이어지는 상태"></div>
+              </div>
+              <div class="transport">MR / AR / 악보재생 transport 유지</div>
+            </section>
+            <aside class="right">제출 / Feedback 유지</aside>
+          </div>
+          <ul>
+            <li>OSMD가 만든 페이지들이 모두 세로로 쌓여 스크롤이 매우 길어진다.</li>
+            <li>A4 종이 한 장의 높이가 중앙 영역보다 커서 악보가 과하게 크게 보인다.</li>
+            <li>상단 페이지 버튼이 있어도 실제 화면에는 다음 페이지들이 계속 이어져 보인다.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card">
+        <header>
+          <h3>변경 후: A4 한 페이지 고정 + 페이지 전환</h3>
+        </header>
+        <div class="body">
+          <div class="workspace" aria-label="변경 후 와이어프레임">
+            <aside class="left">Number 목록 유지</aside>
+            <section class="center">
+              <div class="score-head">
+                <span>MusicXML 악보</span>
+                <span class="pager">
+                  <button type="button">이전</button>
+                  <span>1 / 70</span>
+                  <button type="button">다음</button>
+                </span>
+              </div>
+              <div class="fixed-score">
+                <div class="a4-page" aria-label="중앙 영역에 고정된 A4 한 페이지"></div>
+              </div>
+              <div class="transport">MR / AR / 악보재생 transport 유지</div>
+            </section>
+            <aside class="right">제출 / Feedback 유지</aside>
+          </div>
+          <ul>
+            <li>중앙 악보 영역은 남은 높이 안에서 A4 비율을 유지한다.</li>
+            <li>한 번에 현재 페이지 하나만 보이고, 나머지 페이지는 잘라서 숨긴다.</li>
+            <li>다음/이전 페이지 버튼으로 OSMD 페이지를 전환한다.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <h2>수정 대상</h2>
+    <ul>
+      <li><strong>ScoreViewer</strong>: OSMD 페이지 중 현재 페이지 외에는 `display: none`으로 숨긴다.</li>
+      <li><strong>ScoreViewer A4 frame</strong>: `height: 100%`, `aspect-ratio: 210 / 297`, `overflow: hidden` 기준으로 중앙 영역 안에 맞춘다.</li>
+      <li><strong>PracticeStudioLayout</strong>: 중앙 MusicXML 영역의 높이를 하단 transport 위에서 고정하고, 내부 긴 스크롤을 제거한다.</li>
+      <li><strong>ScorePager</strong>: 기존 이전/다음 페이지 버튼은 유지하며 실제 표시 페이지와 연결한다.</li>
+    </ul>
+
+    <h2>유지되는 요소</h2>
+    <ul>
+      <li>좌측 Number 목록 위치와 역할은 유지한다.</li>
+      <li>우측 제출 상태, 녹음 Take 목록, Feedback 표시 방식은 유지한다.</li>
+      <li>하단 MR/AR/악보재생 transport와 Recording timeline 위치는 유지한다.</li>
+      <li>MusicXML 렌더링 방식은 OSMD를 계속 사용한다.</li>
+    </ul>
+
+    <div class="warn">
+      주의: 한 페이지에 들어가는 마디 수 자체는 MusicXML/OSMD engraving 설정의 영향을 받는다.
+      이번 변경은 먼저 “한 화면에 A4 한 장만 보이게 잘라내는 것”에 집중하고,
+      마디 밀도 조정은 다음 단계에서 별도 승인 후 진행하는 것이 안전하다.
+    </div>
+
+    <div class="decision">
+      추천 승인안: 변경 후 방식으로 진행한다. 즉, 중앙 악보는 A4 한 장 높이로 고정하고,
+      현재 페이지 외 페이지는 숨긴 뒤 이전/다음 버튼으로 넘기도록 구현한다.
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Musical Studio UI 변경 제안 - MR/AR 재생 안정화 1단계</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef2f7;
+      --panel: #ffffff;
+      --line: #cbd5e1;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --teal: #0f766e;
+      --blue: #2563eb;
+      --rose: #be123c;
+      --amber: #b45309;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-top: 28px;
+      font-size: 18px;
+    }
+
+    h3 {
+      font-size: 14px;
+    }
+
+    .lead {
+      margin-top: 8px;
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .card header {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      background: #f8fafc;
+    }
+
+    .card .body {
+      padding: 14px;
+    }
+
+    .transport {
+      border: 1px solid var(--line);
+      background: white;
+      padding: 12px;
+    }
+
+    .transport-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .source-tabs {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 1fr);
+      overflow: hidden;
+      width: 184px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .source-tabs span {
+      display: grid;
+      place-items: center;
+      border-right: 1px solid var(--line);
+      color: #334155;
+    }
+
+    .source-tabs span:last-child {
+      border-right: 0;
+    }
+
+    .source-tabs .active {
+      background: var(--teal);
+      color: white;
+    }
+
+    .meta {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .button {
+      display: grid;
+      min-width: 32px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .button.primary {
+      border-color: #14b8a6;
+      background: #ccfbf1;
+      color: #134e4a;
+    }
+
+    .lanes {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .lane {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr) 96px;
+      gap: 10px;
+      align-items: center;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .track {
+      position: relative;
+      height: 22px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: #f1f5f9;
+    }
+
+    .track .fill {
+      height: 100%;
+      width: 36%;
+      background: #99f6e4;
+    }
+
+    .track .record-fill {
+      height: 100%;
+      width: 16%;
+      background: #fecdd3;
+    }
+
+    .seek-track {
+      position: relative;
+      height: 34px;
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+      background:
+        linear-gradient(to right, #0f766e 0 37%, #dbeafe 37% 100%);
+    }
+
+    .seek-track::before {
+      content: "";
+      position: absolute;
+      inset: 7px 8px;
+      border-radius: 999px;
+      background:
+        repeating-linear-gradient(
+          to right,
+          rgb(15 23 42 / 0.18) 0,
+          rgb(15 23 42 / 0.18) 1px,
+          transparent 1px,
+          transparent 44px
+        );
+    }
+
+    .thumb {
+      position: absolute;
+      top: 4px;
+      left: calc(37% - 9px);
+      width: 18px;
+      height: 24px;
+      border: 2px solid #064e3b;
+      border-radius: 999px;
+      background: white;
+      box-shadow: 0 3px 9px rgb(15 23 42 / 0.24);
+    }
+
+    .playhead {
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      left: 37%;
+      width: 2px;
+      background: #0f172a;
+    }
+
+    .time {
+      text-align: right;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .note {
+      margin-top: 12px;
+      border-left: 4px solid var(--teal);
+      background: #f0fdfa;
+      padding: 10px 12px;
+      color: #134e4a;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .list li {
+      margin-top: 6px;
+    }
+
+    .scope {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .scope-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      padding: 12px;
+    }
+
+    .tag {
+      display: inline-block;
+      border-radius: 999px;
+      background: #e0f2fe;
+      padding: 3px 8px;
+      color: #075985;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 760px) {
+      .grid,
+      .scope {
+        grid-template-columns: 1fr;
+      }
+
+      .transport-top,
+      .lane {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        justify-content: flex-start;
+      }
+
+      .time {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>MR/AR 재생 안정화 1단계 제안</h1>
+    <p class="lead">
+      목표는 현재 구현된 HTMLAudio 기반을 유지하면서, MR/AR가 실제로 재생되는지 명확히 보이고 사용자가 현재 위치를 클릭하거나 드래그해서 이동할 수 있는 트랙 UX를 먼저 완성하는 것입니다.
+    </p>
+
+    <h2>변경 전 / 변경 후</h2>
+    <div class="grid">
+      <section class="card">
+        <header>
+          <h3>변경 전: 진행 막대는 있지만 조작 불가</h3>
+        </header>
+        <div class="body">
+          <div class="transport">
+            <div class="transport-top">
+              <div>
+                <div class="source-tabs">
+                  <span class="active">MR</span>
+                  <span>AR</span>
+                  <span>악보재생</span>
+                </div>
+                <div class="meta">
+                  <span>MR · SONG05_MR.mp3</span>
+                  <span>00:36 / 01:38</span>
+                </div>
+              </div>
+              <div class="controls">
+                <span class="button">-10</span>
+                <span class="button primary">▶</span>
+                <span class="button">Ⅱ</span>
+                <span class="button">■</span>
+                <span class="button">+10</span>
+              </div>
+            </div>
+            <div class="lanes">
+              <div class="lane">
+                <span>MR Track</span>
+                <div class="track"><div class="fill"></div></div>
+                <span class="time">00:36 / 01:38</span>
+              </div>
+              <div class="lane">
+                <span>Recording</span>
+                <div class="track"><div class="record-fill"></div></div>
+                <span class="time">00:15 / 01:38</span>
+              </div>
+            </div>
+          </div>
+          <ul class="list">
+            <li>MR Track이 단순 색상 바여서 사용자가 클릭하거나 끌 수 없습니다.</li>
+            <li>현재 재생 위치가 playhead로 분명하게 보이지 않습니다.</li>
+            <li>MR/AR 파일이 없거나 로딩 전일 때 조작 가능 여부가 덜 명확합니다.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card">
+        <header>
+          <h3>변경 후: 재생 위치 표시 + 드래그 seek</h3>
+        </header>
+        <div class="body">
+          <div class="transport">
+            <div class="transport-top">
+              <div>
+                <div class="source-tabs">
+                  <span class="active">MR</span>
+                  <span>AR</span>
+                  <span>악보재생</span>
+                </div>
+                <div class="meta">
+                  <span>MR · SONG05_MR.mp3</span>
+                  <span>오디오 준비됨</span>
+                </div>
+              </div>
+              <div class="controls">
+                <span class="button">-10</span>
+                <span class="button primary">▶</span>
+                <span class="button">Ⅱ</span>
+                <span class="button">■</span>
+                <span class="button">+10</span>
+              </div>
+            </div>
+            <div class="lanes">
+              <div class="lane">
+                <span>MR Track</span>
+                <div class="seek-track" aria-hidden="true">
+                  <div class="playhead"></div>
+                  <div class="thumb"></div>
+                </div>
+                <span class="time">00:36 / 01:38</span>
+              </div>
+              <div class="lane">
+                <span>Recording</span>
+                <div class="track"><div class="record-fill"></div></div>
+                <span class="time">00:15 / 01:38</span>
+              </div>
+            </div>
+          </div>
+          <ul class="list">
+            <li>MR/AR 선택 시 같은 seek UI를 사용하고, 현재 선택 소스의 실제 시간을 표시합니다.</li>
+            <li>트랙을 클릭하거나 thumb를 드래그하면 <strong>audio.currentTime</strong>이 즉시 이동합니다.</li>
+            <li>Recording lane은 이번 단계에서 시간축 정렬만 유지하고, waveform은 다음 단계로 둡니다.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <h2>1단계 구현 범위</h2>
+    <div class="scope">
+      <section class="scope-card">
+        <span class="tag">우선 적용</span>
+        <h3 style="margin-top: 8px;">MR/AR 재생 확인</h3>
+        <ul class="list">
+          <li>MR/AR 선택 시 연결된 파일명, 준비 상태, 현재 시간/전체 시간을 명확히 표시합니다.</li>
+          <li>재생/일시정지/정지/10초 이동은 현재 선택한 MR 또는 AR 오디오에만 적용합니다.</li>
+        </ul>
+      </section>
+      <section class="scope-card">
+        <span class="tag">우선 적용</span>
+        <h3 style="margin-top: 8px;">Interactive MR Track</h3>
+        <ul class="list">
+          <li>기존 passive bar를 접근 가능한 range slider 기반 seek bar로 바꿉니다.</li>
+          <li>played 구간, playhead, thumb 색상을 분리해서 현재 위치를 한눈에 보이게 합니다.</li>
+        </ul>
+      </section>
+      <section class="scope-card">
+        <span class="tag">다음 단계</span>
+        <h3 style="margin-top: 8px;">녹음 파형/동기화</h3>
+        <ul class="list">
+          <li>Recording lane은 이번 단계에서 유지하되, 실제 waveform과 녹음 seek는 녹음 안정화 단계에서 진행합니다.</li>
+          <li>장치 선택/모니터링은 기존 접힘 패널을 유지합니다.</li>
+        </ul>
+      </section>
+    </div>
+
+    <h2>검증 기준</h2>
+    <ul class="list">
+      <li>MR 파일이 있는 넘버에서 MR 탭을 선택하고 재생하면 시간이 증가해야 합니다.</li>
+      <li>AR 파일이 있는 넘버에서 AR 탭을 선택하고 재생하면 같은 컨트롤로 재생되어야 합니다.</li>
+      <li>seek bar를 클릭/드래그하면 표시 시간이 바뀌고, 실제 오디오 위치도 이동해야 합니다.</li>
+      <li>MR/AR 파일이 없는 넘버에서는 재생/seek 컨트롤이 비활성화되어야 합니다.</li>
+      <li>기존 좌측 넘버 목록, 중앙 악보 A4 영역, 우측 제출/피드백 패널 레이아웃은 변경하지 않습니다.</li>
+    </ul>
+
+    <p class="note">
+      추천 진행: 이 제안대로 승인되면 테스트를 먼저 추가하고, `PracticeTransport` 내부의 MR/AR 오디오 상태와 `TimelineTrack`만 좁게 수정하겠습니다. 악보 재생, 녹음 저장, 피드백 목록 UI는 이번 단계에서 구조 변경하지 않습니다.
+    </p>
+  </main>
+</body>
+</html>

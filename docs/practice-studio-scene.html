@@ -1,0 +1,1160 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Practice Studio Scene Prototype</title>
+  <style>
+    :root {
+      --bg: #edf1f5;
+      --panel: #ffffff;
+      --panel-soft: #f7f9fc;
+      --line: #cfd7e3;
+      --line-strong: #9aa8bc;
+      --text: #172033;
+      --muted: #667085;
+      --blue: #1d4ed8;
+      --teal: #0f766e;
+      --amber: #a15c07;
+      --red: #be123c;
+      --green: #15803d;
+      --track: #e7edf5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      font-size: 13px;
+    }
+
+    button,
+    select,
+    input {
+      font: inherit;
+    }
+
+    button,
+    select {
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 56px 1fr;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfe;
+    }
+
+    .brand {
+      min-width: 0;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 17px;
+      line-height: 1.1;
+    }
+
+    .brand span,
+    .hint,
+    .code {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .member-picker {
+      display: grid;
+      grid-template-columns: auto 190px;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .member-picker label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .member-picker select,
+    .select {
+      height: 30px;
+      min-width: 0;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      color: var(--text);
+      padding: 0 8px;
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(560px, 1fr) 378px;
+      gap: 10px;
+      padding: 10px;
+      min-height: 0;
+    }
+
+    .panel {
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .panel-head {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-soft);
+      font-weight: 900;
+    }
+
+    .number-list,
+    .workspace,
+    .side {
+      height: calc(100vh - 76px);
+      min-height: 0;
+    }
+
+    .number-list,
+    .side {
+      overflow: auto;
+    }
+
+    .number-row {
+      width: 100%;
+      min-height: 45px;
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      padding: 5px 9px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      text-align: left;
+    }
+
+    .number-row:hover,
+    .number-row.active {
+      background: #eaf3ff;
+    }
+
+    .number-row.active {
+      box-shadow: inset 3px 0 0 var(--blue);
+    }
+
+    .title {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+
+    .chips {
+      display: flex;
+      gap: 3px;
+      margin-top: 3px;
+      overflow: hidden;
+    }
+
+    .chip,
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      height: 18px;
+      padding: 0 5px;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .chip.on,
+    .badge.on {
+      border-color: #9bd7c8;
+      background: #e6f6f1;
+      color: var(--teal);
+    }
+
+    .chip.warn,
+    .badge.warn {
+      border-color: #f5c27a;
+      background: #fff6e6;
+      color: var(--amber);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-rows: auto minmax(230px, 1fr) auto;
+      overflow: hidden;
+    }
+
+    .now {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .now h1 {
+      margin: 0 0 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 21px;
+      line-height: 1.15;
+    }
+
+    .now p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      align-content: start;
+      gap: 4px;
+    }
+
+    .musicxml-view {
+      min-height: 0;
+      padding: 10px;
+      overflow: auto;
+      background: #f9fbfd;
+    }
+
+    .musicxml-paper {
+      min-height: 340px;
+      border: 1px solid var(--line-strong);
+      background:
+        repeating-linear-gradient(#fff 0 30px, #f7f9fc 31px),
+        #fff;
+      padding: 18px;
+      box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+    }
+
+    .musicxml-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #111827;
+      font-weight: 900;
+    }
+
+    .musicxml-empty {
+      min-height: 250px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed var(--line-strong);
+      background: #fbfcfe;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .musicxml-meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .musicxml-meta div {
+      min-width: 0;
+      padding: 7px;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .musicxml-meta strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .musicxml-status {
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      word-break: break-all;
+    }
+
+    .musicxml-error {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #fecdd3;
+      background: #fff1f2;
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .musicxml-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .file-button {
+      position: relative;
+      display: inline-grid;
+      place-items: center;
+      height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 900;
+      overflow: hidden;
+    }
+
+    .file-button input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .staff {
+      display: grid;
+      gap: 15px;
+    }
+
+    .measure {
+      position: relative;
+      height: 52px;
+      border-top: 2px solid #111827;
+      border-bottom: 2px solid #111827;
+      background: repeating-linear-gradient(to bottom, transparent 0 10px, rgba(17, 24, 39, 0.42) 11px 12px);
+    }
+
+    .measure::before,
+    .measure::after {
+      content: "";
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      width: 2px;
+      background: #111827;
+    }
+
+    .measure::before { left: 22%; }
+    .measure::after { right: 28%; }
+
+    .note-dot {
+      position: absolute;
+      width: 12px;
+      height: 9px;
+      border-radius: 50%;
+      background: #111827;
+      transform: rotate(-16deg);
+    }
+
+    .transport {
+      border-top: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .transport-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .transport-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 5px;
+    }
+
+    .transport-buttons button {
+      width: 32px;
+      height: 30px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      padding: 0;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .transport-buttons .record {
+      width: 38px;
+      font-size: 11px;
+    }
+
+    .small-button {
+      height: 30px;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      padding: 0 8px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .transport-buttons .play {
+      border-color: #8dd0c4;
+      background: #e6f6f1;
+      color: var(--teal);
+    }
+
+    .transport-buttons .record {
+      border-color: #fecdd3;
+      background: #fff1f2;
+      color: var(--red);
+    }
+
+    .time {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 5px;
+      padding: 8px 10px 10px;
+    }
+
+    .track {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+    }
+
+    .track-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .track-bar {
+      position: relative;
+      height: 24px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--track);
+    }
+
+    .track-bar .progress {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 38%;
+      background: rgba(15, 118, 110, 0.18);
+      border-right: 2px solid var(--teal);
+    }
+
+    .wave {
+      position: absolute;
+      inset: 0;
+      opacity: 0.9;
+      background:
+        linear-gradient(90deg, transparent 0 8px, rgba(29, 78, 216, 0.38) 9px 12px, transparent 13px 21px),
+        linear-gradient(90deg, transparent 0 18px, rgba(29, 78, 216, 0.26) 19px 24px, transparent 25px 34px);
+      background-size: 34px 100%, 42px 100%;
+    }
+
+    .record-wave {
+      background:
+        linear-gradient(90deg, transparent 0 10px, rgba(190, 18, 60, 0.45) 11px 15px, transparent 16px 25px),
+        linear-gradient(90deg, transparent 0 22px, rgba(190, 18, 60, 0.25) 23px 29px, transparent 30px 42px);
+      background-size: 38px 100%, 46px 100%;
+    }
+
+    .device-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding: 9px 10px;
+    }
+
+    .device-field {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .device-field label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .device-field input[type="range"] {
+      width: 100%;
+    }
+
+    .side {
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .card h2 {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-soft);
+      font-size: 13px;
+    }
+
+    .card-body {
+      padding: 9px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr);
+      gap: 5px 8px;
+      font-size: 12px;
+    }
+
+    .kv dt {
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .kv dd {
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+
+    .take {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 7px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      background: #fbfcfe;
+    }
+
+    .take.selected {
+      border-color: #93c5fd;
+      background: #eff6ff;
+    }
+
+    .take-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 900;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 5px;
+    }
+
+    .comment {
+      margin-bottom: 7px;
+      padding: 8px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      font-size: 12px;
+    }
+
+    .comment strong {
+      color: var(--blue);
+    }
+
+    .empty-state {
+      padding: 14px;
+      color: var(--muted);
+      text-align: center;
+      border: 1px dashed var(--line-strong);
+      background: #fbfcfe;
+      font-weight: 800;
+    }
+
+    @media (max-width: 1180px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .number-list,
+      .workspace,
+      .side {
+        height: auto;
+      }
+
+      .device-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <strong>Practice Studio</strong>
+        <span>Fanletter DB Scene · static HTML prototype</span>
+      </div>
+      <div class="member-picker">
+        <label for="memberSelect">Member(NickName)</label>
+        <select id="memberSelect" aria-label="Member NickName 선택"></select>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="panel">
+        <div class="panel-head">
+          <span>Number 목록</span>
+          <small>local DB 22 rows</small>
+        </div>
+        <div id="numberList" class="number-list"></div>
+      </aside>
+
+      <main class="panel workspace">
+        <section class="now">
+          <div>
+            <h1 id="activeTitle">SONG07_거짓말이아니야</h1>
+            <p id="activeMeta">MusicXML · MR · Recording lanes · test member picker</p>
+          </div>
+          <div class="status-grid">
+            <span id="musicxmlBadge" class="badge">MusicXML</span>
+            <span id="midiBadge" class="badge">MIDI_ALL</span>
+            <span id="mrBadge" class="badge">MR</span>
+            <span id="arBadge" class="badge">AR</span>
+          </div>
+        </section>
+
+        <section id="musicxmlView" class="musicxml-view" aria-label="MusicXML 악보 Viewer"></section>
+
+        <section class="transport" aria-label="MR playback and recording controls">
+          <div class="transport-row">
+            <div>
+              <div class="track-bar">
+                <span class="wave"></span>
+                <span class="progress"></span>
+              </div>
+              <div class="time"><span>01:12</span><span id="duration">03:18</span></div>
+            </div>
+            <div class="transport-buttons" aria-label="MR transport controls">
+              <button type="button" title="10초 전" aria-label="10초 전">↶10</button>
+              <button class="play" type="button" title="재생" aria-label="재생">▶</button>
+              <button type="button" title="일시정지" aria-label="일시정지">⏸</button>
+              <button type="button" title="정지" aria-label="정지">■</button>
+              <button type="button" title="10초 후" aria-label="10초 후">10↷</button>
+              <button class="record" type="button" title="녹음 시작" aria-label="녹음 시작">REC</button>
+            </div>
+          </div>
+
+          <div class="timeline">
+            <div class="track">
+              <span class="track-label">MR Tracker</span>
+              <div class="track-bar">
+                <span class="wave"></span>
+                <span class="progress"></span>
+              </div>
+            </div>
+            <div class="track">
+              <span class="track-label">Recording</span>
+              <div class="track-bar">
+                <span class="wave record-wave"></span>
+                <span class="progress"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="device-row">
+            <div class="device-field">
+              <label for="mrVolume">MR volume</label>
+              <input id="mrVolume" type="range" value="72">
+            </div>
+            <div class="device-field">
+              <label for="recordingVolume">Recording volume</label>
+              <input id="recordingVolume" type="range" value="62">
+            </div>
+            <div class="device-field">
+              <label for="micSelect">Microphone</label>
+              <select id="micSelect" class="select">
+                <option>Built-in Microphone</option>
+                <option>USB Audio Interface</option>
+                <option>Bluetooth Headset Mic</option>
+              </select>
+            </div>
+            <div class="device-field">
+              <label for="outputSelect">Output</label>
+              <select id="outputSelect" class="select">
+                <option>Default Speaker</option>
+                <option>Headphones</option>
+                <option>USB Audio Interface</option>
+              </select>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="side">
+        <section class="card">
+          <h2>
+            <span>선택 Member</span>
+            <small class="hint">test용, 추후 로그인 대체</small>
+          </h2>
+          <div class="card-body">
+            <dl id="memberInfo" class="kv"></dl>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><span>선택 Number 파일</span></h2>
+          <div class="card-body">
+            <dl id="fileInfo" class="kv"></dl>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><span>제출 Recording</span></h2>
+          <div id="takes" class="card-body"></div>
+        </section>
+
+        <section class="card">
+          <h2><span>Feedback</span></h2>
+          <div id="feedback" class="card-body"></div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const numberAssetRoot = 'file:///E:/04.Musical/08.팬레터/01.넘버';
+
+    const numbers = [
+      { id: 1, title: 'SONG01_유고집', musicxml: '', ar: 'SONG01_AR.mp3', mr: 'SONG01_MR.mp3', midi: '' },
+      { id: 2, title: 'SONG02_그녀의탄생과죽음', musicxml: '', ar: 'SONG02_AR.mp3', mr: 'SONG02_MR.mp3', midi: '' },
+      { id: 3, title: 'SONG03_아무도모른다', musicxml: '', ar: 'SONG03_AR.mp3', mr: 'SONG03_MR.mp3', midi: '' },
+      { id: 4, title: 'SONG04_NUMBER7', musicxml: '', ar: 'SONG04_AR.mp3', mr: 'SONG04_MR.mp3', midi: '' },
+      { id: 5, title: 'SONG05_눈물이나', musicxml: '', ar: 'SONG05_AR.mp3', mr: 'SONG05_MR.mp3', midi: '' },
+      { id: 6, title: 'SONG06_그녀를만나면', musicxml: '', ar: 'SONG06_AR.mp3', mr: 'SONG06_MR.mp3', midi: '' },
+      { id: 7, title: 'SONG07_거짓말이아니야', musicxml: 'SONG07_MUSIC_SHEET.musicxml.xml', musicxmlUrl: 'file:///E:/04.Musical/08.팬레터/01.넘버/SONG07_거짓말이아니야/SONG07_MUSIC_SHEET.musicxml.xml', ar: 'SONG07_AR.mp3', mr: 'SONG07_MR.mp3', midi: 'SONG07_MIDI_ALL.mp3' },
+      { id: 8, title: 'SONG08_신인탄생', musicxml: '', ar: 'SONG08_AR.mp3', mr: 'SONG08_MR.mp3', midi: '' },
+      { id: 9, title: 'SONG09_글자그대로', musicxml: '', ar: 'SONG09_AR.mp3', mr: 'SONG09_MR.mp3', midi: '' },
+      { id: 10, title: 'SONG10_MUSE', musicxml: '', ar: 'SONG10_AR.mp3', mr: 'SONG10_MR.mp3', midi: '' },
+      { id: 11, title: 'SONG11_섬세한팬레터', musicxml: '', ar: 'SONG11_AR.mp3', mr: 'SONG11_MR.mp3', midi: '' },
+      { id: 12, title: 'SONG12_투서', musicxml: '', ar: 'SONG12_AR.mp3', mr: 'SONG12_MR.mp3', midi: '' },
+      { id: 13, title: 'SONG13_글자그대로Rep', musicxml: '', ar: 'SONG13_AR.mp3', mr: 'SONG13_MR.mp3', midi: '' },
+      { id: 14, title: 'SONG14_별이반짝이는시간', musicxml: '', ar: 'SONG14_AR.mp3', mr: 'SONG14_MR.mp3', midi: '' },
+      { id: 15, title: 'SONG15_생의반려', musicxml: '', ar: 'SONG15_AR.mp3', mr: 'SONG15_MR.mp3', midi: '' },
+      { id: 151, title: 'SONG15a_별이반짝이는시간Rep', musicxml: '', ar: 'SONG15a_AR.mp3', mr: 'SONG15a_MR.mp3', midi: '' },
+      { id: 16, title: 'SONG16_거울', musicxml: 'SONG16_MUSIC_SHEET.musicxml.xml', musicxmlUrl: 'file:///E:/04.Musical/08.팬레터/01.넘버/SONG16_거울/SONG16_MUSIC_SHEET.musicxml.xml', ar: 'SONG16_AR.mp3', mr: 'SONG16_MR.mp3', midi: '' },
+      { id: 17, title: 'SONG17_고백', musicxml: '', ar: 'SONG17_AR.mp3', mr: 'SONG17_MR.mp3', midi: '' },
+      { id: 18, title: 'SONG18_해진의편지', musicxml: '', ar: 'SONG18_AR.mp3', mr: 'SONG18_MR.mp3', midi: '' },
+      { id: 19, title: 'SONG19_내가죽었을때', musicxml: '', ar: 'SONG19_AR.mp3', mr: 'SONG19_MR.mp3', midi: '' },
+      { id: 20, title: 'SONG20_CURTAINCALL', musicxml: '', ar: '', mr: '', midi: '' },
+      { id: 99, title: 'SONG99_ETC', musicxml: '', ar: '', mr: 'SONG_ETC_MuseRep_MR.mp3', midi: '' }
+    ];
+
+    const members = [
+      { id: 1, nickname: '주언', type: 'player', castings: ['김환태'] },
+      { id: 2, nickname: '카일', type: 'player', castings: ['정세훈'] },
+      { id: 3, nickname: '기묘', type: 'player', castings: ['정세훈'] },
+      { id: 4, nickname: '재럼', type: 'player', castings: ['김해진'] },
+      { id: 5, nickname: '두기 이켄가', type: 'player', castings: ['김해진'] },
+      { id: 6, nickname: '듀이', type: 'player', castings: ['히카루'] },
+      { id: 7, nickname: '폴라리스', type: 'player', castings: ['히카루'] },
+      { id: 8, nickname: '까미', type: 'player', castings: ['이윤'] },
+      { id: 9, nickname: '종욱', type: 'player', castings: ['이윤'] },
+      { id: 10, nickname: '윤슬', type: 'player', castings: ['이태준'] },
+      { id: 11, nickname: '북구', type: 'player', castings: ['이태준'] },
+      { id: 12, nickname: '죠죠', type: 'player', castings: ['김수남'] },
+      { id: 13, nickname: '지예', type: 'player', castings: ['김수남'] },
+      { id: 14, nickname: '앙리', type: 'direction', castings: ['메인'] },
+      { id: 15, nickname: '도마', type: 'direction', castings: ['극본'] },
+      { id: 16, nickname: '에반', type: 'direction', castings: ['시각'] },
+      { id: 17, nickname: '레이', type: 'direction', castings: ['미정'] },
+      { id: 18, nickname: '머피', type: 'direction', castings: ['음향'] },
+      { id: 19, nickname: '타니', type: 'direction', castings: ['엔지니어'] },
+      { id: 20, nickname: '아리', type: 'direction', castings: ['운영'] },
+      { id: 21, nickname: '뇽뇽', type: 'direction', castings: ['미정'] }
+    ];
+
+    const works = [
+      { id: 1, numberId: 1, memberId: 6, casting: '히카루', fileName: 'take_03.wav', fileUrl: '/recordings/dewey/song01/take_03.wav' },
+      { id: 2, numberId: 1, memberId: 7, casting: '히카루', fileName: 'take_01.wav', fileUrl: '/recordings/polaris/song01/take_01.wav' }
+    ];
+
+    const comments = [
+      { id: 1, workId: 1, authorId: 14, text: '첫 호흡은 안정적입니다. 12마디 전 자음 타이밍을 더 선명하게 맞춰주세요.' },
+      { id: 2, workId: 1, authorId: 19, text: '후렴 에너지는 좋습니다. 마지막 음은 조금 더 가볍게 정리해보면 좋겠습니다.' }
+    ];
+
+    let activeNumberId = 7;
+    let activeMemberId = 6;
+    let activeWorkId = null;
+    let musicxmlLoadToken = 0;
+
+    const el = {
+      memberSelect: document.getElementById('memberSelect'),
+      numberList: document.getElementById('numberList'),
+      activeTitle: document.getElementById('activeTitle'),
+      activeMeta: document.getElementById('activeMeta'),
+      musicxmlBadge: document.getElementById('musicxmlBadge'),
+      midiBadge: document.getElementById('midiBadge'),
+      mrBadge: document.getElementById('mrBadge'),
+      arBadge: document.getElementById('arBadge'),
+      musicxmlView: document.getElementById('musicxmlView'),
+      memberInfo: document.getElementById('memberInfo'),
+      fileInfo: document.getElementById('fileInfo'),
+      takes: document.getElementById('takes'),
+      feedback: document.getElementById('feedback')
+    };
+
+    function codeLabel(id) {
+      if (id === 151) return '15a';
+      if (id === 99) return '99';
+      return String(id).padStart(2, '0');
+    }
+
+    function chip(label, exists) {
+      return `<span class="chip ${exists ? 'on' : 'warn'}">${label}</span>`;
+    }
+
+    function badge(node, label, exists) {
+      node.textContent = exists ? `${label} 있음` : `${label} 없음`;
+      node.className = `badge ${exists ? 'on' : 'warn'}`;
+    }
+
+    function currentNumber() {
+      return numbers.find((number) => number.id === activeNumberId) ?? numbers[0];
+    }
+
+    function currentMember() {
+      return members.find((member) => member.id === activeMemberId) ?? members[0];
+    }
+
+    function memberName(memberId) {
+      return members.find((member) => member.id === memberId)?.nickname ?? '-';
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function resolveMusicXMLUrl(number) {
+      if (number.musicxmlUrl) return encodeURI(number.musicxmlUrl);
+      if (!number.musicxml) return '';
+      return encodeURI(`${numberAssetRoot}/${number.title}/${number.musicxml}`);
+    }
+
+    function xmlText(doc, selector, fallback = '-') {
+      const value = doc.querySelector(selector)?.textContent?.trim();
+      return value || fallback;
+    }
+
+    function parseMusicXMLDocument(xml) {
+      const doc = new DOMParser().parseFromString(xml, 'application/xml');
+      const parserError = doc.querySelector('parsererror');
+      if (parserError) throw new Error('MusicXML XML parse failed');
+
+      const parts = [...doc.querySelectorAll('score-part')].map((part, index) => ({
+        id: part.getAttribute('id') || `P${index + 1}`,
+        name: part.querySelector('part-name')?.textContent?.trim() || `Part ${index + 1}`
+      }));
+
+      return {
+        title: xmlText(doc, 'work-title', '-'),
+        movement: xmlText(doc, 'movement-title', '-'),
+        parts,
+        measures: doc.querySelectorAll('part measure').length,
+        divisions: xmlText(doc, 'divisions', '-')
+      };
+    }
+
+    function renderParsedMusicXML(number, sourceLabel, parsed) {
+      const title = parsed.title === '-' ? number.title : parsed.title;
+      const partPreview = parsed.parts.slice(0, 6).map((part) => `${escapeHtml(part.id)} · ${escapeHtml(part.name)}`).join('<br>') || '-';
+
+      el.musicxmlView.innerHTML = `
+        <div class="musicxml-paper">
+          <div class="musicxml-title">
+            <span>${escapeHtml(title)} · MusicXML loaded</span>
+            <span class="code">${escapeHtml(number.musicxml || sourceLabel)}</span>
+          </div>
+          <div class="musicxml-status">실제 MusicXML 파일을 읽었습니다. Source: ${escapeHtml(sourceLabel)}</div>
+          <div class="musicxml-meta">
+            <div><strong>movement</strong>${escapeHtml(parsed.movement)}</div>
+            <div><strong>parts</strong>${parsed.parts.length}</div>
+            <div><strong>measures</strong>${parsed.measures}</div>
+            <div><strong>divisions</strong>${escapeHtml(parsed.divisions)}</div>
+          </div>
+          <div class="musicxml-status"><strong>Number parts</strong><br>${partPreview}</div>
+          <div class="staff" aria-hidden="true">
+            <div class="measure"><span class="note-dot" style="left:8%;top:20px"></span><span class="note-dot" style="left:32%;top:13px"></span><span class="note-dot" style="left:56%;top:27px"></span><span class="note-dot" style="left:78%;top:18px"></span></div>
+            <div class="measure"><span class="note-dot" style="left:12%;top:25px"></span><span class="note-dot" style="left:38%;top:18px"></span><span class="note-dot" style="left:63%;top:12px"></span><span class="note-dot" style="left:86%;top:29px"></span></div>
+            <div class="measure"><span class="note-dot" style="left:18%;top:16px"></span><span class="note-dot" style="left:44%;top:24px"></span><span class="note-dot" style="left:70%;top:14px"></span></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function attachMusicXMLFilePicker(number) {
+      const input = document.getElementById('musicxmlFileInput');
+      if (!input) return;
+
+      input.addEventListener('change', async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        try {
+          const xml = await file.text();
+          renderParsedMusicXML(number, file.name, parseMusicXMLDocument(xml));
+        } catch (error) {
+          el.musicxmlView.querySelector('.musicxml-error').textContent = `선택한 MusicXML 파일을 읽지 못했습니다. 오류: ${error.message}`;
+        }
+      });
+    }
+
+    function setupMemberSelect() {
+      el.memberSelect.innerHTML = members.map((member) => (
+        `<option value="${member.id}">${member.nickname} · ${member.type} · ${member.castings.join(', ')}</option>`
+      )).join('');
+      el.memberSelect.value = String(activeMemberId);
+      el.memberSelect.addEventListener('change', () => {
+        activeMemberId = Number(el.memberSelect.value);
+        activeWorkId = null;
+        render();
+      });
+    }
+
+    function renderNumberList() {
+      el.numberList.innerHTML = numbers.map((number) => `
+        <button class="number-row ${number.id === activeNumberId ? 'active' : ''}" type="button" data-id="${number.id}">
+          <span class="code">${codeLabel(number.id)}</span>
+          <span>
+            <span class="title">${number.title}</span>
+            <span class="chips">
+              ${chip('MusicXML', number.musicxml)}
+              ${chip('MR', number.mr)}
+              ${chip('MIDI', number.midi)}
+            </span>
+          </span>
+        </button>
+      `).join('');
+
+      document.querySelectorAll('.number-row').forEach((button) => {
+        button.addEventListener('click', () => {
+          activeNumberId = Number(button.dataset.id);
+          activeWorkId = null;
+          render();
+        });
+      });
+    }
+
+    async function renderMusicXML(number) {
+      const token = ++musicxmlLoadToken;
+
+      if (!number.musicxml) {
+        el.musicxmlView.innerHTML = `
+          <div class="musicxml-empty">
+            <div>
+              <div>MusicXML 미등록</div>
+              <div class="hint">이 Number는 현재 악보 파일이 없어 MR/Recording 중심으로 연습 Scene을 표시합니다.</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const url = resolveMusicXMLUrl(number);
+      el.musicxmlView.innerHTML = `
+        <div class="musicxml-paper">
+          <div class="musicxml-title">
+            <span>${escapeHtml(number.title)} · MusicXML loading</span>
+            <span class="code">${escapeHtml(number.musicxml)}</span>
+          </div>
+          <div class="musicxml-status">${escapeHtml(url)} 파일을 읽는 중입니다.</div>
+          <div class="musicxml-empty">MusicXML 파일 확인 중</div>
+        </div>
+      `;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const xml = await response.text();
+        if (token !== musicxmlLoadToken) return;
+        renderParsedMusicXML(number, url, parseMusicXMLDocument(xml));
+      } catch (error) {
+        if (token !== musicxmlLoadToken) return;
+        el.musicxmlView.innerHTML = `
+          <div class="musicxml-paper">
+            <div class="musicxml-title">
+              <span>${escapeHtml(number.title)} · MusicXML read blocked</span>
+              <span class="code">${escapeHtml(number.musicxml)}</span>
+            </div>
+            <div class="musicxml-status">읽기 시도 경로: ${escapeHtml(url)}</div>
+            <div class="staff" aria-hidden="true">
+              <div class="measure"><span class="note-dot" style="left:8%;top:20px"></span><span class="note-dot" style="left:32%;top:13px"></span><span class="note-dot" style="left:56%;top:27px"></span><span class="note-dot" style="left:78%;top:18px"></span></div>
+              <div class="measure"><span class="note-dot" style="left:12%;top:25px"></span><span class="note-dot" style="left:38%;top:18px"></span><span class="note-dot" style="left:63%;top:12px"></span><span class="note-dot" style="left:86%;top:29px"></span></div>
+            </div>
+            <div class="musicxml-error">브라우저가 file:// MusicXML 읽기를 차단했거나 파일을 찾지 못했습니다. 정적 HTML에서는 아래 버튼으로 같은 MusicXML 파일을 직접 선택하면 FileReader로 읽을 수 있습니다. 실제 앱에서는 Next.js Route/API 또는 Supabase/Drive URL을 통해 OSMD로 렌더링해야 합니다. 오류: ${escapeHtml(error.message)}</div>
+            <div class="musicxml-actions">
+              <label class="file-button">
+                MusicXML 파일 선택
+                <input id="musicxmlFileInput" type="file" accept=".musicxml,.xml,.mxl,application/xml,text/xml">
+              </label>
+              <span class="hint">추천 파일: ${escapeHtml(number.musicxml)}</span>
+            </div>
+          </div>
+        `;
+        attachMusicXMLFilePicker(number);
+      }
+    }
+
+    function renderInfo(number, member) {
+      el.activeTitle.textContent = number.title;
+      el.activeMeta.textContent = `${member.nickname} · ${member.castings.join(', ')} · ${number.musicxml ? 'MusicXML 사용 가능' : 'MusicXML 미등록'} · ${number.midi ? 'MIDI_ALL 연습 가능' : 'MIDI_ALL 미등록'}`;
+
+      badge(el.musicxmlBadge, 'MusicXML', number.musicxml);
+      badge(el.midiBadge, 'MIDI_ALL', number.midi);
+      badge(el.mrBadge, 'MR', number.mr);
+      badge(el.arBadge, 'AR', number.ar);
+
+      el.memberInfo.innerHTML = `
+        <dt>nickname</dt><dd>${member.nickname}</dd>
+        <dt>type</dt><dd>${member.type}</dd>
+        <dt>casting</dt><dd>${member.castings.join(', ') || '-'}</dd>
+        <dt>note</dt><dd>test select · login 대체 예정</dd>
+      `;
+
+      el.fileInfo.innerHTML = `
+        <dt>MusicXML</dt><dd class="${number.musicxml ? '' : 'empty-state-inline'}">${number.musicxml || 'NULL'}</dd>
+        <dt>AR</dt><dd>${number.ar || 'NULL'}</dd>
+        <dt>MR</dt><dd>${number.mr || 'NULL'}</dd>
+        <dt>MIDI_ALL</dt><dd>${number.midi || 'NULL'}</dd>
+      `;
+    }
+
+    function renderTakes(number, member) {
+      const memberWorks = works.filter((work) => work.numberId === number.id && work.memberId === member.id);
+      if (!memberWorks.length) {
+        el.takes.innerHTML = '<div class="empty-state">선택 Member의 제출된 Recording 없음</div>';
+        activeWorkId = null;
+        return;
+      }
+
+      if (!activeWorkId || !memberWorks.some((work) => work.id === activeWorkId)) {
+        activeWorkId = memberWorks[0].id;
+      }
+
+      el.takes.innerHTML = memberWorks.map((work) => `
+        <div class="take ${work.id === activeWorkId ? 'selected' : ''}">
+          <div class="take-top">
+            <span>${work.fileName}</span>
+            <span class="code">${memberName(work.memberId)} · ${work.casting}</span>
+          </div>
+          <div class="button-row">
+            <button class="small-button" type="button">재생</button>
+            <button class="small-button" type="button" data-work-id="${work.id}">Feedback 보기</button>
+          </div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('[data-work-id]').forEach((button) => {
+        button.addEventListener('click', () => {
+          activeWorkId = Number(button.dataset.workId);
+          render();
+        });
+      });
+    }
+
+    function renderFeedback() {
+      if (!activeWorkId) {
+        el.feedback.innerHTML = '<div class="empty-state">Recording을 선택하면 Feedback이 표시됩니다.</div>';
+        return;
+      }
+
+      const related = comments.filter((comment) => comment.workId === activeWorkId);
+      if (!related.length) {
+        el.feedback.innerHTML = '<div class="empty-state">아직 Feedback 없음</div>';
+        return;
+      }
+
+      el.feedback.innerHTML = related.map((comment) => `
+        <article class="comment">
+          <strong>${memberName(comment.authorId)}</strong>
+          <div>${comment.text}</div>
+        </article>
+      `).join('');
+    }
+
+    function render() {
+      const number = currentNumber();
+      const member = currentMember();
+      renderNumberList();
+      renderMusicXML(number);
+      renderInfo(number, member);
+      renderTakes(number, member);
+      renderFeedback();
+    }
+
+    setupMemberSelect();
+    render();
+  </script>
+</body>
+</html>
