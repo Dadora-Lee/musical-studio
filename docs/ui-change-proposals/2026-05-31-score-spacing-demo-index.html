@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Score Spacing Demo Index</title>
+  <style>
+    :root {
+      --bg: #eef2f7;
+      --panel: #fff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #cbd5e1;
+      --blue: #2563eb;
+      --teal: #0f766e;
+      --violet: #7c3aed;
+      --amber: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    header {
+      margin-bottom: 16px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .card {
+      display: grid;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 16px;
+      min-height: 250px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+    .tag {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      min-height: 26px;
+      border-radius: 6px;
+      padding: 0 9px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .tag.a { background: #ecfdf5; color: var(--teal); border: 1px solid #99f6e4; }
+    .tag.b { background: #f5f3ff; color: var(--violet); border: 1px solid #ddd6fe; }
+    .tag.c { background: #fffbeb; color: var(--amber); border: 1px solid #fde68a; }
+    .selected {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.18), 0 10px 24px rgba(76, 29, 149, 0.1);
+    }
+    ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #334155;
+    }
+    li + li { margin-top: 4px; }
+    a.button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    a.button:hover {
+      background: #dbeafe;
+    }
+    .note {
+      margin-top: 16px;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      background: #eff6ff;
+      padding: 14px;
+      color: #1e3a8a;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid #dbe3ee;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f8fafc;
+      color: #334155;
+      font-size: 12px;
+    }
+    @media (max-width: 900px) {
+      main { padding: 14px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>MusicXML 마디 간격 Demo 선택</h1>
+      <p>실제 앱 적용 전에 3가지 악보 spacing 정책을 HTML demo로 비교합니다. 원하는 방향을 선택해주면 그 기준으로 변경 전/후 제안서를 만들고 구현 단계로 넘어가겠습니다.</p>
+    </header>
+
+    <section class="grid" aria-label="spacing demo options">
+      <article class="card">
+        <span class="tag a">추천</span>
+        <h2>A. 실제 악보형</h2>
+        <p>4마디/줄, 12~16마디/페이지를 유지하되 마디 폭은 가사와 음표 밀도에 맞춰 자연스럽게 둡니다.</p>
+        <ul>
+          <li>가독성 좋음</li>
+          <li>실제 악보 느낌 유지</li>
+          <li>마디 폭은 완전 동일하지 않음</li>
+        </ul>
+        <a class="button" href="./2026-05-31-score-spacing-demo-a-practical.html">Demo A 보기</a>
+      </article>
+
+      <article class="card selected">
+        <span class="tag b">연습 위치 우선</span>
+        <h2>B. 균등 연습형 - 선택됨</h2>
+        <p>한 줄을 4개 칸으로 나누어 마디 폭을 최대한 동일하게 맞춥니다.</p>
+        <ul>
+          <li>마디 위치 찾기 쉬움</li>
+          <li>피드백 기준 지정에 유리</li>
+          <li>가사 긴 마디는 압축될 수 있음</li>
+        </ul>
+        <a class="button" href="./2026-05-31-score-spacing-demo-b-uniform.html">Demo B 보기</a>
+        <a class="button" href="./2026-05-31-score-spacing-decision-b-uniform.html">결정 기록 보기</a>
+      </article>
+
+      <article class="card">
+        <span class="tag c">원본 우선</span>
+        <h2>C. 원본 보존형</h2>
+        <p>MusicXML 원본의 줄바꿈과 페이지 나눔을 최대한 존중합니다.</p>
+        <ul>
+          <li>원본 악보와 가장 가까움</li>
+          <li>페이지당 마디 수가 들쑥날쑥할 수 있음</li>
+          <li>앱 연습 UX와 맞추기 어려울 수 있음</li>
+        </ul>
+        <a class="button" href="./2026-05-31-score-spacing-demo-c-original.html">Demo C 보기</a>
+      </article>
+    </section>
+
+    <section class="note">
+      <strong>선택 기준:</strong>
+      Musical Studio의 1차 목표가 “배우가 MR/AR를 들으며 악보를 보고 녹음하고, 특정 위치에 피드백을 받는 것”이므로 B. 균등 연습형으로 진행하기로 결정했습니다. 이 결정은 피드백 위치 지정, 마디 단위 반복 연습, MR timeline과 악보 위치 매칭을 우선합니다.
+    </section>
+
+    <table>
+      <thead>
+        <tr>
+          <th>항목</th>
+          <th>A. 실제 악보형</th>
+          <th>B. 균등 연습형</th>
+          <th>C. 원본 보존형</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>마디 폭</td>
+          <td>자연 배치</td>
+          <td>최대한 균등</td>
+          <td>원본 기준</td>
+        </tr>
+        <tr>
+          <td>가독성</td>
+          <td>좋음</td>
+          <td>긴 가사 구간에서 낮아질 수 있음</td>
+          <td>원본 품질에 의존</td>
+        </tr>
+        <tr>
+          <td>피드백 위치 지정</td>
+          <td>좋음</td>
+          <td>가장 좋음</td>
+          <td>일관성이 낮을 수 있음</td>
+        </tr>
+        <tr>
+          <td>구현 리스크</td>
+          <td>낮음</td>
+          <td>중간</td>
+          <td>낮음</td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

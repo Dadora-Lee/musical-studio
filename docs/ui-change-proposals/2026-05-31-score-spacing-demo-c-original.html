@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Score Spacing Demo C - 원본 보존형</title>
+  <style>
+    :root {
+      --bg: #eef2f7;
+      --paper: #fff;
+      --ink: #111827;
+      --muted: #64748b;
+      --line: #cbd5e1;
+      --blue: #2563eb;
+      --accent: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      font-size: 13px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px 24px 12px;
+    }
+    h1 { margin: 0; font-size: 22px; letter-spacing: 0; }
+    p { margin: 6px 0 0; color: var(--muted); line-height: 1.5; }
+    a { color: var(--blue); font-weight: 700; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .badge {
+      border: 1px solid #fde68a;
+      border-radius: 6px;
+      background: #fffbeb;
+      color: var(--accent);
+      padding: 7px 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    main {
+      display: grid;
+      grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+      gap: 16px;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px 24px;
+    }
+    aside, .stage {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+    aside { padding: 14px; }
+    h2 { margin: 0 0 10px; font-size: 15px; }
+    ul { margin: 0; padding-left: 18px; line-height: 1.65; color: #334155; }
+    .stage {
+      min-height: 780px;
+      padding: 18px;
+      background: #dfe5ee;
+    }
+    .paper {
+      position: relative;
+      aspect-ratio: 210 / 297;
+      width: min(100%, 560px);
+      margin: 0 auto;
+      border: 1px solid #b8c2d0;
+      background: var(--paper);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+      padding: 48px 42px 38px;
+      overflow: hidden;
+    }
+    .title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .tempo {
+      position: absolute;
+      top: 88px;
+      left: 70px;
+      font-size: 12px;
+      color: #334155;
+    }
+    .system {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 30px;
+      align-items: stretch;
+    }
+    .system.one { grid-template-columns: 1.1fr 0.8fr 1.25fr; }
+    .system.two { grid-template-columns: 0.7fr 1.35fr 0.85fr 1.1fr 0.72fr; }
+    .system.three { grid-template-columns: 1.4fr 0.9fr 1.2fr; }
+    .system.four { grid-template-columns: 0.76fr 1.12fr 1.36fr 0.9fr; }
+    .measure {
+      position: relative;
+      min-height: 82px;
+      border-left: 2px solid #111827;
+      border-right: 1px solid #111827;
+      padding: 20px 6px 6px;
+    }
+    .staff {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 28px;
+      height: 32px;
+      background: repeating-linear-gradient(to bottom, #111827 0 1px, transparent 1px 7px);
+    }
+    .num {
+      position: absolute;
+      top: 2px;
+      left: 6px;
+      color: #475569;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .chord {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .lyric {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      text-align: center;
+      font-size: 10px;
+      color: #1f2937;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .notes {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 36px;
+      height: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .note {
+      width: 7px;
+      height: 6px;
+      border-radius: 50%;
+      background: #111827;
+      transform: rotate(-18deg);
+    }
+    .rest {
+      position: absolute;
+      top: 39px;
+      left: 50%;
+      width: 18px;
+      height: 5px;
+      transform: translateX(-50%);
+      background: #111827;
+    }
+    .comment {
+      margin-top: 14px;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      background: #fffbeb;
+      padding: 12px;
+      color: #78350f;
+      line-height: 1.55;
+    }
+    @media (max-width: 860px) {
+      header, main { padding-left: 14px; padding-right: 14px; }
+      main { grid-template-columns: 1fr; }
+      header { display: grid; }
+      .paper { width: 100%; padding: 42px 24px 34px; }
+      .system { gap: 6px; }
+      .lyric { font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Demo C - 원본 보존형</h1>
+      <p>MusicXML 원본의 줄바꿈, 페이지 나눔, 시스템 배치를 최대한 존중하는 방향입니다.</p>
+    </div>
+    <a class="badge" href="./2026-05-31-score-spacing-demo-index.html">비교 index로 돌아가기</a>
+  </header>
+  <main>
+    <aside>
+      <h2>사용 느낌</h2>
+      <ul>
+        <li>원본 제작자가 의도한 흐름과 가장 가까움</li>
+        <li>출력 악보와 비교하기 쉬움</li>
+        <li>페이지당 마디 수가 일정하지 않을 수 있음</li>
+        <li>앱 내 MR timeline과 시각적 매칭이 덜 규칙적임</li>
+      </ul>
+      <div class="comment">원본 악보 신뢰도가 높을 때 좋은 선택입니다. 다만 prototype에서 “A4 한 페이지당 12~16마디” 기준과 충돌할 수 있습니다.</div>
+    </aside>
+    <section class="stage" aria-label="원본 보존형 demo">
+      <article class="paper">
+        <div class="title">SONG07_거짓말이아니야</div>
+        <div class="tempo">♩ = 150</div>
+        <div class="system one">
+          <div class="measure"><span class="num">1</span><span class="chord">Bb</span><div class="staff"></div><div class="rest"></div><div class="lyric">VAMP</div></div>
+          <div class="measure"><span class="num">2</span><span class="chord">C</span><div class="staff"></div><div class="rest"></div><div class="lyric">VAMP</div></div>
+          <div class="measure"><span class="num">3</span><span class="chord">Gbmaj7</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i><i class="note"></i></div><div class="lyric">이제</div></div>
+        </div>
+        <div class="system two">
+          <div class="measure"><span class="num">4</span><span class="chord">F</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i></div><div class="lyric">돌이킬 수 없어</div></div>
+          <div class="measure"><span class="num">5</span><span class="chord">Bb</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i><i class="note"></i></div><div class="lyric">어설프면 안 돼</div></div>
+          <div class="measure"><span class="num">6</span><span class="chord">Gb</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i><i class="note"></i><i class="note"></i></div><div class="lyric">거짓을 말하는</div></div>
+          <div class="measure"><span class="num">7</span><span class="chord">Ebm7</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i></div><div class="lyric">가장 완벽한</div></div>
+          <div class="measure"><span class="num">8</span><span class="chord">F</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i><i class="note"></i></div><div class="lyric">방법</div></div>
+        </div>
+        <div class="system three">
+          <div class="measure"><span class="num">9</span><span class="chord">Bbm</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i></div><div class="lyric">자신을 속여라</div></div>
+          <div class="measure"><span class="num">10</span><span class="chord">Gbmaj7</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i><i class="note"></i></div><div class="lyric">넌 그저</div></div>
+          <div class="measure"><span class="num">11</span><span class="chord">F</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i><i class="note"></i><i class="note"></i></div><div class="lyric">나의 다른 이름이었지만</div></div>
+        </div>
+        <div class="system four">
+          <div class="measure"><span class="num">12</span><span class="chord">Bb</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i></div><div class="lyric">이젠</div></div>
+          <div class="measure"><span class="num">13</span><span class="chord">Gb</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i></div><div class="lyric">살아있는</div></div>
+          <div class="measure"><span class="num">14</span><span class="chord">Ab</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i><i class="note"></i></div><div class="lyric">사람인 거야</div></div>
+          <div class="measure"><span class="num">15</span><span class="chord">Bb</span><div class="staff"></div><div class="notes"><i class="note"></i><i class="note"></i><i class="note"></i><i class="note"></i></div><div class="lyric">나의 거짓을 믿자</div></div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

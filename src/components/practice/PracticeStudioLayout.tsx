@@ -174,6 +174,7 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
                 {activeScoreSource ? (
                   <ScoreViewer
                     source={scoreViewerSource ?? ''}
+                    title={activeNumber.title}
                     currentPage={currentPage}
                     onPageCountChange={handlePageCountChange}
                     onCurrentPageChange={handleCurrentScorePageChange}
@@ -370,12 +371,17 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
     setSource(nextSource);
   }
 
-  function handleSeek(nextTime: number) {
+  function handleSeek(nextTime: number, options: { play: boolean }) {
     if (source !== 'mr' && source !== 'ar') return;
     if (!sourceMeta.available) return;
     const nextAudioTime = clampTime(nextTime, effectiveAudioDuration);
     const audio = selectedAudio();
-    if (audio) audio.currentTime = nextAudioTime;
+    if (audio) {
+      audio.currentTime = nextAudioTime;
+      if (options.play && audio.paused) {
+        playAudioFromSeek(audio, () => setIsPlaying(true), () => setRecorderMessage('브라우저가 자동 재생을 막았습니다. 재생 버튼을 눌러주세요.'));
+      }
+    }
     setAudioTime(nextAudioTime);
   }
 
@@ -567,9 +573,9 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
                 </button>
               ))}
             </div>
-            <span className="min-w-0 truncate text-xs font-bold text-slate-500">{sourceMeta.label} · {sourceMeta.fileName}</span>
+            <span className="min-w-0 truncate text-xs text-slate-500">{sourceMeta.label} · {sourceMeta.fileName}</span>
           </div>
-          <div className="flex items-center justify-between gap-3 text-[11px] font-bold text-slate-500">
+          <div className="flex items-center justify-between gap-3 text-[11px] text-slate-500">
             <span>현재 {currentTime} / {duration}</span>
             <span>{sourceMeta.available ? recorderMessage : '선택한 오디오 파일이 아직 연결되지 않았습니다.'}</span>
           </div>
@@ -595,15 +601,16 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
           value={source === 'score' ? 0 : audioTime}
           max={effectiveAudioDuration}
           disabled={!sourceMeta.available || source === 'score'}
-          onSeek={handleSeek}
+          onPreviewSeek={(nextTime) => handleSeek(nextTime, { play: false })}
+          onCommitSeek={(nextTime) => handleSeek(nextTime, { play: true })}
         />
         <TimelineTrack label="Recording" progress={recordingProgress} tone="recording" time={`${formatTime(recordingTime)} / ${formatTime(effectiveAudioDuration || recordingTime)}`} />
       </div>
 
       <div className="mt-2 grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,260px)_auto] md:items-center">
-        <label className="grid grid-cols-[78px_minmax(0,1fr)] items-center gap-2 text-xs font-black text-slate-600">MR Volume<input aria-label="MR Volume" type="range" min="0" max="100" value={volume} onChange={(event) => setVolume(Number(event.target.value))} /></label>
-        <label className="grid grid-cols-[78px_minmax(0,1fr)] items-center gap-2 text-xs font-black text-slate-600">Monitor<input aria-label="Monitor Volume" type="range" min="0" max="100" value={monitorVolume} onChange={(event) => setMonitorVolume(Number(event.target.value))} /></label>
-        <details className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-600">
+        <label className="grid grid-cols-[78px_minmax(0,1fr)] items-center gap-2 text-xs text-slate-600">MR Volume<input aria-label="MR Volume" type="range" min="0" max="100" value={volume} onChange={(event) => setVolume(Number(event.target.value))} /></label>
+        <label className="grid grid-cols-[78px_minmax(0,1fr)] items-center gap-2 text-xs text-slate-600">Monitor<input aria-label="Monitor Volume" type="range" min="0" max="100" value={monitorVolume} onChange={(event) => setMonitorVolume(Number(event.target.value))} /></label>
+        <details className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-xs text-slate-600">
           <summary className="cursor-pointer">장치 선택</summary>
           <div className="mt-2 grid gap-2">
             <label className="grid gap-1">Microphone<select aria-label="Microphone" className="min-w-0 rounded border border-slate-300 bg-white px-2 py-1" value={selectedMicId} onChange={(event) => setSelectedMicId(event.target.value)}>{micDevices.length > 0 ? micDevices.map((device) => <option key={device.deviceId} value={device.deviceId}>{device.label}</option>) : <option value="">권한 요청 후 표시</option>}</select></label>
@@ -616,17 +623,42 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
   );
 }
 
-function SeekableTimelineTrack({ label, progress, time, value, max, disabled, onSeek }: { label: string; progress: number; time: string; value: number; max: number; disabled: boolean; onSeek: (value: number) => void }) {
+function SeekableTimelineTrack({
+  label,
+  progress,
+  time,
+  value,
+  max,
+  disabled,
+  onPreviewSeek,
+  onCommitSeek,
+}: {
+  label: string;
+  progress: number;
+  time: string;
+  value: number;
+  max: number;
+  disabled: boolean;
+  onPreviewSeek: (value: number) => void;
+  onCommitSeek: (value: number) => void;
+}) {
+  const isDraggingRef = useRef(false);
   const safeMax = Math.max(0, Math.round(max));
   const safeValue = clampTime(value, safeMax);
   const safeProgress = Math.min(100, Math.max(0, progress));
+  const progressValue = formatProgressForData(safeProgress);
+  const commitSeek = (nextValue: number) => {
+    isDraggingRef.current = false;
+    onCommitSeek(nextValue);
+  };
+
   return (
-    <div className="grid grid-cols-[82px_minmax(0,1fr)_92px] items-center gap-2 text-xs font-black text-slate-600">
+    <div className="grid grid-cols-[82px_minmax(0,1fr)_92px] items-center gap-2 text-xs text-slate-600">
       <span>{label}</span>
       <div className="relative grid h-8 items-center rounded-md border border-blue-200 bg-blue-50 px-2 shadow-inner">
-        <div className="pointer-events-none absolute inset-x-2 top-1/2 h-2 -translate-y-1/2 rounded-full bg-blue-100" />
-        <div className="pointer-events-none absolute left-2 top-1/2 h-2 -translate-y-1/2 rounded-full bg-emerald-400" style={{ width: `calc((100% - 16px) * ${safeProgress / 100})` }} />
-        <div className="pointer-events-none absolute top-1 bottom-1 w-0.5 rounded-full bg-slate-900" style={{ left: `calc(8px + (100% - 16px) * ${safeProgress / 100})` }} />
+        <div className="pointer-events-none absolute inset-x-2 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-blue-100" />
+        <div data-testid="active-audio-track-fill" data-progress={progressValue} className="pointer-events-none absolute left-2 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-gradient-to-r from-blue-600 to-emerald-500" style={{ width: `calc((100% - 16px) * ${safeProgress / 100})` }} />
+        <div data-testid="active-audio-track-playhead" data-progress={progressValue} className="pointer-events-none absolute top-1 bottom-1 w-[3px] rounded-full bg-slate-950" style={{ left: `calc(8px + (100% - 16px) * ${safeProgress / 100})` }} />
         <input
           aria-label={`${label} 위치`}
           type="range"
@@ -635,9 +667,47 @@ function SeekableTimelineTrack({ label, progress, time, value, max, disabled, on
           step="1"
           value={safeValue}
           disabled={disabled || safeMax <= 0}
-          className="relative z-10 h-8 w-full cursor-pointer appearance-none bg-transparent accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
-          onChange={(event) => onSeek(Number(event.target.value))}
+          className="seek-range--line-only relative z-10 h-8 w-full cursor-pointer appearance-none bg-transparent disabled:cursor-not-allowed disabled:opacity-50"
+          onPointerDown={() => {
+            isDraggingRef.current = true;
+          }}
+          onInput={(event) => onPreviewSeek(Number(event.currentTarget.value))}
+          onChange={(event) => {
+            if (!isDraggingRef.current) onCommitSeek(Number(event.target.value));
+          }}
+          onPointerUp={(event) => commitSeek(Number(event.currentTarget.value))}
+          onBlur={(event) => {
+            if (isDraggingRef.current) commitSeek(Number(event.currentTarget.value));
+          }}
         />
+        <style>{`
+          .seek-range--line-only::-webkit-slider-runnable-track {
+            height: 32px;
+            background: transparent;
+          }
+
+          .seek-range--line-only::-webkit-slider-thumb {
+            width: 0;
+            height: 0;
+            appearance: none;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+          }
+
+          .seek-range--line-only::-moz-range-track {
+            height: 32px;
+            background: transparent;
+            border: 0;
+          }
+
+          .seek-range--line-only::-moz-range-thumb {
+            width: 0;
+            height: 0;
+            border: 0;
+            background: transparent;
+          }
+        `}</style>
       </div>
       <span className="text-right text-slate-500">{time}</span>
     </div>
@@ -645,7 +715,7 @@ function SeekableTimelineTrack({ label, progress, time, value, max, disabled, on
 }
 
 function TimelineTrack({ label, progress, tone, time }: { label: string; progress: number; tone: 'mr' | 'recording'; time: string }) {
-  return <div className="grid grid-cols-[82px_minmax(0,1fr)_92px] items-center gap-2 text-xs font-black text-slate-600"><span>{label}</span><div className="h-5 overflow-hidden rounded border border-slate-300 bg-slate-100"><div className={`h-full ${tone === 'mr' ? 'bg-emerald-200' : 'bg-rose-200'}`} style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} /></div><span className="text-right text-slate-500">{time}</span></div>;
+  return <div className="grid grid-cols-[82px_minmax(0,1fr)_92px] items-center gap-2 text-xs text-slate-600"><span>{label}</span><div className="h-5 overflow-hidden rounded border border-slate-300 bg-slate-100"><div className={`h-full ${tone === 'mr' ? 'bg-emerald-200' : 'bg-rose-200'}`} style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} /></div><span className="text-right text-slate-500">{time}</span></div>;
 }
 
 function IconButton({ label, disabled, strong, record, onClick, children }: { label: string; disabled?: boolean; strong?: boolean; record?: boolean; onClick: () => void; children: ReactNode }) {
@@ -677,6 +747,17 @@ function safePause(audio: HTMLAudioElement | null) {
   audio?.pause();
 }
 
+function playAudioFromSeek(audio: HTMLAudioElement, onPlayed: () => void, onBlocked: () => void) {
+  try {
+    const playResult = audio.play();
+    if (playResult && typeof playResult.then === 'function') {
+      void playResult.then(onPlayed).catch(onBlocked);
+    }
+  } catch {
+    onBlocked();
+  }
+}
+
 function formatTime(value?: number) {
   if (!value || !Number.isFinite(value)) return '00:00';
   const minutes = Math.floor(value / 60);
@@ -699,6 +780,10 @@ function clampTime(value: number, duration?: number) {
 function audioProgress(current: number, duration?: number) {
   if (!duration || !Number.isFinite(duration)) return 0;
   return Math.min(100, Math.max(0, (current / duration) * 100));
+}
+
+function formatProgressForData(progress: number) {
+  return progress.toFixed(4).replace(/\.?0+$/, '');
 }
 
 async function transcodeToWav(blob: Blob) {

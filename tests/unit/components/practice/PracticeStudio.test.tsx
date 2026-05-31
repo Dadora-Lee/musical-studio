@@ -1,6 +1,6 @@
 ﻿import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { PracticeStudioLayout } from '@/components/practice/PracticeStudioLayout';
 import { practiceStudioPrototype } from '@/lib/practice/prototype-data';
 
@@ -95,6 +95,8 @@ describe('PracticeStudioLayout', () => {
   });
 
   it('lets members seek the selected MR or AR track directly', () => {
+    const play = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+
     render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
 
     const mrSeek = screen.getByRole('slider', { name: 'MR Track 위치' });
@@ -110,6 +112,67 @@ describe('PracticeStudioLayout', () => {
     expect(arSeek).toBeEnabled();
     fireEvent.change(arSeek, { target: { value: '66' } });
     expect(screen.getByText('01:06 / 03:18')).toBeInTheDocument();
+    expect(screen.getByTestId('active-audio-track-fill')).toHaveAttribute('data-progress', '33.3333');
+    expect(screen.getByTestId('active-audio-track-playhead')).toHaveAttribute('data-progress', '33.3333');
+    expect(screen.getByRole('slider', { name: 'AR Track 위치' })).toHaveClass('seek-range--line-only');
+
+    play.mockRestore();
+  });
+
+  it('uses real audio metadata duration and plays from the dragged tracker position', () => {
+    const play = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+
+    render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
+
+    const audio = document.querySelector('audio');
+    expect(audio).not.toBeNull();
+    if (!audio) return;
+
+    Object.defineProperty(audio, 'duration', { configurable: true, value: 196 });
+    fireEvent.loadedMetadata(audio);
+
+    expect(screen.getByText('현재 00:00 / 03:16')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole('slider', { name: 'MR Track 위치' }), { target: { value: '74' } });
+
+    expect(audio.currentTime).toBe(74);
+    expect(screen.getByText('01:14 / 03:16')).toBeInTheDocument();
+    expect(play).toHaveBeenCalled();
+
+    play.mockRestore();
+  });
+
+  it('previews tracker drag without repeatedly calling play before commit', () => {
+    const play = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+
+    render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
+
+    const audio = document.querySelector('audio');
+    expect(audio).not.toBeNull();
+    if (!audio) return;
+
+    Object.defineProperty(audio, 'duration', { configurable: true, value: 196 });
+    fireEvent.loadedMetadata(audio);
+
+    const mrSeek = screen.getByRole('slider', { name: 'MR Track 위치' });
+    fireEvent.pointerDown(mrSeek);
+    fireEvent.input(mrSeek, { target: { value: '24' } });
+    fireEvent.input(mrSeek, { target: { value: '48' } });
+    fireEvent.input(mrSeek, { target: { value: '72' } });
+
+    expect(audio.currentTime).toBe(72);
+    expect(screen.getByText('01:12 / 03:16')).toBeInTheDocument();
+    expect(play).not.toHaveBeenCalled();
+
+    fireEvent.input(mrSeek, { target: { value: '84' } });
+    expect(play).not.toHaveBeenCalled();
+    fireEvent.pointerUp(mrSeek);
+
+    expect(audio.currentTime).toBe(84);
+    expect(screen.getByText('01:24 / 03:16')).toBeInTheDocument();
+    expect(play).toHaveBeenCalledTimes(1);
+
+    play.mockRestore();
   });
 
   it('disables track seeking when the selected audio file is missing', () => {

@@ -17,6 +17,7 @@ export interface ScorePlaybackController {
 
 interface ScoreViewerProps {
   source: string | { raw: string } | { url: string };
+  title?: string;
   visiblePartIds?: string[];
   currentPage?: number;
   onPageCountChange?: (pageCount: number) => void;
@@ -79,6 +80,20 @@ function normalizePracticeMusicXml(xml: string) {
     .replace(/\snew-page="no"/g, '');
 }
 
+function escapeXmlText(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function ensureMusicXmlTitle(xml: string, title?: string) {
+  if (!title?.trim()) return xml;
+  if (/<movement-title\b|<work-title\b|<credit-words\b/.test(xml)) return xml;
+
+  return xml.replace(/(<score-partwise\b[^>]*>)/, `$1\n  <movement-title>${escapeXmlText(title.trim())}</movement-title>`);
+}
+
 function pageElements(container: HTMLDivElement) {
   const directChildren = Array.from(container.children) as HTMLElement[];
   const pageLike = directChildren.filter((child) => {
@@ -133,6 +148,7 @@ function normalizeA4Pages(container: HTMLDivElement) {
 
 export function ScoreViewer({
   source,
+  title,
   visiblePartIds,
   currentPage = 1,
   onPageCountChange,
@@ -184,7 +200,7 @@ export function ScoreViewer({
           autoResize: false,
           backend: 'svg',
           drawingParameters: 'compacttight',
-          drawTitle: false,
+          drawTitle: true,
           drawSubtitle: false,
           drawComposer: true,
           followCursor: true,
@@ -197,7 +213,10 @@ export function ScoreViewer({
         applyPracticeEngravingRules(osmd);
 
         const xml = normalizePracticeMusicXml(
-          typeof source === 'string' ? source : 'url' in source ? await fetchMusicXml(source.url) : source.raw,
+          ensureMusicXmlTitle(
+            typeof source === 'string' ? source : 'url' in source ? await fetchMusicXml(source.url) : source.raw,
+            title,
+          ),
         );
         await withTimeout(osmd.load(xml), 20000, 'MusicXML load timed out after 20 seconds.');
         applyPracticeEngravingRules(osmd);
@@ -295,7 +314,7 @@ export function ScoreViewer({
       onPlaybackControllerChange?.(null);
       osmdRef.current = null;
     };
-  }, [source, visiblePartIds, onReady, onError, onPageCountChange, onCurrentPageChange, onPlaybackControllerChange]);
+  }, [source, title, visiblePartIds, onReady, onError, onPageCountChange, onCurrentPageChange, onPlaybackControllerChange]);
 
   return (
     <div className={`relative h-full ${className}`} data-score-stage={stage}>

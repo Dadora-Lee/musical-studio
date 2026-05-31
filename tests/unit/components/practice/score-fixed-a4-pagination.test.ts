@@ -26,7 +26,7 @@ describe('fixed A4 score pagination', () => {
   it('uses practice engraving density for roughly 12 to 16 measures per A4 page', () => {
     const source = readFileSync('src/components/score/ScoreViewer.tsx', 'utf8');
 
-    expect(source).toContain('drawTitle: false');
+    expect(source).toContain('drawTitle: true');
     expect(source).toContain("drawingParameters: 'compacttight'");
     expect(source).toContain('newSystemFromXML: false');
     expect(source).toContain('newPageFromXML: false');
@@ -48,6 +48,16 @@ describe('fixed A4 score pagination', () => {
     expect(source).toContain(".replace(/<print\\b[^>]*>[\\s\\S]*?<\\/print>/g, '')");
     expect(source).toContain('.replace(/\\snew-system="yes"/g, \'\')');
     expect(source).toContain('const xml = normalizePracticeMusicXml(');
+  });
+
+  it('restores a title when the source MusicXML has no title metadata', () => {
+    const source = readFileSync('src/components/score/ScoreViewer.tsx', 'utf8');
+    const layout = readFileSync('src/components/practice/PracticeStudioLayout.tsx', 'utf8');
+
+    expect(source).toContain('function ensureMusicXmlTitle');
+    expect(source).toContain('<movement-title>${escapeXmlText(title.trim())}</movement-title>');
+    expect(source).toContain('drawTitle: true');
+    expect(layout).toContain('title={activeNumber.title}');
   });
 
   it('keeps the MusicXML viewport clipped inside the center score area', () => {

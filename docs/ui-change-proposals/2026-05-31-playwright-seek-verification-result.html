@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Musical Studio - MRTracker Seek 검증 결과</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef2f7;
+      --panel: #ffffff;
+      --line: #cbd5e1;
+      --text: #0f172a;
+      --muted: #64748b;
+      --blue: #2563eb;
+      --teal: #0f766e;
+      --rose: #be123c;
+      --amber: #b45309;
+      --soft-blue: #eff6ff;
+      --soft-teal: #ecfdf5;
+      --soft-rose: #fff1f2;
+      --soft-amber: #fffbeb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    a {
+      color: var(--blue);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    code {
+      border: 1px solid #dbe3ee;
+      border-radius: 4px;
+      background: #f8fafc;
+      padding: 1px 5px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+    }
+
+    pre {
+      margin: 0;
+      overflow: auto;
+      border: 1px solid #dbe3ee;
+      border-radius: 6px;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 12px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero-note {
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .badge.ok {
+      border-color: #99f6e4;
+      background: var(--soft-teal);
+      color: var(--teal);
+    }
+
+    .badge.warn {
+      border-color: #fde68a;
+      background: var(--soft-amber);
+      color: var(--amber);
+    }
+
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .result-table th,
+    .result-table td {
+      border: 1px solid #dbe3ee;
+      padding: 7px 8px;
+      text-align: left;
+      vertical-align: top;
+      word-break: keep-all;
+    }
+
+    .result-table th {
+      width: 190px;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 12px;
+    }
+
+    .pass {
+      color: var(--teal);
+      font-weight: 700;
+    }
+
+    .fail {
+      color: var(--rose);
+      font-weight: 700;
+    }
+
+    .timeline {
+      position: relative;
+      height: 34px;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      background: var(--soft-blue);
+      padding: 0 8px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 50%;
+      height: 6px;
+      transform: translateY(-50%);
+      border-radius: 999px;
+      background: #dbeafe;
+    }
+
+    .fill {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      width: 69.9247%;
+      height: 6px;
+      transform: translateY(-50%);
+      border-radius: 999px;
+      background: linear-gradient(90deg, #2563eb, #10b981);
+    }
+
+    .playhead {
+      position: absolute;
+      top: 5px;
+      bottom: 5px;
+      left: calc(8px + (100% - 16px) * 0.699247);
+      width: 3px;
+      border-radius: 999px;
+      background: #0f172a;
+    }
+
+    .steps {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .steps li + li {
+      margin-top: 5px;
+    }
+
+    .screenshot {
+      width: 100%;
+      max-height: 460px;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    @media (max-width: 760px) {
+      main {
+        padding: 14px;
+      }
+
+      header,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .badge-row {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stack">
+    <header>
+      <div>
+        <h1>MRTracker Seek 검증 결과</h1>
+        <p class="hero-note">Playwright로 실제 <code>/work</code> 앱을 열고 MR 슬라이더를 마우스로 드래그해 확인한 결과입니다.</p>
+      </div>
+      <div class="badge-row">
+        <span class="badge ok">Range 응답 수정 완료</span>
+        <span class="badge ok">Playwright 검증 통과</span>
+        <span class="badge warn">로컬 prototype 기준</span>
+      </div>
+    </header>
+
+    <section class="panel">
+      <h2>바로 확인할 페이지</h2>
+      <table class="result-table">
+        <tbody>
+          <tr>
+            <th>실제 앱</th>
+            <td><a href="http://localhost:3000/work">http://localhost:3000/work</a></td>
+          </tr>
+          <tr>
+            <th>확인 위치</th>
+            <td>하단 Transport 영역의 <code>MR Track</code> 슬라이딩 바</td>
+          </tr>
+          <tr>
+            <th>기대 동작</th>
+            <td>슬라이딩 바를 원하는 위치로 드래그하면 현재 시간이 이동하고, 해당 위치에서 MR이 재생됩니다.</td>
+          </tr>
+          <tr>
+            <th>검증 스크린샷</th>
+            <td><code>docs/ui-change-proposals/2026-05-30-playwright-seek-verification-fixed.png</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>Playwright 검증 결과</h2>
+        <table class="result-table">
+          <tbody>
+            <tr>
+              <th>드래그 전</th>
+              <td><code>sliderValue: 0</code>, <code>audioCurrentTime: 0</code></td>
+            </tr>
+            <tr>
+              <th>드래그 후</th>
+              <td><code>sliderValue: 280</code>, <code>audioCurrentTime: 280</code></td>
+            </tr>
+            <tr>
+              <th>화면 시간</th>
+              <td><code>04:40 / 06:40</code></td>
+            </tr>
+            <tr>
+              <th>재생 호출</th>
+              <td><code>playCount: 42</code>, 마지막 호출 시점 <code>280초</code></td>
+            </tr>
+            <tr>
+              <th>판정</th>
+              <td><span class="pass">통과</span> - 드래그한 위치와 오디오 시간이 일치합니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="panel">
+        <h2>원인과 수정</h2>
+        <table class="result-table">
+          <tbody>
+            <tr>
+              <th>문제</th>
+              <td>오디오 API가 <code>Range</code> 요청에도 <code>200 OK</code>만 반환해서 브라우저가 MP3를 seek 가능한 파일로 인식하지 못했습니다.</td>
+            </tr>
+            <tr>
+              <th>수정</th>
+              <td><code>Accept-Ranges</code>, <code>Content-Range</code>, <code>206 Partial Content</code> 응답을 추가했습니다.</td>
+            </tr>
+            <tr>
+              <th>수정 파일</th>
+              <td><code>src/app/api/prototype-assets/[numberId]/[kind]/route.ts</code></td>
+            </tr>
+            <tr>
+              <th>현재 상태</th>
+              <td><span class="pass">seekableEnd: 400.43102</span>로 브라우저가 전체 길이를 seek 가능 구간으로 인식합니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>MR Track 상태 예시</h2>
+      <div class="timeline" aria-label="MR Track progress preview">
+        <div class="fill"></div>
+        <div class="playhead"></div>
+      </div>
+      <p class="hero-note">Playwright 검증 시점 기준 진행률은 약 <code>69.9247%</code>입니다.</p>
+    </section>
+
+    <section class="panel">
+      <h2>직접 확인 순서</h2>
+      <ol class="steps">
+        <li><a href="http://localhost:3000/work">http://localhost:3000/work</a>를 엽니다.</li>
+        <li>좌측 Number 목록에서 기본 선택된 곡 또는 원하는 곡을 선택합니다.</li>
+        <li>하단 Transport 영역에서 <code>MR</code>이 선택되어 있는지 확인합니다.</li>
+        <li><code>MR Track</code> 선을 원하는 위치로 드래그합니다.</li>
+        <li>우측 시간 표시가 이동한 위치로 바뀌고, 선/재생 위치가 같은 지점으로 이동하는지 확인합니다.</li>
+      </ol>
+    </section>
+
+    <section class="panel">
+      <h2>검증 데이터</h2>
+      <pre>{
+  "before": {
+    "sliderValue": "0",
+    "sliderMax": "400",
+    "audioCurrentTime": 0,
+    "seekableEnd": 400.43102
+  },
+  "afterDrag": {
+    "sliderValue": "280",
+    "sliderMax": "400",
+    "audioCurrentTime": 280,
+    "playCount": 42,
+    "lastPlayedCurrentTime": 280,
+    "timeTexts": [
+      "04:40 / 06:40",
+      "04:40 / 06:40",
+      "00:00 / 06:40"
+    ],
+    "fillProgress": "69.9247",
+    "playheadProgress": "69.9247"
+  }
+}</pre>
+    </section>
+  </main>
+</body>
+</html>
