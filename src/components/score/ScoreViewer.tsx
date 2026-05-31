@@ -28,7 +28,9 @@ interface ScoreViewerProps {
   className?: string;
 }
 
-
+const PRACTICE_MEASURES_PER_SYSTEM = 4;
+const PRACTICE_TARGET_MEASURES_PER_PAGE = '12-16';
+const PRACTICE_SCORE_SPACING = 'uniform-practice';
 
 async function fetchMusicXml(url: string) {
   const response = await fetch(url, { cache: 'no-store' });
@@ -56,7 +58,7 @@ function applyPracticeEngravingRules(osmd: OpenSheetMusicDisplay) {
   rules.NewSystemAtXMLNewSystemAttribute = false;
   rules.NewSystemAtXMLNewPageAttribute = false;
   rules.NewPageAtXMLNewPageAttribute = false;
-  rules.RenderXMeasuresPerLineAkaSystem = 4;
+  rules.RenderXMeasuresPerLineAkaSystem = PRACTICE_MEASURES_PER_SYSTEM;
   rules.PageTopMargin = 8;
   rules.PageBottomMargin = 8;
   rules.PageLeftMargin = 8;
@@ -67,7 +69,7 @@ function applyPracticeEngravingRules(osmd: OpenSheetMusicDisplay) {
   rules.MinSkyBottomDistBetweenSystems = 2;
   rules.StaffDistance = 4;
   rules.BetweenStaffDistance = 3;
-  rules.StretchLastSystemLine = false;
+  rules.StretchLastSystemLine = true;
 }
 
 function normalizePracticeMusicXml(xml: string) {
@@ -143,6 +145,18 @@ function normalizeA4Pages(container: HTMLDivElement) {
       svg.style.overflow = 'visible';
       svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     }
+  });
+}
+
+function markUniformPracticeScore(container: HTMLDivElement) {
+  container.setAttribute('data-score-spacing', PRACTICE_SCORE_SPACING);
+  container.setAttribute('data-score-measures-per-system', String(PRACTICE_MEASURES_PER_SYSTEM));
+  container.setAttribute('data-score-target-measures-per-page', PRACTICE_TARGET_MEASURES_PER_PAGE);
+
+  pageElements(container).forEach((page) => {
+    page.setAttribute('data-score-spacing', PRACTICE_SCORE_SPACING);
+    page.setAttribute('data-score-measures-per-system', String(PRACTICE_MEASURES_PER_SYSTEM));
+    page.setAttribute('data-score-target-measures-per-page', PRACTICE_TARGET_MEASURES_PER_PAGE);
   });
 }
 
@@ -233,6 +247,7 @@ export function ScoreViewer({
 
         osmd.render();
         normalizeA4Pages(containerRef.current);
+        markUniformPracticeScore(containerRef.current);
 
         if (cancelled || !containerRef.current) return;
 

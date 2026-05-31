@@ -32,12 +32,24 @@ describe('fixed A4 score pagination', () => {
     expect(source).toContain('newPageFromXML: false');
     expect(source).toContain('function applyPracticeEngravingRules');
     expect(source).toContain('osmd.setCustomPageFormat(840, 1188)');
-    expect(source).toContain('rules.RenderXMeasuresPerLineAkaSystem = 4');
+    expect(source).toContain('rules.RenderXMeasuresPerLineAkaSystem = PRACTICE_MEASURES_PER_SYSTEM');
     expect(source).toContain('rules.NewSystemAtXMLNewSystemAttribute = false');
     expect(source).toContain('rules.NewPageAtXMLNewPageAttribute = false');
     expect(source).toContain('rules.CompactMode = true');
     expect(source).toContain('applyPracticeEngravingRules(osmd)');
     expect(source).toContain("await withTimeout(osmd.load(xml), 20000, 'MusicXML load timed out after 20 seconds.');\n        applyPracticeEngravingRules(osmd);");
+  });
+
+  it('marks the rendered score as the B-type uniform practice layout', () => {
+    const source = readFileSync('src/components/score/ScoreViewer.tsx', 'utf8');
+
+    expect(source).toContain('PRACTICE_SCORE_SPACING');
+    expect(source).toContain('uniform-practice');
+    expect(source).toContain('data-score-spacing');
+    expect(source).toContain('data-score-measures-per-system');
+    expect(source).toContain('data-score-target-measures-per-page');
+    expect(source).toContain('PRACTICE_MEASURES_PER_SYSTEM = 4');
+    expect(source).toContain("PRACTICE_TARGET_MEASURES_PER_PAGE = '12-16'");
   });
 
   it('removes MusicXML authoring line breaks before practice layout rendering', () => {

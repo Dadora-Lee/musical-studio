@@ -1,8 +1,75 @@
-﻿import { fireEvent, render, screen, within } from '@testing-library/react';
+﻿import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PracticeStudioLayout } from '@/components/practice/PracticeStudioLayout';
 import { practiceStudioPrototype } from '@/lib/practice/prototype-data';
+
+class FakeMediaRecorder {
+  static isTypeSupported = () => true;
+  state: RecordingState = 'inactive';
+  mimeType = 'audio/webm';
+  ondataavailable: ((event: BlobEvent) => void) | null = null;
+  onstop: (() => void) | null = null;
+
+  constructor(public stream: MediaStream) {}
+
+  start() {
+    this.state = 'recording';
+  }
+
+  pause() {
+    this.state = 'paused';
+  }
+
+  resume() {
+    this.state = 'recording';
+  }
+
+  stop() {
+    this.state = 'inactive';
+    this.ondataavailable?.({ data: new Blob(['recording'], { type: 'audio/webm' }) } as BlobEvent);
+    this.onstop?.();
+  }
+}
+
+function installRecorderMocks() {
+  const stop = vi.fn();
+  const getUserMedia = vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] });
+  const enumerateDevices = vi.fn().mockResolvedValue([
+    { kind: 'audioinput', deviceId: 'mic-1', label: 'USB Mic' },
+    { kind: 'audiooutput', deviceId: 'out-1', label: 'Headphones' },
+  ]);
+  const createObjectURL = vi.fn(() => 'blob:local-take');
+  const revokeObjectURL = vi.fn();
+  const close = vi.fn().mockResolvedValue(undefined);
+  const decodeAudioData = vi.fn().mockResolvedValue({
+    numberOfChannels: 1,
+    sampleRate: 44100,
+    length: 4,
+    getChannelData: () => new Float32Array([0, 0.1, -0.1, 0]),
+  });
+  class FakeAudioContext {
+    decodeAudioData = decodeAudioData;
+    close = close;
+  }
+
+  Object.defineProperty(window, 'MediaRecorder', { configurable: true, value: FakeMediaRecorder });
+  Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia, enumerateDevices } });
+  Object.defineProperty(window.URL, 'createObjectURL', { configurable: true, value: createObjectURL });
+  Object.defineProperty(window.URL, 'revokeObjectURL', { configurable: true, value: revokeObjectURL });
+  Object.defineProperty(Blob.prototype, 'arrayBuffer', {
+    configurable: true,
+    value: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+  });
+  Object.defineProperty(window, 'AudioContext', { configurable: true, value: FakeAudioContext });
+  Object.defineProperty(window, 'webkitAudioContext', { configurable: true, value: FakeAudioContext });
+
+  return { getUserMedia, enumerateDevices, createObjectURL, stop };
+}
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('PracticeStudioLayout', () => {
   it('shows submission status before the take list', () => {
@@ -142,6 +209,31 @@ describe('PracticeStudioLayout', () => {
     play.mockRestore();
   });
 
+  it('resets playback state when switching between MR and AR sources', async () => {
+    const user = userEvent.setup();
+    const play = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+
+    render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
+
+    const audio = document.querySelector('audio');
+    expect(audio).not.toBeNull();
+    if (!audio) return;
+
+    Object.defineProperty(audio, 'duration', { configurable: true, value: 196 });
+    fireEvent.loadedMetadata(audio);
+    fireEvent.change(screen.getByRole('slider', { name: 'MR Track 위치' }), { target: { value: '40' } });
+
+    expect(screen.getByText('00:40 / 03:16')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'AR' }));
+
+    expect(screen.getByText('현재 00:00 / 03:18')).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: 'AR Track 위치' })).toBeEnabled();
+    expect(play).toHaveBeenCalledTimes(1);
+
+    play.mockRestore();
+  });
+
   it('previews tracker drag without repeatedly calling play before commit', () => {
     const play = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
 
@@ -193,6 +285,41 @@ describe('PracticeStudioLayout', () => {
     expect(screen.getByRole('region', { name: '제출 피드백' })).toBeInTheDocument();
     expect(screen.getByText('00:42')).toBeInTheDocument();
     expect(screen.getByText(/진입 박자가 MR보다 조금 늦어요/)).toBeInTheDocument();
+  });
+
+  it('records with the selected audio source and saves a local WAV take', async () => {
+    const user = userEvent.setup();
+    const play = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+    const mocks = installRecorderMocks();
+
+    render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
+
+    await waitFor(() => expect(screen.getByLabelText('녹음 시작')).toBeEnabled());
+
+    await user.click(screen.getByLabelText('녹음 시작'));
+
+    expect(mocks.getUserMedia).toHaveBeenCalled();
+    expect(play).toHaveBeenCalled();
+    expect(await screen.findByText(/녹음 중입니다/)).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('녹음 일시정지'));
+    expect(screen.getByText('녹음을 일시정지했습니다.')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('녹음 일시정지'));
+    expect(screen.getByText('녹음을 다시 진행합니다.')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('녹음 정지'));
+
+    await waitFor(() => expect(mocks.stop).toHaveBeenCalled());
+    await waitFor(() => expect(mocks.createObjectURL).toHaveBeenCalled());
+    expect(await screen.findByText('WAV Take가 준비되었습니다. 저장하면 오른쪽 녹음 Take 목록에 추가됩니다.')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('녹음 저장'));
+
+    expect(screen.getByText('WAV Take를 목록에 추가했습니다. 제출은 local prototype 상태입니다.')).toBeInTheDocument();
+    expect(screen.getAllByText(/take_\d+\.wav/).length).toBeGreaterThan(0);
+
+    play.mockRestore();
   });
 });
 

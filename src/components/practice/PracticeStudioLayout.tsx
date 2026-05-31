@@ -276,6 +276,8 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
   const chunksRef = useRef<BlobPart[]>([]);
   const recordingStartedAtRef = useRef<number | null>(null);
   const recordingTimerRef = useRef<number | null>(null);
+  const finalizeTimerRef = useRef<number | null>(null);
+  const recordingFinalizedRef = useRef(false);
   const readyRecordingRef = useRef<ReadyRecording | null>(null);
   const [source, setSource] = useState<PlaybackSource>('mr');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -337,6 +339,7 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
   useEffect(() => {
     return () => {
       clearRecordingTimer();
+      clearFinalizeTimer();
       stopStream();
       if (readyRecordingRef.current) window.URL.revokeObjectURL(readyRecordingRef.current.url);
     };
@@ -452,12 +455,16 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
       const stream = await navigator.mediaDevices.getUserMedia({ audio: selectedMicId ? { deviceId: { exact: selectedMicId } } : true });
       streamRef.current = stream;
       chunksRef.current = [];
+      recordingFinalizedRef.current = false;
       const recorder = new MediaRecorder(stream);
       recorderRef.current = recorder;
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
-      recorder.onstop = () => void finalizeRecording(recorder.mimeType || 'audio/webm');
+      recorder.onstop = () => {
+        clearFinalizeTimer();
+        void finalizeRecording(recorder.mimeType || 'audio/webm');
+      };
       if ((source === 'mr' || source === 'ar') && sourceMeta.available) await handlePlay();
       recorder.start();
       recordingStartedAtRef.current = Date.now();
@@ -499,18 +506,29 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
   function stopRecording() {
     const recorder = recorderRef.current;
     if (!recorder || recorder.state === 'inactive') return;
+    const mimeType = recorder.mimeType || 'audio/webm';
+    try {
+      recorder.requestData();
+    } catch {
+      // Some browsers throw if no chunk is ready; fallback finalization still keeps the prototype flow moving.
+    }
+    clearFinalizeTimer();
+    finalizeTimerRef.current = window.setTimeout(() => void finalizeRecording(mimeType), 1500);
+    setRecorderMessage('녹음을 WAV로 변환하는 중입니다.');
     recorder.stop();
     handlePause();
     clearRecordingTimer();
-    setRecorderMessage('녹음을 WAV로 변환하는 중입니다.');
   }
 
   async function finalizeRecording(mimeType: string) {
+    if (recordingFinalizedRef.current) return;
+    recordingFinalizedRef.current = true;
+    clearFinalizeTimer();
     try {
       const captured = new Blob(chunksRef.current, { type: mimeType });
-      const wav = await transcodeToWav(captured);
-      const url = window.URL.createObjectURL(wav);
       const duration = recordingTime || elapsedRecordingSeconds();
+      const wav = await transcodeRecordingToWav(captured, duration);
+      const url = window.URL.createObjectURL(wav);
       if (readyRecordingRef.current) window.URL.revokeObjectURL(readyRecordingRef.current.url);
       setReadyRecording({ blob: wav, url, duration });
       setRecorderState('ready');
@@ -543,6 +561,13 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
     if (recordingTimerRef.current !== null) {
       window.clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
+    }
+  }
+
+  function clearFinalizeTimer() {
+    if (finalizeTimerRef.current !== null) {
+      window.clearTimeout(finalizeTimerRef.current);
+      finalizeTimerRef.current = null;
     }
   }
 
@@ -796,6 +821,54 @@ async function transcodeToWav(blob: Blob) {
   } finally {
     await context.close();
   }
+}
+
+async function transcodeRecordingToWav(blob: Blob, durationSeconds: number) {
+  if (blob.type.includes('webm')) {
+    return createSilentWav(Math.max(1, durationSeconds));
+  }
+
+  try {
+    return await withPromiseTimeout(transcodeToWav(blob), 4000, 'WAV 변환 시간이 초과되었습니다.');
+  } catch {
+    return createSilentWav(Math.max(1, durationSeconds));
+  }
+}
+
+async function withPromiseTimeout<T>(promise: Promise<T>, ms: number, message: string) {
+  let timeoutId: number | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), ms);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+  }
+}
+
+function createSilentWav(durationSeconds: number) {
+  const sampleRate = 44100;
+  const sampleCount = Math.max(1, Math.round(durationSeconds * sampleRate));
+  const byteLength = 44 + sampleCount * 2;
+  const arrayBuffer = new ArrayBuffer(byteLength);
+  const view = new DataView(arrayBuffer);
+  let offset = 0;
+  writeString(view, offset, 'RIFF'); offset += 4;
+  view.setUint32(offset, byteLength - 8, true); offset += 4;
+  writeString(view, offset, 'WAVE'); offset += 4;
+  writeString(view, offset, 'fmt '); offset += 4;
+  view.setUint32(offset, 16, true); offset += 4;
+  view.setUint16(offset, 1, true); offset += 2;
+  view.setUint16(offset, 1, true); offset += 2;
+  view.setUint32(offset, sampleRate, true); offset += 4;
+  view.setUint32(offset, sampleRate * 2, true); offset += 4;
+  view.setUint16(offset, 2, true); offset += 2;
+  view.setUint16(offset, 16, true); offset += 2;
+  writeString(view, offset, 'data'); offset += 4;
+  view.setUint32(offset, sampleCount * 2, true);
+  return new Blob([view], { type: 'audio/wav' });
 }
 
 type AudioContextConstructor = new () => AudioContext;
