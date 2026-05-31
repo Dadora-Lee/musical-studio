@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ScoreViewer, type ScorePlaybackController } from '@/components/score/ScoreViewer';
+import { createBrowserMusicXmlPianoPlayer } from '@/lib/audio-engine/musicxml-piano-player';
+import { parseMusicXmlPlaybackEvents, type MusicXmlPlaybackMap } from '@/lib/musicxml/playback-events';
 import {
   practiceStudioPrototype,
   submissionStateLabel,
@@ -15,6 +17,7 @@ type RecorderState = 'checking' | 'idle' | 'recording' | 'paused' | 'ready' | 'u
 type DeviceOption = { deviceId: string; label: string };
 type ReadyRecording = { blob: Blob; url: string; duration: number };
 type AudioElementWithSink = HTMLAudioElement & { setSinkId?: (sinkId: string) => Promise<void> };
+type MusicXmlPianoPlayer = Awaited<ReturnType<typeof createBrowserMusicXmlPianoPlayer>>;
 
 const prototypeMembers = [
   '주언',
@@ -55,6 +58,7 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
   const [currentPage, setCurrentPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
   const [scoreController, setScoreController] = useState<ScorePlaybackController | null>(null);
+  const [scoreRawXml, setScoreRawXml] = useState<string | null>(null);
   const [localTakes, setLocalTakes] = useState<PracticeTake[]>(data.takes);
   const activeNumber = data.numbers.find((number) => number.id === selectedNumberId) ?? data.numbers[0];
   const submittedTake = localTakes.find((take) => take.id === data.submission.takeId);
@@ -89,6 +93,7 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
     setCurrentPage(1);
     setPageCount(1);
     setScoreController(null);
+    setScoreRawXml(null);
     setSelectedSubmissionTakeId(null);
   }, []);
 
@@ -178,6 +183,7 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
                     currentPage={currentPage}
                     onPageCountChange={handlePageCountChange}
                     onCurrentPageChange={handleCurrentScorePageChange}
+                    onMusicXmlLoaded={setScoreRawXml}
                     onPlaybackControllerChange={setScoreController}
                     className="h-full"
                   />
@@ -193,7 +199,7 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
               </div>
             </section>
 
-            <PracticeTransport key={activeNumber.id} activeNumber={activeNumber} scoreController={scoreController} onTakeCreated={handleTakeCreated} />
+            <PracticeTransport key={activeNumber.id} activeNumber={activeNumber} scoreController={scoreController} scoreRawXml={scoreSourceRaw ?? scoreRawXml} onTakeCreated={handleTakeCreated} />
           </section>
 
           <aside className="right-panel min-h-0 overflow-auto border-l border-slate-300 bg-[#f8fafc] p-3" aria-label="Recording Submissions">
@@ -269,8 +275,19 @@ function ScorePager({ currentPage, pageCount, onPrevious, onNext }: { currentPag
   );
 }
 
-function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { activeNumber: PracticeNumber; scoreController: ScorePlaybackController | null; onTakeCreated: (take: PracticeTake) => void }) {
+function PracticeTransport({
+  activeNumber,
+  scoreController,
+  scoreRawXml,
+  onTakeCreated,
+}: {
+  activeNumber: PracticeNumber;
+  scoreController: ScorePlaybackController | null;
+  scoreRawXml: string | null;
+  onTakeCreated: (take: PracticeTake) => void;
+}) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const pianoPlayerRef = useRef<MusicXmlPianoPlayer | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -285,6 +302,7 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
   const [monitorVolume, setMonitorVolume] = useState(75);
   const [audioTime, setAudioTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
+  const [pianoTime, setPianoTime] = useState(0);
   const [recorderState, setRecorderState] = useState<RecorderState>('checking');
   const [recorderMessage, setRecorderMessage] = useState('브라우저 녹음 기능을 확인 중입니다.');
   const [recordingTime, setRecordingTime] = useState(0);
@@ -299,16 +317,24 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
     setReadyRecordingState(next);
   }, []);
 
+  const pianoPlaybackMap = useMemo(() => {
+    if (!scoreRawXml) return null;
+    const map = parseMusicXmlPlaybackEvents(scoreRawXml);
+    return map.events.length > 0 ? map : null;
+  }, [scoreRawXml]);
+
   const sourceMeta = useMemo(() => {
     if (source === 'mr') return { label: 'MR', url: activeNumber.mrUrl, fileName: activeNumber.mrFileName ?? 'MR 파일 미등록', available: Boolean(activeNumber.mrUrl) };
     if (source === 'ar') return { label: 'AR', url: activeNumber.arUrl, fileName: activeNumber.arFileName ?? 'AR 파일 미등록', available: Boolean(activeNumber.arUrl) };
-    return { label: '악보재생', url: undefined, fileName: 'OSMD cursor 재생', available: Boolean(scoreController) };
-  }, [activeNumber, scoreController, source]);
+    return { label: '피아노 연주', url: undefined, fileName: 'MusicXML piano reference', available: Boolean(pianoPlaybackMap) };
+  }, [activeNumber, pianoPlaybackMap, source]);
 
   const canRecord = recorderState !== 'checking' && recorderState !== 'unsupported' && recorderState !== 'recording';
   const isRecording = recorderState === 'recording' || recorderState === 'paused';
   const fallbackAudioDuration = parseDurationLabel(activeNumber.durationLabel ?? '00:00');
   const effectiveAudioDuration = audioDuration || fallbackAudioDuration;
+  const pianoDuration = pianoPlaybackMap?.durationSeconds ?? 0;
+  const effectiveTrackDuration = source === 'score' ? pianoDuration : effectiveAudioDuration;
   const recordingProgress = Math.min(100, Math.max(0, (recordingTime / Math.max(effectiveAudioDuration, 1)) * 100));
 
   useEffect(() => {
@@ -329,6 +355,39 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume / 100;
   }, [volume, sourceMeta.url]);
+
+  useEffect(() => {
+    let cancelled = false;
+    pianoPlayerRef.current?.dispose();
+    pianoPlayerRef.current = null;
+
+    if (!pianoPlaybackMap) return;
+
+    createBrowserMusicXmlPianoPlayer({
+      onTimeChange: setPianoTime,
+      onMeasureChange: (measureNumber) => {
+        scoreController?.goToMeasure?.(measureNumber);
+      },
+    }).then((player) => {
+      if (cancelled) {
+        player.dispose();
+        return;
+      }
+      player.load(pianoPlaybackMap);
+      pianoPlayerRef.current = player;
+      setPianoTime(0);
+    }).catch(() => {
+      if (!cancelled) {
+        setRecorderMessage('피아노 연주 엔진을 준비하지 못했습니다. 다시 시도해주세요.');
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      pianoPlayerRef.current?.dispose();
+      pianoPlayerRef.current = null;
+    };
+  }, [pianoPlaybackMap, scoreController]);
 
   useEffect(() => {
     const audio = audioRef.current as AudioElementWithSink | null;
@@ -365,18 +424,31 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
   }
 
   function selectSource(nextSource: PlaybackSource) {
-    scoreController?.pause();
+    pianoPlayerRef.current?.pause();
     safePause(audioRef.current);
     if (audioRef.current) audioRef.current.currentTime = 0;
     setIsPlaying(false);
     setAudioTime(0);
+    setPianoTime(0);
     setAudioDuration(0);
     setSource(nextSource);
   }
 
   function handleSeek(nextTime: number, options: { play: boolean }) {
-    if (source !== 'mr' && source !== 'ar') return;
     if (!sourceMeta.available) return;
+
+    if (source === 'score') {
+      const nextPianoTime = clampTime(nextTime, effectiveTrackDuration);
+      pianoPlayerRef.current?.seek(nextPianoTime);
+      setPianoTime(nextPianoTime);
+      scoreController?.goToMeasure?.(findMeasureForTime(pianoPlaybackMap, nextPianoTime));
+      if (options.play && !isPlaying) {
+        void pianoPlayerRef.current?.play().then(() => setIsPlaying(true));
+      }
+      return;
+    }
+
+    if (source !== 'mr' && source !== 'ar') return;
     const nextAudioTime = clampTime(nextTime, effectiveAudioDuration);
     const audio = selectedAudio();
     if (audio) {
@@ -390,8 +462,9 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
 
   async function handlePlay() {
     if (source === 'score') {
-      scoreController?.play();
-      setIsPlaying(Boolean(scoreController));
+      if (!pianoPlayerRef.current || !sourceMeta.available) return;
+      await pianoPlayerRef.current.play();
+      setIsPlaying(true);
       return;
     }
     const audio = selectedAudio();
@@ -402,7 +475,7 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
 
   function handlePause() {
     if (source === 'score') {
-      scoreController?.pause();
+      pianoPlayerRef.current?.pause();
       setIsPlaying(false);
       return;
     }
@@ -412,7 +485,8 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
 
   function handleStop() {
     if (source === 'score') {
-      scoreController?.stop();
+      pianoPlayerRef.current?.stop();
+      setPianoTime(0);
       setIsPlaying(false);
       return;
     }
@@ -426,7 +500,7 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
 
   function handleBack() {
     if (source === 'score') {
-      scoreController?.stepBack();
+      handleSeek(pianoTime - 10, { play: false });
       return;
     }
     const audio = selectedAudio();
@@ -438,7 +512,7 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
 
   function handleForward() {
     if (source === 'score') {
-      scoreController?.stepForward();
+      handleSeek(pianoTime + 10, { play: false });
       return;
     }
     const audio = selectedAudio();
@@ -581,10 +655,10 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
     streamRef.current = null;
   }
 
-  const duration = source === 'score' ? activeNumber.durationLabel : formatTime(effectiveAudioDuration);
-  const currentTime = source === 'score' ? (isPlaying ? '재생 중' : '대기') : formatTime(audioTime);
-  const progress = source === 'score' ? (isPlaying ? 48 : 0) : audioProgress(audioTime, effectiveAudioDuration);
-  const audioTrackLabel = source === 'ar' ? 'AR Track' : 'MR Track';
+  const duration = formatTime(effectiveTrackDuration);
+  const currentTime = source === 'score' ? formatTime(pianoTime) : formatTime(audioTime);
+  const progress = source === 'score' ? audioProgress(pianoTime, effectiveTrackDuration) : audioProgress(audioTime, effectiveAudioDuration);
+  const trackLabel = source === 'score' ? '피아노 연주' : source === 'ar' ? 'AR Track' : 'MR Track';
 
   return (
     <section className="border-t border-slate-300 bg-white px-3 py-2" aria-label="Transport">
@@ -593,8 +667,8 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <div className="inline-grid h-8 grid-cols-3 overflow-hidden rounded-md border border-slate-300 text-xs font-black">
               {(['mr', 'ar', 'score'] as PlaybackSource[]).map((option) => (
-                <button key={option} type="button" aria-label={option === 'mr' ? 'MR' : option === 'ar' ? 'AR' : '악보재생'} className={`px-3 ${source === option ? 'bg-blue-700 text-white' : 'bg-white text-slate-700 hover:bg-blue-50'}`} onClick={() => selectSource(option)}>
-                  {option === 'mr' ? 'MR' : option === 'ar' ? 'AR' : '악보재생'}
+                <button key={option} type="button" aria-label={option === 'mr' ? 'MR' : option === 'ar' ? 'AR' : '피아노 연주'} className={`px-3 ${source === option ? 'bg-blue-700 text-white' : 'bg-white text-slate-700 hover:bg-blue-50'}`} onClick={() => selectSource(option)}>
+                  {option === 'mr' ? 'MR' : option === 'ar' ? 'AR' : '피아노 연주'}
                 </button>
               ))}
             </div>
@@ -620,12 +694,12 @@ function PracticeTransport({ activeNumber, scoreController, onTakeCreated }: { a
 
       <div className="mt-2 grid gap-1.5">
         <SeekableTimelineTrack
-          label={audioTrackLabel}
+          label={trackLabel}
           progress={progress}
           time={`${currentTime} / ${duration}`}
-          value={source === 'score' ? 0 : audioTime}
-          max={effectiveAudioDuration}
-          disabled={!sourceMeta.available || source === 'score'}
+          value={source === 'score' ? pianoTime : audioTime}
+          max={effectiveTrackDuration}
+          disabled={!sourceMeta.available}
           onPreviewSeek={(nextTime) => handleSeek(nextTime, { play: false })}
           onCommitSeek={(nextTime) => handleSeek(nextTime, { play: true })}
         />
@@ -805,6 +879,15 @@ function clampTime(value: number, duration?: number) {
 function audioProgress(current: number, duration?: number) {
   if (!duration || !Number.isFinite(duration)) return 0;
   return Math.min(100, Math.max(0, (current / duration) * 100));
+}
+
+function findMeasureForTime(map: MusicXmlPlaybackMap | null, seconds: number) {
+  if (!map || map.measures.length === 0) return 1;
+  const activeMeasure = map.measures.find((measure) => {
+    const endSeconds = measure.startSeconds + measure.durationSeconds;
+    return seconds >= measure.startSeconds && seconds < endSeconds;
+  });
+  return activeMeasure?.measureNumber ?? map.measures.at(-1)?.measureNumber ?? 1;
 }
 
 function formatProgressForData(progress: number) {

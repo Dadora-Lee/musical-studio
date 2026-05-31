@@ -78,4 +78,14 @@ describe('fixed A4 score pagination', () => {
     expect(source).toContain('h-[calc(100%-42px)] min-h-0 overflow-hidden');
     expect(source).toContain('className="h-full"');
   });
+
+  it('exposes loaded MusicXML and measure navigation for piano playback sync', () => {
+    const source = readFileSync('src/components/score/ScoreViewer.tsx', 'utf8');
+
+    expect(source).toContain('onMusicXmlLoaded?: (xml: string) => void');
+    expect(source).toContain('onMusicXmlLoaded?.(xml)');
+    expect(source).toContain('goToMeasure?: (measureNumber: number) => void');
+    expect(source).toContain('function goToMeasure(measureNumber: number)');
+    expect(source).toContain('osmd.cursor.nextMeasure()');
+  });
 });

@@ -13,6 +13,7 @@ export interface ScorePlaybackController {
   stop: () => void;
   stepBack: () => void;
   stepForward: () => void;
+  goToMeasure?: (measureNumber: number) => void;
 }
 
 interface ScoreViewerProps {
@@ -24,6 +25,7 @@ interface ScoreViewerProps {
   onCurrentPageChange?: (page: number) => void;
   onReady?: (osmd: OpenSheetMusicDisplay) => void;
   onError?: (err: Error) => void;
+  onMusicXmlLoaded?: (xml: string) => void;
   onPlaybackControllerChange?: (controller: ScorePlaybackController | null) => void;
   className?: string;
 }
@@ -169,6 +171,7 @@ export function ScoreViewer({
   onCurrentPageChange,
   onReady,
   onError,
+  onMusicXmlLoaded,
   onPlaybackControllerChange,
   className = '',
 }: ScoreViewerProps) {
@@ -232,6 +235,7 @@ export function ScoreViewer({
             title,
           ),
         );
+        onMusicXmlLoaded?.(xml);
         await withTimeout(osmd.load(xml), 20000, 'MusicXML load timed out after 20 seconds.');
         applyPracticeEngravingRules(osmd);
         setStage('rendering');
@@ -280,6 +284,16 @@ export function ScoreViewer({
           });
         };
 
+        function goToMeasure(measureNumber: number) {
+          clearPlaybackTimer();
+          osmd.cursor.reset();
+          osmd.cursor.show();
+          for (let index = 1; index < Math.max(1, measureNumber); index += 1) {
+            osmd.cursor.nextMeasure();
+          }
+          revealCursor();
+        }
+
         const controller: ScorePlaybackController = {
           play: () => {
             clearPlaybackTimer();
@@ -306,6 +320,7 @@ export function ScoreViewer({
             osmd.cursor.show();
             revealCursor();
           },
+          goToMeasure,
         };
 
         onPlaybackControllerChange?.(controller);
@@ -329,7 +344,7 @@ export function ScoreViewer({
       onPlaybackControllerChange?.(null);
       osmdRef.current = null;
     };
-  }, [source, title, visiblePartIds, onReady, onError, onPageCountChange, onCurrentPageChange, onPlaybackControllerChange]);
+  }, [source, title, visiblePartIds, onReady, onError, onMusicXmlLoaded, onPageCountChange, onCurrentPageChange, onPlaybackControllerChange]);
 
   return (
     <div className={`relative h-full ${className}`} data-score-stage={stage}>

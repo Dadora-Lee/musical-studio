@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Practice Studio 피아노 연주 변경 전/후</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d7dfeb;
+      --blue: #2563eb;
+      --teal: #0f766e;
+      --amber: #b45309;
+      --rose: #be123c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    main { max-width: 1240px; margin: 0 auto; padding: 24px; }
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+    h1, h2, h3 { letter-spacing: 0; }
+    h1 { margin: 0; font-size: 24px; }
+    h2 { margin: 0 0 10px; font-size: 16px; }
+    h3 { margin: 0 0 8px; font-size: 14px; }
+    p { margin: 0; color: var(--muted); }
+    code {
+      border: 1px solid #dbe3ee;
+      border-radius: 4px;
+      background: #f8fafc;
+      padding: 1px 5px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+    }
+    ul { margin: 0; padding-left: 18px; color: #344054; }
+    li + li { margin-top: 5px; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td {
+      border: 1px solid #dbe3ee;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      word-break: keep-all;
+    }
+    th { width: 170px; background: #f8fafc; color: #344054; font-size: 12px; }
+    a { color: var(--blue); font-weight: 700; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .stack { display: grid; gap: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      border: 1px solid #99f6e4;
+      border-radius: 6px;
+      background: #ecfdf5;
+      color: var(--teal);
+      padding: 0 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .note { border-color: #bfdbfe; background: #eff6ff; color: #1e3a8a; }
+    .warn { border-color: #fde68a; background: #fffbeb; color: #78350f; }
+    .danger { border-color: #fecdd3; background: #fff1f2; color: #881337; }
+    .mock {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr) 220px;
+      min-height: 230px;
+      overflow: hidden;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+    .mock aside, .mock .right {
+      background: #f8fafc;
+      padding: 10px;
+      color: #475569;
+      font-size: 12px;
+    }
+    .mock aside { border-right: 1px solid #cbd5e1; }
+    .mock .right { border-left: 1px solid #cbd5e1; }
+    .mock .center { display: grid; grid-template-rows: 42px 1fr 70px; min-width: 0; }
+    .mock .score { display: grid; place-items: center; background: #dfe5ee; color: #64748b; }
+    .mock .transport { border-top: 1px solid #cbd5e1; padding: 10px; }
+    .tabs { display: inline-grid; grid-template-columns: repeat(3, auto); overflow: hidden; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 700; }
+    .tabs span { padding: 6px 10px; border-right: 1px solid #cbd5e1; background: #fff; color: #334155; }
+    .tabs span:last-child { border-right: 0; }
+    .tabs .active { background: #1d4ed8; color: #fff; }
+    @media (max-width: 920px) {
+      main { padding: 14px; }
+      header, .grid { grid-template-columns: 1fr; }
+      .mock { grid-template-columns: 1fr; }
+      .mock aside, .mock .right { border: 0; border-bottom: 1px solid #cbd5e1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stack">
+    <header>
+      <div>
+        <h1>Practice Studio 피아노 연주 변경 전/후</h1>
+        <p>작성일: 2026-05-31 · 대상 화면 <code>/work</code> · 기준 브랜치 <code>codex/local-db-prototype</code></p>
+      </div>
+      <span class="badge">승인 필요</span>
+    </header>
+
+    <section class="panel note">
+      <h2>변경 목적</h2>
+      <p>현재 <code>악보재생</code>은 소리 없이 OSMD cursor만 마디 단위로 움직인다. 이를 사용자가 기대한 의미에 맞게 MusicXML note event를 실제 피아노 계열 소리로 재생하는 <code>피아노 연주</code> source로 전환한다.</p>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>변경 전</h2>
+        <div class="mock" aria-label="변경 전 mock">
+          <aside>Number 목록<br />기존 위치 유지</aside>
+          <div class="center">
+            <div style="padding:10px;border-bottom:1px solid #cbd5e1;">MusicXML Header</div>
+            <div class="score">A4 MusicXML Score</div>
+            <div class="transport">
+              <div class="tabs"><span>MR</span><span>AR</span><span class="active">악보재생</span></div>
+              <p style="margin-top:8px;">OSMD cursor만 이동 · 실제 소리 없음</p>
+            </div>
+          </div>
+          <div class="right">녹음 Take 목록<br />제출 Feedback</div>
+        </div>
+      </article>
+      <article class="panel">
+        <h2>변경 후</h2>
+        <div class="mock" aria-label="변경 후 mock">
+          <aside>Number 목록<br />기존 위치 유지</aside>
+          <div class="center">
+            <div style="padding:10px;border-bottom:1px solid #cbd5e1;">MusicXML Header</div>
+            <div class="score">A4 MusicXML Score<br />현재 measure cursor/page sync</div>
+            <div class="transport">
+              <div class="tabs"><span>MR</span><span>AR</span><span class="active">피아노 연주</span></div>
+              <p style="margin-top:8px;">MusicXML note event를 Tone.js로 재생 · MR/AR와 같은 seek UX</p>
+            </div>
+          </div>
+          <div class="right">녹음 Take 목록<br />제출 Feedback</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>영향 범위</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>유지</th>
+            <td>좌측 Number 목록, 상단 NickName 선택, 중앙 A4 MusicXML 영역, 하단 Transport/Recording, 우측 제출/Feedback 위치</td>
+          </tr>
+          <tr>
+            <th>변경</th>
+            <td><code>악보재생</code> source label과 동작을 <code>피아노 연주</code>로 전환한다. transport 버튼과 slider는 MR/AR와 같은 의미로 작동한다.</td>
+          </tr>
+          <tr>
+            <th>추가</th>
+            <td>MusicXML playback event parser, Tone.js piano player wrapper, ScoreViewer raw XML callback, measure 기반 cursor/page sync</td>
+          </tr>
+          <tr>
+            <th>삭제</th>
+            <td>소리 없는 interval 기반 cursor-only playback 의미는 제거한다. 단 cursor/page sync 기능은 피아노 연주 위치 추적으로 재사용한다.</td>
+          </tr>
+          <tr>
+            <th>보류</th>
+            <td>고품질 피아노 sample pack, part selector, repeat/grace/dynamic/pedal 완전 지원, Recording과 피아노 연주 동시 녹음 정책</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel warn">
+      <h2>승인 기준</h2>
+      <ul>
+        <li><code>/work</code>의 큰 레이아웃은 바꾸지 않는다.</li>
+        <li>사용자에게 보이는 source 이름은 <code>악보재생</code>에서 <code>피아노 연주</code>로 바뀐다.</li>
+        <li>자동 검증은 playback state와 scheduling 중심으로 하고, 실제 소리는 브라우저에서 수동 청음으로 확인한다.</li>
+        <li>새 dependency, DB schema, Supabase migration, 실제 MusicXML/MR/AR 파일 추가는 하지 않는다.</li>
+      </ul>
+    </section>
+
+    <section class="panel danger">
+      <h2>되돌릴 기준</h2>
+      <ul>
+        <li>MR/AR 재생 또는 Recording 흐름이 깨지면 피아노 연주 통합을 되돌린다.</li>
+        <li>MusicXML 없는 Number에서 transport가 오동작하면 unavailable 상태로 되돌린다.</li>
+        <li>큰 악보에서 browser freeze가 발생하면 event 수 guard를 낮추고 part selector를 별도 제안한다.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>관련 문서</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>상세 계획</th>
+            <td><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/superpowers/plans/2026-05-31-musicxml-piano-playback-plan.md">2026-05-31-musicxml-piano-playback-plan.md</a></td>
+          </tr>
+          <tr>
+            <th>계획 HTML</th>
+            <td><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/ui-change-proposals/2026-05-31-musicxml-piano-playback-plan.html">2026-05-31-musicxml-piano-playback-plan.html</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

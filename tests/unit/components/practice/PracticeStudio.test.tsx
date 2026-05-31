@@ -1,8 +1,71 @@
 ﻿import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PracticeStudioLayout } from '@/components/practice/PracticeStudioLayout';
 import { practiceStudioPrototype } from '@/lib/practice/prototype-data';
+
+const pianoMocks = vi.hoisted(() => {
+  const scoreController = {
+    play: vi.fn(),
+    pause: vi.fn(),
+    stop: vi.fn(),
+    stepBack: vi.fn(),
+    stepForward: vi.fn(),
+    goToMeasure: vi.fn(),
+  };
+  const player = {
+    load: vi.fn(),
+    play: vi.fn().mockResolvedValue(undefined),
+    pause: vi.fn(),
+    stop: vi.fn(),
+    seek: vi.fn(),
+    dispose: vi.fn(),
+    getSnapshot: vi.fn(() => ({ isPlaying: false, currentTime: 0, currentMeasure: 1, durationSeconds: 2 })),
+  };
+  return {
+    scoreController,
+    player,
+    createBrowserMusicXmlPianoPlayer: vi.fn().mockResolvedValue(player),
+  };
+});
+
+vi.mock('@/components/score/ScoreViewer', async () => {
+  const React = await import('react');
+  const rawXml = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="3.1">
+  <part-list><score-part id="P1"><part-name>Hikaru</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>1</divisions></attributes>
+      <sound tempo="120"/>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration></note>
+    </measure>
+  </part>
+</score-partwise>`;
+
+  return {
+    ScoreViewer: (props: {
+      title?: string;
+      className?: string;
+      onMusicXmlLoaded?: (xml: string) => void;
+      onPlaybackControllerChange?: (controller: typeof pianoMocks.scoreController) => void;
+    }) => {
+      React.useEffect(() => {
+        props.onMusicXmlLoaded?.(rawXml);
+        props.onPlaybackControllerChange?.(pianoMocks.scoreController);
+      }, [props]);
+
+      return React.createElement('div', { className: props.className, 'data-testid': 'mock-score-viewer' }, props.title);
+    },
+  };
+});
+
+vi.mock('@/lib/audio-engine/musicxml-piano-player', () => ({
+  createBrowserMusicXmlPianoPlayer: pianoMocks.createBrowserMusicXmlPianoPlayer,
+}));
 
 class FakeMediaRecorder {
   static isTypeSupported = () => true;
@@ -71,6 +134,25 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+beforeEach(() => {
+  pianoMocks.createBrowserMusicXmlPianoPlayer.mockResolvedValue(pianoMocks.player);
+  pianoMocks.player.play.mockResolvedValue(undefined);
+  pianoMocks.scoreController.play.mockClear();
+  pianoMocks.scoreController.pause.mockClear();
+  pianoMocks.scoreController.stop.mockClear();
+  pianoMocks.scoreController.stepBack.mockClear();
+  pianoMocks.scoreController.stepForward.mockClear();
+  pianoMocks.scoreController.goToMeasure.mockClear();
+  pianoMocks.player.load.mockClear();
+  pianoMocks.player.play.mockClear();
+  pianoMocks.player.pause.mockClear();
+  pianoMocks.player.stop.mockClear();
+  pianoMocks.player.seek.mockClear();
+  pianoMocks.player.dispose.mockClear();
+  pianoMocks.player.getSnapshot.mockClear();
+  pianoMocks.createBrowserMusicXmlPianoPlayer.mockClear();
+});
+
 describe('PracticeStudioLayout', () => {
   it('shows submission status before the take list', () => {
     render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
@@ -83,18 +165,48 @@ describe('PracticeStudioLayout', () => {
     expect(within(takes).getByText('take_03.wav')).toBeInTheDocument();
   });
 
-  it('shows score pagination and MR/AR/score playback sources', () => {
+  it('shows score pagination and MR/AR/piano playback sources', () => {
     render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
 
     expect(screen.getByRole('button', { name: '이전 페이지' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '다음 페이지' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'MR' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'AR' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '악보재생' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '피아노 연주' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'AR' }));
 
     expect(screen.getByText(/AR · SONG07_AR.mp3/)).toBeInTheDocument();
+  });
+
+  it('plays and seeks MusicXML piano playback with score cursor sync', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PracticeStudioLayout
+        data={practiceStudioPrototype}
+        scoreSources={{
+          'song07-lie': { url: '/api/prototype-assets/song07-lie/musicxml', label: 'SONG07_MUSIC_SHEET.musicxml.xml' },
+        }}
+      />,
+    );
+
+    await screen.findByTestId('mock-score-viewer');
+    await waitFor(() => expect(pianoMocks.createBrowserMusicXmlPianoPlayer).toHaveBeenCalled());
+
+    await user.click(screen.getByRole('button', { name: '피아노 연주' }));
+
+    expect(screen.getByText(/피아노 연주 · MusicXML piano reference/)).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: '피아노 연주 위치' })).toBeEnabled();
+
+    await user.click(screen.getByLabelText('재생'));
+
+    expect(pianoMocks.player.play).toHaveBeenCalled();
+
+    fireEvent.change(screen.getByRole('slider', { name: '피아노 연주 위치' }), { target: { value: '1' } });
+
+    expect(pianoMocks.player.seek).toHaveBeenCalledWith(1);
+    expect(pianoMocks.scoreController.goToMeasure).toHaveBeenCalledWith(2);
   });
 
   it('allows every member to select any number from the left list', async () => {
