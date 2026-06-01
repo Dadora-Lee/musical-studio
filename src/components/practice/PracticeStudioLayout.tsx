@@ -14,7 +14,8 @@ import {
 
 type PlaybackSource = 'mr' | 'ar' | 'score';
 type ScoreLayoutPreset = 'lyrics' | 'balanced' | 'overview';
-type RecorderState = 'checking' | 'idle' | 'recording' | 'paused' | 'ready' | 'unsupported' | 'error';
+type RecordingStatus = 'idle' | 'requesting-permission' | 'recording' | 'paused' | 'stopping' | 'ready-to-save' | 'saving' | 'saved' | 'error';
+type RecorderState = RecordingStatus | 'checking' | 'unsupported';
 type DeviceOption = { deviceId: string; label: string };
 type ReadyRecording = { blob: Blob; url: string; duration: number };
 type AudioElementWithSink = HTMLAudioElement & { setSinkId?: (sinkId: string) => Promise<void> };
@@ -80,6 +81,7 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
   const [scoreController, setScoreController] = useState<ScorePlaybackController | null>(null);
   const [scoreRawXml, setScoreRawXml] = useState<string | null>(null);
   const [localTakes, setLocalTakes] = useState<PracticeTake[]>(data.takes);
+  const localTakeUrlsRef = useRef<Set<string>>(new Set());
   const activeNumber = data.numbers.find((number) => number.id === selectedNumberId) ?? data.numbers[0];
   const submittedTake = localTakes.find((take) => take.id === data.submission.takeId);
   const activeScoreSource = scoreSources?.[activeNumber.id] ?? scoreSource;
@@ -106,7 +108,16 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
   }, []);
 
   const handleTakeCreated = useCallback((take: PracticeTake) => {
+    if (take.audioUrl?.startsWith('blob:')) localTakeUrlsRef.current.add(take.audioUrl);
     setLocalTakes((takes) => [take, ...takes]);
+  }, []);
+
+  useEffect(() => {
+    const localTakeUrls = localTakeUrlsRef.current;
+    return () => {
+      localTakeUrls.forEach((url) => window.URL.revokeObjectURL(url));
+      localTakeUrls.clear();
+    };
   }, []);
 
   const handleNumberSelect = useCallback((numberId: string) => {
@@ -351,6 +362,7 @@ function PracticeTransport({
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const recordingStartedAtRef = useRef<number | null>(null);
+  const recordingBaseSecondsRef = useRef(0);
   const recordingTimerRef = useRef<number | null>(null);
   const finalizeTimerRef = useRef<number | null>(null);
   const recordingFinalizedRef = useRef(false);
@@ -392,13 +404,13 @@ function PracticeTransport({
     return { label: '피아노 연주', url: undefined, fileName: 'MusicXML piano reference', available: Boolean(pianoPlaybackMap) };
   }, [activeNumber, pianoPlaybackMap, source]);
 
-  const canRecord = recorderState !== 'checking' && recorderState !== 'unsupported' && recorderState !== 'recording';
+  const canRecord = recorderState === 'idle' || recorderState === 'saved' || recorderState === 'error';
   const isRecording = recorderState === 'recording' || recorderState === 'paused';
   const fallbackAudioDuration = parseDurationLabel(activeNumber.durationLabel ?? '00:00');
   const effectiveAudioDuration = audioDuration || fallbackAudioDuration;
   const pianoDuration = pianoPlaybackMap?.durationSeconds ?? 0;
   const effectiveTrackDuration = source === 'score' ? pianoDuration : effectiveAudioDuration;
-  const recordingProgress = Math.min(100, Math.max(0, (recordingTime / Math.max(effectiveAudioDuration, 1)) * 100));
+  const recordingProgress = Math.min(100, Math.max(0, (recordingTime / Math.max(effectiveTrackDuration || effectiveAudioDuration, 1)) * 100));
   const sourceVolume = sourceVolumes[source];
   const sourceMuted = sourceMutes[source];
 
@@ -617,6 +629,7 @@ function PracticeTransport({
   async function startRecording() {
     if (!canRecord || !navigator.mediaDevices?.getUserMedia || typeof window.MediaRecorder === 'undefined') return;
     try {
+      setRecorderState('requesting-permission');
       setRecorderMessage('마이크 권한을 요청하는 중입니다.');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: selectedMicId ? { deviceId: { exact: selectedMicId } } : true });
       streamRef.current = stream;
@@ -631,9 +644,10 @@ function PracticeTransport({
         clearFinalizeTimer();
         void finalizeRecording(recorder.mimeType || 'audio/webm');
       };
-      if ((source === 'mr' || source === 'ar') && sourceMeta.available) await handlePlay();
       recorder.start();
+      recordingBaseSecondsRef.current = 0;
       recordingStartedAtRef.current = Date.now();
+      if (sourceMeta.available) await handlePlay();
       setRecordingTime(0);
       setReadyRecording(null);
       setRecorderState('recording');
@@ -654,14 +668,19 @@ function PracticeTransport({
     if (!recorder) return;
     if (recorderState === 'recording' && recorder.state === 'recording') {
       recorder.pause();
+      const pausedAt = elapsedRecordingSeconds();
+      recordingBaseSecondsRef.current = pausedAt;
+      recordingStartedAtRef.current = null;
+      setRecordingTime(pausedAt);
       setRecorderState('paused');
       setRecorderMessage('녹음을 일시정지했습니다.');
       clearRecordingTimer();
-      safePause(selectedAudio());
+      handlePause();
       return;
     }
     if (recorderState === 'paused' && recorder.state === 'paused') {
       recorder.resume();
+      recordingStartedAtRef.current = Date.now();
       setRecorderState('recording');
       setRecorderMessage('녹음을 다시 진행합니다.');
       startRecordingTimer();
@@ -680,6 +699,7 @@ function PracticeTransport({
     }
     clearFinalizeTimer();
     finalizeTimerRef.current = window.setTimeout(() => void finalizeRecording(mimeType), 1500);
+    setRecorderState('stopping');
     setRecorderMessage('녹음을 WAV로 변환하는 중입니다.');
     recorder.stop();
     handlePause();
@@ -697,7 +717,7 @@ function PracticeTransport({
       const url = window.URL.createObjectURL(wav);
       if (readyRecordingRef.current) window.URL.revokeObjectURL(readyRecordingRef.current.url);
       setReadyRecording({ blob: wav, url, duration });
-      setRecorderState('ready');
+      setRecorderState('ready-to-save');
       setRecorderMessage('WAV Take가 준비되었습니다. 저장하면 오른쪽 녹음 Take 목록에 추가됩니다.');
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -711,10 +731,11 @@ function PracticeTransport({
 
   function saveRecordingTake() {
     if (!readyRecording) return;
+    setRecorderState('saving');
     const takeNumber = Date.now().toString().slice(-5);
     onTakeCreated({ id: `local-take-${takeNumber}`, fileName: `take_${takeNumber}.wav`, createdLabel: '방금', durationLabel: formatTime(readyRecording.duration), isSubmitted: false, audioUrl: readyRecording.url });
     setReadyRecording(null);
-    setRecorderState('idle');
+    setRecorderState('saved');
     setRecorderMessage('WAV Take를 목록에 추가했습니다. 제출은 local prototype 상태입니다.');
   }
 
@@ -738,8 +759,8 @@ function PracticeTransport({
   }
 
   function elapsedRecordingSeconds() {
-    if (!recordingStartedAtRef.current) return 0;
-    return Math.max(0, Math.round((Date.now() - recordingStartedAtRef.current) / 1000));
+    if (!recordingStartedAtRef.current) return recordingBaseSecondsRef.current;
+    return Math.max(0, recordingBaseSecondsRef.current + Math.round((Date.now() - recordingStartedAtRef.current) / 1000));
   }
 
   function stopStream() {
@@ -1154,7 +1175,4 @@ function audioBufferToWav(buffer: AudioBuffer) {
 function writeString(view: DataView, offset: number, value: string) {
   for (let index = 0; index < value.length; index += 1) view.setUint8(offset + index, value.charCodeAt(index));
 }
-
-
-
 

@@ -129,7 +129,7 @@ function installRecorderMocks() {
   Object.defineProperty(window, 'AudioContext', { configurable: true, value: FakeAudioContext });
   Object.defineProperty(window, 'webkitAudioContext', { configurable: true, value: FakeAudioContext });
 
-  return { getUserMedia, enumerateDevices, createObjectURL, stop };
+  return { getUserMedia, enumerateDevices, createObjectURL, revokeObjectURL, stop };
 }
 
 afterEach(() => {
@@ -468,6 +468,84 @@ describe('PracticeStudioLayout', () => {
 
     play.mockRestore();
   });
-});
+  it('records with the selected piano source and synchronizes pause and resume', async () => {
+    const user = userEvent.setup();
+    const mocks = installRecorderMocks();
 
+    render(
+      <PracticeStudioLayout
+        data={practiceStudioPrototype}
+        scoreSources={{
+          'song07-lie': { url: '/api/prototype-assets/song07-lie/musicxml', label: 'SONG07_MUSIC_SHEET.musicxml.xml' },
+        }}
+      />,
+    );
+
+    await screen.findByTestId('mock-score-viewer');
+    await waitFor(() => expect(pianoMocks.createBrowserMusicXmlPianoPlayer).toHaveBeenCalled());
+
+    await user.click(screen.getByRole('button', { name: '피아노 연주' }));
+    await waitFor(() => expect(screen.getByRole('slider', { name: '피아노 연주 위치' })).toBeEnabled());
+    await waitFor(() => expect(screen.getByLabelText('녹음 시작')).toBeEnabled());
+
+    await user.click(screen.getByLabelText('녹음 시작'));
+
+    expect(mocks.getUserMedia).toHaveBeenCalled();
+    expect(pianoMocks.player.play).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText(/녹음 중입니다/)).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('녹음 일시정지'));
+
+    expect(pianoMocks.player.pause).toHaveBeenCalled();
+    expect(screen.getByLabelText('녹음 시작')).toBeDisabled();
+    expect(screen.getByText('녹음을 일시정지했습니다.')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('녹음 일시정지'));
+
+    expect(pianoMocks.player.play).toHaveBeenCalledTimes(2);
+    expect(screen.getByText('녹음을 다시 진행합니다.')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('녹음 정지'));
+
+    await waitFor(() => expect(mocks.stop).toHaveBeenCalled());
+    expect(pianoMocks.player.pause).toHaveBeenCalled();
+  });
+
+  it('shows a recording error when microphone permission fails', async () => {
+    const user = userEvent.setup();
+    const mocks = installRecorderMocks();
+    mocks.getUserMedia.mockRejectedValueOnce(new Error('permission denied'));
+
+    render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
+
+    await waitFor(() => expect(screen.getByLabelText('녹음 시작')).toBeEnabled());
+    await user.click(screen.getByLabelText('녹음 시작'));
+
+    expect(await screen.findByText(/마이크 권한 또는 녹음 시작에 실패했습니다: permission denied/)).toBeInTheDocument();
+  });
+
+  it('plays a saved local take and revokes its object URL on unmount', async () => {
+    const user = userEvent.setup();
+    const play = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+    const mocks = installRecorderMocks();
+
+    const { unmount } = render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
+
+    await waitFor(() => expect(screen.getByLabelText('녹음 시작')).toBeEnabled());
+    await user.click(screen.getByLabelText('녹음 시작'));
+    await user.click(screen.getByLabelText('녹음 정지'));
+    await waitFor(() => expect(mocks.createObjectURL).toHaveBeenCalledWith(expect.any(Blob)));
+    await user.click(screen.getByLabelText('녹음 저장'));
+
+    const takePlayButtons = screen.getAllByRole('button', { name: '재생' });
+    await user.click(takePlayButtons[takePlayButtons.length - 1]);
+
+    expect(play).toHaveBeenCalled();
+
+    unmount();
+
+    expect(mocks.revokeObjectURL).toHaveBeenCalledWith('blob:local-take');
+    play.mockRestore();
+  });
+});
 
