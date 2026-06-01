@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Practice UX 개선 구현 결과 - 2026-06-01</title>
+  <style>
+    body { margin: 0; background: #eef3f8; color: #172033; font-family: Arial, "Noto Sans KR", sans-serif; letter-spacing: 0; }
+    main { max-width: 1040px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    h2 { margin: 0 0 10px; font-size: 18px; }
+    p, li, td, th { font-size: 13px; line-height: 1.7; }
+    .sub { color: #667085; }
+    .card { border: 1px solid #d7dee8; border-radius: 8px; background: #fff; padding: 16px 18px; margin: 14px 0; box-shadow: 0 10px 28px rgba(23, 32, 51, 0.08); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #d7dee8; padding: 9px 10px; text-align: left; vertical-align: top; }
+    th { background: #f8fafc; }
+    code { border: 1px solid #d7dee8; border-radius: 5px; background: #f8fafc; padding: 2px 5px; font-size: 12px; }
+    a { color: #1e4fae; font-weight: 800; }
+    .ok { color: #18794e; font-weight: 800; }
+    .warn { color: #b7791f; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Practice Studio UX 개선 구현 결과</h1>
+    <p class="sub">A안 확정 피드백 기준. 대상 화면: <a href="http://localhost:3000/work">http://localhost:3000/work</a></p>
+
+    <section class="card">
+      <h2>반영 내용</h2>
+      <table>
+        <thead><tr><th>요청</th><th>구현 결과</th></tr></thead>
+        <tbody>
+          <tr><td>악보가 움직이지 않고 현재 위치만 표시</td><td>피아노 재생/seek에서 기존 <code>goToMeasure</code> 호출을 제거하고 <code>highlightMeasure</code>를 사용하도록 변경했다. 이 API는 페이지 reveal/scroll을 하지 않고 OSMD cursor만 현재 마디 위치로 이동시킨다.</td></tr>
+          <tr><td>가시성 향상용 마디 렌더링 선택</td><td>악보 pager에 <code>가사 크게</code>, <code>균형</code>, <code>전체</code> 라디오를 추가했다. 각각 3/4/5마디 per system 기준으로 OSMD를 다시 렌더링한다.</td></tr>
+          <tr><td>트랙별 볼륨/소리 토글</td><td>MR/AR/Piano active lane과 Recording lane 왼쪽에 소리 활성/비활성 토글, 볼륨 슬라이더, % 표시를 배치했다. MR/AR/Piano는 source별로 볼륨과 mute 상태를 따로 기억한다.</td></tr>
+          <tr><td>재생 상태 표시</td><td>재생/일시정지를 하나의 primary 버튼으로 합쳤고, 재생 중에는 active 스타일과 pause 아이콘으로 바뀐다.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>2차 계획 검토 결과</h2>
+      <p>검토 결과 A안 구현 방향은 유지한다. 다만 “개별 음악과 녹음한 것을 같이 들을 수 있다”는 의도에 맞춰, 선택된 source 하나의 볼륨 상태를 공유하지 않고 MR/AR/Piano별 볼륨과 mute 상태를 분리했다.</p>
+      <p>Recording lane은 현재 POC에서 녹음 진행/monitor 기준 UI로 두고, 저장된 take와 MR/AR을 동시에 playback하는 mixer는 다음 단계의 명확한 기능 단위로 분리한다.</p>
+    </section>
+
+    <section class="card">
+      <h2>흔들림 관련 확인</h2>
+      <p>악보가 계속 흔들릴 수 있었던 주 원인은 피아노 재생 중 현재 마디를 맞추기 위해 <code>goToMeasure</code>가 호출되고, 내부에서 <code>revealCursor()</code>가 페이지 표시와 <code>scrollIntoView()</code>를 실행하던 구조였다.</p>
+      <p>이번 변경에서는 피아노 재생과 seek가 <code>highlightMeasure()</code>만 호출하도록 분리했다. 따라서 재생 중 자동 페이지 이동은 기본 동작에서 빠졌다. 단, 사용자가 악보 렌더링 라디오를 바꾸는 순간은 의도적으로 OSMD를 다시 렌더링한다.</p>
+    </section>
+
+    <section class="card">
+      <h2>검증 결과</h2>
+      <ul>
+        <li><span class="ok">통과</span> <code>pnpm typecheck</code></li>
+        <li><span class="ok">통과</span> <code>pnpm lint</code></li>
+        <li><span class="ok">통과</span> <code>pnpm test</code> - 11 files, 49 tests</li>
+        <li><span class="ok">통과</span> <code>pnpm exec playwright test tests/e2e/work-piano-playback.spec.ts --project=chromium</code></li>
+        <li><span class="warn">참고</span> 전체 Playwright 프로젝트 실행은 local WebKit 바이너리 미설치로 mobile-safari만 실패했다. Chromium 검증은 통과했다.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>관련 문서</h2>
+      <ul>
+        <li><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/ui-change-proposals/2026-06-01-work-practice-ux-improvement-approved-a.html">A안 확정 변경 전/후</a></li>
+        <li><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/ui-change-proposals/2026-06-01-work-practice-ux-improvement-options.html">초기 선택안</a></li>
+        <li><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/ui-change-proposals/2026-06-01-work-practice-ux-improvement-plan.html">상세 계획서</a></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

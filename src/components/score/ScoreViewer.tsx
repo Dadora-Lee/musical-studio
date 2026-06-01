@@ -13,6 +13,7 @@ export interface ScorePlaybackController {
   stop: () => void;
   stepBack: () => void;
   stepForward: () => void;
+  highlightMeasure?: (measureNumber: number) => void;
   goToMeasure?: (measureNumber: number) => void;
 }
 
@@ -27,10 +28,10 @@ interface ScoreViewerProps {
   onError?: (err: Error) => void;
   onMusicXmlLoaded?: (xml: string) => void;
   onPlaybackControllerChange?: (controller: ScorePlaybackController | null) => void;
+  measuresPerSystem?: number;
   className?: string;
 }
 
-const PRACTICE_MEASURES_PER_SYSTEM = 4;
 const PRACTICE_TARGET_MEASURES_PER_PAGE = '12-16';
 const PRACTICE_SCORE_SPACING = 'uniform-practice';
 
@@ -52,7 +53,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, message: string) 
   }
 }
 
-function applyPracticeEngravingRules(osmd: OpenSheetMusicDisplay) {
+function applyPracticeEngravingRules(osmd: OpenSheetMusicDisplay, measuresPerSystem: number) {
   const rules = osmd.EngravingRules;
 
   osmd.setCustomPageFormat(840, 1188);
@@ -60,7 +61,7 @@ function applyPracticeEngravingRules(osmd: OpenSheetMusicDisplay) {
   rules.NewSystemAtXMLNewSystemAttribute = false;
   rules.NewSystemAtXMLNewPageAttribute = false;
   rules.NewPageAtXMLNewPageAttribute = false;
-  rules.RenderXMeasuresPerLineAkaSystem = PRACTICE_MEASURES_PER_SYSTEM;
+  rules.RenderXMeasuresPerLineAkaSystem = measuresPerSystem;
   rules.PageTopMargin = 8;
   rules.PageBottomMargin = 8;
   rules.PageLeftMargin = 8;
@@ -150,16 +151,23 @@ function normalizeA4Pages(container: HTMLDivElement) {
   });
 }
 
-function markUniformPracticeScore(container: HTMLDivElement) {
+function markUniformPracticeScore(container: HTMLDivElement, measuresPerSystem: number) {
   container.setAttribute('data-score-spacing', PRACTICE_SCORE_SPACING);
-  container.setAttribute('data-score-measures-per-system', String(PRACTICE_MEASURES_PER_SYSTEM));
+  container.setAttribute('data-score-measures-per-system', String(measuresPerSystem));
   container.setAttribute('data-score-target-measures-per-page', PRACTICE_TARGET_MEASURES_PER_PAGE);
 
   pageElements(container).forEach((page) => {
     page.setAttribute('data-score-spacing', PRACTICE_SCORE_SPACING);
-    page.setAttribute('data-score-measures-per-system', String(PRACTICE_MEASURES_PER_SYSTEM));
+    page.setAttribute('data-score-measures-per-system', String(measuresPerSystem));
     page.setAttribute('data-score-target-measures-per-page', PRACTICE_TARGET_MEASURES_PER_PAGE);
   });
+}
+
+function styleCursorAsMeasureHighlight(cursorElement?: HTMLElement | null) {
+  if (!cursorElement) return;
+  cursorElement.style.backgroundColor = 'rgba(47, 111, 223, 0.55)';
+  cursorElement.style.boxShadow = '0 0 0 3px rgba(47, 111, 223, 0.14)';
+  cursorElement.style.borderRadius = '4px';
 }
 
 export function ScoreViewer({
@@ -173,6 +181,7 @@ export function ScoreViewer({
   onError,
   onMusicXmlLoaded,
   onPlaybackControllerChange,
+  measuresPerSystem = 4,
   className = '',
 }: ScoreViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -227,7 +236,7 @@ export function ScoreViewer({
           pageFormat: 'A4_P',
         });
         osmdRef.current = osmd;
-        applyPracticeEngravingRules(osmd);
+        applyPracticeEngravingRules(osmd, measuresPerSystem);
 
         const xml = normalizePracticeMusicXml(
           ensureMusicXmlTitle(
@@ -237,7 +246,7 @@ export function ScoreViewer({
         );
         onMusicXmlLoaded?.(xml);
         await withTimeout(osmd.load(xml), 20000, 'MusicXML load timed out after 20 seconds.');
-        applyPracticeEngravingRules(osmd);
+        applyPracticeEngravingRules(osmd, measuresPerSystem);
         setStage('rendering');
 
         if (cancelled) return;
@@ -251,7 +260,7 @@ export function ScoreViewer({
 
         osmd.render();
         normalizeA4Pages(containerRef.current);
-        markUniformPracticeScore(containerRef.current);
+        markUniformPracticeScore(containerRef.current, measuresPerSystem);
 
         if (cancelled || !containerRef.current) return;
 
@@ -294,6 +303,16 @@ export function ScoreViewer({
           revealCursor();
         }
 
+        function highlightMeasure(measureNumber: number) {
+          clearPlaybackTimer();
+          osmd.cursor.reset();
+          osmd.cursor.show();
+          for (let index = 1; index < Math.max(1, measureNumber); index += 1) {
+            osmd.cursor.nextMeasure();
+          }
+          styleCursorAsMeasureHighlight(osmd.cursor.cursorElement);
+        }
+
         const controller: ScorePlaybackController = {
           play: () => {
             clearPlaybackTimer();
@@ -320,6 +339,7 @@ export function ScoreViewer({
             osmd.cursor.show();
             revealCursor();
           },
+          highlightMeasure,
           goToMeasure,
         };
 
@@ -344,7 +364,7 @@ export function ScoreViewer({
       onPlaybackControllerChange?.(null);
       osmdRef.current = null;
     };
-  }, [source, title, visiblePartIds, onReady, onError, onMusicXmlLoaded, onPageCountChange, onCurrentPageChange, onPlaybackControllerChange]);
+  }, [source, title, visiblePartIds, measuresPerSystem, onReady, onError, onMusicXmlLoaded, onPageCountChange, onCurrentPageChange, onPlaybackControllerChange]);
 
   return (
     <div className={`relative h-full ${className}`} data-score-stage={stage}>

@@ -4,6 +4,7 @@ export interface PianoSynth {
   triggerAttackRelease: (pitch: string, durationSeconds: number, time?: number) => void;
   dispose: () => void;
   toDestination?: () => PianoSynth;
+  volume?: { value: number };
 }
 
 export interface PianoToneModule {
@@ -118,6 +119,10 @@ export function createMusicXmlPianoPlayer({
     seek(seconds: number) {
       notify(seconds);
       tone.Transport.seconds = currentTime;
+    },
+    setVolume(percent: number) {
+      if (!synth?.volume) return;
+      synth.volume.value = percent <= 0 ? -60 : 20 * Math.log10(Math.min(1, Math.max(0, percent / 100)));
     },
     dispose() {
       clearSchedule();

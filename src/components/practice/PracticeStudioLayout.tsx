@@ -13,11 +13,30 @@ import {
 } from '@/lib/practice/prototype-data';
 
 type PlaybackSource = 'mr' | 'ar' | 'score';
+type ScoreLayoutPreset = 'lyrics' | 'balanced' | 'overview';
 type RecorderState = 'checking' | 'idle' | 'recording' | 'paused' | 'ready' | 'unsupported' | 'error';
 type DeviceOption = { deviceId: string; label: string };
 type ReadyRecording = { blob: Blob; url: string; duration: number };
 type AudioElementWithSink = HTMLAudioElement & { setSinkId?: (sinkId: string) => Promise<void> };
 type MusicXmlPianoPlayer = Awaited<ReturnType<typeof createBrowserMusicXmlPianoPlayer>>;
+
+const scoreLayoutOptions: Array<{ value: ScoreLayoutPreset; label: string; measuresPerSystem: number }> = [
+  { value: 'lyrics', label: '가사 크게', measuresPerSystem: 3 },
+  { value: 'balanced', label: '균형', measuresPerSystem: 4 },
+  { value: 'overview', label: '전체', measuresPerSystem: 5 },
+];
+
+const defaultSourceVolumes: Record<PlaybackSource, number> = {
+  mr: 70,
+  ar: 70,
+  score: 70,
+};
+
+const defaultSourceMutes: Record<PlaybackSource, boolean> = {
+  mr: false,
+  ar: false,
+  score: false,
+};
 
 const prototypeMembers = [
   '주언',
@@ -57,6 +76,7 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
   const [selectedSubmissionTakeId, setSelectedSubmissionTakeId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
+  const [scoreLayoutPreset, setScoreLayoutPreset] = useState<ScoreLayoutPreset>('balanced');
   const [scoreController, setScoreController] = useState<ScorePlaybackController | null>(null);
   const [scoreRawXml, setScoreRawXml] = useState<string | null>(null);
   const [localTakes, setLocalTakes] = useState<PracticeTake[]>(data.takes);
@@ -69,6 +89,7 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
     () => (scoreSourceUrl ? { url: scoreSourceUrl } : (scoreSourceRaw ?? null)),
     [scoreSourceRaw, scoreSourceUrl],
   );
+  const measuresPerSystem = scoreLayoutOptions.find((option) => option.value === scoreLayoutPreset)?.measuresPerSystem ?? 4;
   const selectedSubmittedTake = useMemo(
     () => localTakes.find((take) => take.id === selectedSubmissionTakeId && take.isSubmitted),
     [localTakes, selectedSubmissionTakeId],
@@ -172,6 +193,8 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
               <ScorePager
                 currentPage={currentPage}
                 pageCount={pageCount}
+                scoreLayoutPreset={scoreLayoutPreset}
+                onScoreLayoutPresetChange={setScoreLayoutPreset}
                 onPrevious={() => setCurrentPage((page) => Math.max(1, page - 1))}
                 onNext={() => setCurrentPage((page) => Math.min(pageCount, page + 1))}
               />
@@ -185,6 +208,7 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
                     onCurrentPageChange={handleCurrentScorePageChange}
                     onMusicXmlLoaded={setScoreRawXml}
                     onPlaybackControllerChange={setScoreController}
+                    measuresPerSystem={measuresPerSystem}
                     className="h-full"
                   />
                 ) : scoreSources || scoreSource || scoreError ? (
@@ -262,10 +286,45 @@ export function PracticeStudioLayout({ data = practiceStudioPrototype, score, sc
   );
 }
 
-function ScorePager({ currentPage, pageCount, onPrevious, onNext }: { currentPage: number; pageCount: number; onPrevious: () => void; onNext: () => void }) {
+function ScorePager({
+  currentPage,
+  pageCount,
+  scoreLayoutPreset,
+  onScoreLayoutPresetChange,
+  onPrevious,
+  onNext,
+}: {
+  currentPage: number;
+  pageCount: number;
+  scoreLayoutPreset: ScoreLayoutPreset;
+  onScoreLayoutPresetChange: (preset: ScoreLayoutPreset) => void;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
   return (
     <div className="flex h-[42px] items-center justify-between gap-2 border-b border-slate-300 bg-[#f8fafc] px-3">
       <h2 className="text-xs font-black uppercase text-slate-700">MusicXML 악보</h2>
+      <fieldset className="flex min-w-0 items-center gap-1 text-[11px] font-black" aria-label="악보 마디 렌더링">
+        <legend className="sr-only">악보 마디 렌더링</legend>
+        {scoreLayoutOptions.map((option) => (
+          <label
+            key={option.value}
+            className={`grid h-7 cursor-pointer place-items-center rounded border px-2 ${
+              scoreLayoutPreset === option.value ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-300 bg-white text-slate-600'
+            }`}
+          >
+            <input
+              className="sr-only"
+              type="radio"
+              name="score-layout-preset"
+              value={option.value}
+              checked={scoreLayoutPreset === option.value}
+              onChange={() => onScoreLayoutPresetChange(option.value)}
+            />
+            {option.label}
+          </label>
+        ))}
+      </fieldset>
       <div className="flex items-center gap-2 text-xs font-black">
         <button type="button" className="h-7 rounded border border-slate-300 bg-white px-2 disabled:cursor-not-allowed disabled:opacity-40" disabled={currentPage <= 1} onClick={onPrevious}>이전 페이지</button>
         <span className="min-w-16 text-center text-slate-600">{currentPage} / {pageCount}</span>
@@ -298,8 +357,12 @@ function PracticeTransport({
   const readyRecordingRef = useRef<ReadyRecording | null>(null);
   const [source, setSource] = useState<PlaybackSource>('mr');
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(70);
+  const [sourceVolumes, setSourceVolumes] = useState(defaultSourceVolumes);
   const [monitorVolume, setMonitorVolume] = useState(75);
+  const [sourceMutes, setSourceMutes] = useState(defaultSourceMutes);
+  const [recordingMuted, setRecordingMuted] = useState(false);
+  const sourceVolumesRef = useRef(sourceVolumes);
+  const sourceMutesRef = useRef(sourceMutes);
   const [audioTime, setAudioTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [pianoTime, setPianoTime] = useState(0);
@@ -336,6 +399,16 @@ function PracticeTransport({
   const pianoDuration = pianoPlaybackMap?.durationSeconds ?? 0;
   const effectiveTrackDuration = source === 'score' ? pianoDuration : effectiveAudioDuration;
   const recordingProgress = Math.min(100, Math.max(0, (recordingTime / Math.max(effectiveAudioDuration, 1)) * 100));
+  const sourceVolume = sourceVolumes[source];
+  const sourceMuted = sourceMutes[source];
+
+  useEffect(() => {
+    sourceVolumesRef.current = sourceVolumes;
+  }, [sourceVolumes]);
+
+  useEffect(() => {
+    sourceMutesRef.current = sourceMutes;
+  }, [sourceMutes]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -353,8 +426,10 @@ function PracticeTransport({
   }, []);
 
   useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume / 100;
-  }, [volume, sourceMeta.url]);
+    const nextVolume = sourceMuted ? 0 : sourceVolume;
+    if (audioRef.current) audioRef.current.volume = nextVolume / 100;
+    pianoPlayerRef.current?.setVolume(nextVolume);
+  }, [source, sourceMeta.url, sourceMuted, sourceVolume]);
 
   useEffect(() => {
     let cancelled = false;
@@ -366,7 +441,7 @@ function PracticeTransport({
     createBrowserMusicXmlPianoPlayer({
       onTimeChange: setPianoTime,
       onMeasureChange: (measureNumber) => {
-        scoreController?.goToMeasure?.(measureNumber);
+        scoreController?.highlightMeasure?.(measureNumber);
       },
     }).then((player) => {
       if (cancelled) {
@@ -374,6 +449,7 @@ function PracticeTransport({
         return;
       }
       player.load(pianoPlaybackMap);
+      player.setVolume(sourceMutesRef.current.score ? 0 : sourceVolumesRef.current.score);
       pianoPlayerRef.current = player;
       setPianoTime(0);
     }).catch(() => {
@@ -423,6 +499,14 @@ function PracticeTransport({
     return source === 'mr' || source === 'ar' ? audioRef.current : null;
   }
 
+  function setCurrentSourceVolume(nextVolume: number) {
+    setSourceVolumes((current) => ({ ...current, [source]: nextVolume }));
+  }
+
+  function setCurrentSourceMuted(nextMuted: boolean) {
+    setSourceMutes((current) => ({ ...current, [source]: nextMuted }));
+  }
+
   function selectSource(nextSource: PlaybackSource) {
     pianoPlayerRef.current?.pause();
     safePause(audioRef.current);
@@ -441,7 +525,7 @@ function PracticeTransport({
       const nextPianoTime = clampTime(nextTime, effectiveTrackDuration);
       pianoPlayerRef.current?.seek(nextPianoTime);
       setPianoTime(nextPianoTime);
-      scoreController?.goToMeasure?.(findMeasureForTime(pianoPlaybackMap, nextPianoTime));
+      scoreController?.highlightMeasure?.(findMeasureForTime(pianoPlaybackMap, nextPianoTime));
       if (options.play && !isPlaying) {
         void pianoPlayerRef.current?.play().then(() => setIsPlaying(true));
       }
@@ -481,6 +565,14 @@ function PracticeTransport({
     }
     safePause(selectedAudio());
     setIsPlaying(false);
+  }
+
+  function handlePlayPause() {
+    if (isPlaying) {
+      handlePause();
+      return;
+    }
+    void handlePlay();
   }
 
   function handleStop() {
@@ -681,8 +773,7 @@ function PracticeTransport({
         </div>
         <div className="flex justify-end gap-1.5">
           <IconButton label="10초 전" disabled={!sourceMeta.available} onClick={handleBack}>-10</IconButton>
-          <IconButton label="재생" disabled={!sourceMeta.available} strong onClick={handlePlay}>▶</IconButton>
-          <IconButton label="일시정지" disabled={!sourceMeta.available} onClick={handlePause}>Ⅱ</IconButton>
+          <IconButton label={isPlaying ? '일시정지' : '재생'} disabled={!sourceMeta.available} strong active={isPlaying} onClick={handlePlayPause}>{isPlaying ? 'Ⅱ' : '▶'}</IconButton>
           <IconButton label="정지" disabled={!sourceMeta.available} onClick={handleStop}>■</IconButton>
           <IconButton label="10초 후" disabled={!sourceMeta.available} onClick={handleForward}>+10</IconButton>
           <IconButton label="녹음 시작" disabled={!canRecord} record onClick={startRecording}>REC</IconButton>
@@ -695,6 +786,15 @@ function PracticeTransport({
       <div className="mt-2 grid gap-1.5">
         <SeekableTimelineTrack
           label={trackLabel}
+          leadingControl={
+            <TrackVolumeControl
+              label={`${sourceMeta.label} 소리`}
+              muted={sourceMuted}
+              volume={sourceVolume}
+              onMutedChange={setCurrentSourceMuted}
+              onVolumeChange={setCurrentSourceVolume}
+            />
+          }
           progress={progress}
           time={`${currentTime} / ${duration}`}
           value={source === 'score' ? pianoTime : audioTime}
@@ -703,12 +803,25 @@ function PracticeTransport({
           onPreviewSeek={(nextTime) => handleSeek(nextTime, { play: false })}
           onCommitSeek={(nextTime) => handleSeek(nextTime, { play: true })}
         />
-        <TimelineTrack label="Recording" progress={recordingProgress} tone="recording" time={`${formatTime(recordingTime)} / ${formatTime(effectiveAudioDuration || recordingTime)}`} />
+        <TimelineTrack
+          label="Recording"
+          leadingControl={
+            <TrackVolumeControl
+              label="Recording 소리"
+              muted={recordingMuted}
+              volume={monitorVolume}
+              onMutedChange={setRecordingMuted}
+              onVolumeChange={setMonitorVolume}
+            />
+          }
+          progress={recordingProgress}
+          tone="recording"
+          time={`${formatTime(recordingTime)} / ${formatTime(effectiveAudioDuration || recordingTime)}`}
+        />
       </div>
 
-      <div className="mt-2 grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,260px)_auto] md:items-center">
-        <label className="grid grid-cols-[78px_minmax(0,1fr)] items-center gap-2 text-xs text-slate-600">MR Volume<input aria-label="MR Volume" type="range" min="0" max="100" value={volume} onChange={(event) => setVolume(Number(event.target.value))} /></label>
-        <label className="grid grid-cols-[78px_minmax(0,1fr)] items-center gap-2 text-xs text-slate-600">Monitor<input aria-label="Monitor Volume" type="range" min="0" max="100" value={monitorVolume} onChange={(event) => setMonitorVolume(Number(event.target.value))} /></label>
+      <div className="mt-2 grid gap-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+        <p className="min-w-0 truncate text-[11px] text-slate-500">각 lane 왼쪽에서 소리 활성/비활성, 볼륨 %, 슬라이더를 조절합니다.</p>
         <details className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-xs text-slate-600">
           <summary className="cursor-pointer">장치 선택</summary>
           <div className="mt-2 grid gap-2">
@@ -724,6 +837,7 @@ function PracticeTransport({
 
 function SeekableTimelineTrack({
   label,
+  leadingControl,
   progress,
   time,
   value,
@@ -733,6 +847,7 @@ function SeekableTimelineTrack({
   onCommitSeek,
 }: {
   label: string;
+  leadingControl?: ReactNode;
   progress: number;
   time: string;
   value: number;
@@ -752,8 +867,8 @@ function SeekableTimelineTrack({
   };
 
   return (
-    <div className="grid grid-cols-[82px_minmax(0,1fr)_92px] items-center gap-2 text-xs text-slate-600">
-      <span>{label}</span>
+    <div className="grid grid-cols-[126px_minmax(0,1fr)_92px] items-center gap-2 text-xs text-slate-600">
+      {leadingControl ?? <span>{label}</span>}
       <div className="relative grid h-8 items-center rounded-md border border-blue-200 bg-blue-50 px-2 shadow-inner">
         <div className="pointer-events-none absolute inset-x-2 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-blue-100" />
         <div data-testid="active-audio-track-fill" data-progress={progressValue} className="pointer-events-none absolute left-2 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-gradient-to-r from-blue-600 to-emerald-500" style={{ width: `calc((100% - 16px) * ${safeProgress / 100})` }} />
@@ -813,12 +928,55 @@ function SeekableTimelineTrack({
   );
 }
 
-function TimelineTrack({ label, progress, tone, time }: { label: string; progress: number; tone: 'mr' | 'recording'; time: string }) {
-  return <div className="grid grid-cols-[82px_minmax(0,1fr)_92px] items-center gap-2 text-xs text-slate-600"><span>{label}</span><div className="h-5 overflow-hidden rounded border border-slate-300 bg-slate-100"><div className={`h-full ${tone === 'mr' ? 'bg-emerald-200' : 'bg-rose-200'}`} style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} /></div><span className="text-right text-slate-500">{time}</span></div>;
+function TimelineTrack({ label, leadingControl, progress, tone, time }: { label: string; leadingControl?: ReactNode; progress: number; tone: 'mr' | 'recording'; time: string }) {
+  return <div className="grid grid-cols-[126px_minmax(0,1fr)_92px] items-center gap-2 text-xs text-slate-600">{leadingControl ?? <span>{label}</span>}<div className="h-5 overflow-hidden rounded border border-slate-300 bg-slate-100"><div className={`h-full ${tone === 'mr' ? 'bg-emerald-200' : 'bg-rose-200'}`} style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} /></div><span className="text-right text-slate-500">{time}</span></div>;
 }
 
-function IconButton({ label, disabled, strong, record, onClick, children }: { label: string; disabled?: boolean; strong?: boolean; record?: boolean; onClick: () => void; children: ReactNode }) {
-  return <button type="button" title={label} aria-label={label} disabled={disabled} className={`grid h-[30px] min-w-8 place-items-center rounded border px-1.5 text-[11px] font-black disabled:cursor-not-allowed disabled:opacity-40 ${record ? 'border-rose-300 bg-rose-50 text-rose-700' : strong ? 'border-teal-500 bg-teal-50 text-teal-800' : 'border-slate-300 bg-white text-slate-700'}`} onClick={onClick}>{children}</button>;
+function TrackVolumeControl({
+  label,
+  muted,
+  volume,
+  onMutedChange,
+  onVolumeChange,
+}: {
+  label: string;
+  muted: boolean;
+  volume: number;
+  onMutedChange: (muted: boolean) => void;
+  onVolumeChange: (volume: number) => void;
+}) {
+  return (
+    <div className="grid grid-cols-[28px_minmax(0,1fr)] items-center gap-1.5">
+      <button
+        type="button"
+        aria-label={`${label} ${muted ? '켜기' : '끄기'}`}
+        aria-pressed={!muted}
+        title={`${label} ${muted ? '켜기' : '끄기'}`}
+        className={`grid h-7 w-7 place-items-center rounded border text-[11px] font-black ${
+          muted ? 'border-slate-300 bg-slate-50 text-slate-400' : 'border-blue-400 bg-blue-50 text-blue-700'
+        }`}
+        onClick={() => onMutedChange(!muted)}
+      >
+        {muted ? 'M' : '♪'}
+      </button>
+      <label className="min-w-0 text-[10px] font-bold text-slate-500">
+        <span className="mb-0.5 block truncate">{volume}%</span>
+        <input
+          aria-label={`${label} 볼륨`}
+          type="range"
+          min="0"
+          max="100"
+          value={volume}
+          className="h-2 w-full"
+          onChange={(event) => onVolumeChange(Number(event.target.value))}
+        />
+      </label>
+    </div>
+  );
+}
+
+function IconButton({ label, disabled, strong, record, active, onClick, children }: { label: string; disabled?: boolean; strong?: boolean; record?: boolean; active?: boolean; onClick: () => void; children: ReactNode }) {
+  return <button type="button" title={label} aria-label={label} aria-pressed={active} disabled={disabled} className={`grid h-[30px] min-w-8 place-items-center rounded border px-1.5 text-[11px] font-black disabled:cursor-not-allowed disabled:opacity-40 ${record ? 'border-rose-300 bg-rose-50 text-rose-700' : strong ? active ? 'border-teal-700 bg-teal-700 text-white shadow-[inset_0_0_0_2px_rgba(255,255,255,0.18)]' : 'border-teal-500 bg-teal-50 text-teal-800' : 'border-slate-300 bg-white text-slate-700'}`} onClick={onClick}>{children}</button>;
 }
 
 function TakeRow({ take, selected, onOpenFeedback }: { take: PracticeTake; selected: boolean; onOpenFeedback: () => void }) {

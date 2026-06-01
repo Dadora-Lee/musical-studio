@@ -32,12 +32,12 @@ describe('fixed A4 score pagination', () => {
     expect(source).toContain('newPageFromXML: false');
     expect(source).toContain('function applyPracticeEngravingRules');
     expect(source).toContain('osmd.setCustomPageFormat(840, 1188)');
-    expect(source).toContain('rules.RenderXMeasuresPerLineAkaSystem = PRACTICE_MEASURES_PER_SYSTEM');
+    expect(source).toContain('rules.RenderXMeasuresPerLineAkaSystem = measuresPerSystem');
     expect(source).toContain('rules.NewSystemAtXMLNewSystemAttribute = false');
     expect(source).toContain('rules.NewPageAtXMLNewPageAttribute = false');
     expect(source).toContain('rules.CompactMode = true');
-    expect(source).toContain('applyPracticeEngravingRules(osmd)');
-    expect(source).toContain("await withTimeout(osmd.load(xml), 20000, 'MusicXML load timed out after 20 seconds.');\n        applyPracticeEngravingRules(osmd);");
+    expect(source).toContain('applyPracticeEngravingRules(osmd, measuresPerSystem)');
+    expect(source).toContain("await withTimeout(osmd.load(xml), 20000, 'MusicXML load timed out after 20 seconds.');\n        applyPracticeEngravingRules(osmd, measuresPerSystem);");
   });
 
   it('marks the rendered score as the B-type uniform practice layout', () => {
@@ -48,7 +48,7 @@ describe('fixed A4 score pagination', () => {
     expect(source).toContain('data-score-spacing');
     expect(source).toContain('data-score-measures-per-system');
     expect(source).toContain('data-score-target-measures-per-page');
-    expect(source).toContain('PRACTICE_MEASURES_PER_SYSTEM = 4');
+    expect(source).toContain('measuresPerSystem = 4');
     expect(source).toContain("PRACTICE_TARGET_MEASURES_PER_PAGE = '12-16'");
   });
 
@@ -79,11 +79,14 @@ describe('fixed A4 score pagination', () => {
     expect(source).toContain('className="h-full"');
   });
 
-  it('exposes loaded MusicXML and measure navigation for piano playback sync', () => {
+  it('exposes loaded MusicXML and fixed-page measure highlighting for piano playback sync', () => {
     const source = readFileSync('src/components/score/ScoreViewer.tsx', 'utf8');
 
     expect(source).toContain('onMusicXmlLoaded?: (xml: string) => void');
     expect(source).toContain('onMusicXmlLoaded?.(xml)');
+    expect(source).toContain('highlightMeasure?: (measureNumber: number) => void');
+    expect(source).toContain('function highlightMeasure(measureNumber: number)');
+    expect(source).toContain('styleCursorAsMeasureHighlight');
     expect(source).toContain('goToMeasure?: (measureNumber: number) => void');
     expect(source).toContain('function goToMeasure(measureNumber: number)');
     expect(source).toContain('osmd.cursor.nextMeasure()');

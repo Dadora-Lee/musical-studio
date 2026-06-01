@@ -11,6 +11,7 @@ const pianoMocks = vi.hoisted(() => {
     stop: vi.fn(),
     stepBack: vi.fn(),
     stepForward: vi.fn(),
+    highlightMeasure: vi.fn(),
     goToMeasure: vi.fn(),
   };
   const player = {
@@ -19,6 +20,7 @@ const pianoMocks = vi.hoisted(() => {
     pause: vi.fn(),
     stop: vi.fn(),
     seek: vi.fn(),
+    setVolume: vi.fn(),
     dispose: vi.fn(),
     getSnapshot: vi.fn(() => ({ isPlaying: false, currentTime: 0, currentMeasure: 1, durationSeconds: 2 })),
   };
@@ -142,12 +144,14 @@ beforeEach(() => {
   pianoMocks.scoreController.stop.mockClear();
   pianoMocks.scoreController.stepBack.mockClear();
   pianoMocks.scoreController.stepForward.mockClear();
+  pianoMocks.scoreController.highlightMeasure.mockClear();
   pianoMocks.scoreController.goToMeasure.mockClear();
   pianoMocks.player.load.mockClear();
   pianoMocks.player.play.mockClear();
   pianoMocks.player.pause.mockClear();
   pianoMocks.player.stop.mockClear();
   pianoMocks.player.seek.mockClear();
+  pianoMocks.player.setVolume.mockClear();
   pianoMocks.player.dispose.mockClear();
   pianoMocks.player.getSnapshot.mockClear();
   pianoMocks.createBrowserMusicXmlPianoPlayer.mockClear();
@@ -179,7 +183,7 @@ describe('PracticeStudioLayout', () => {
     expect(screen.getByText(/AR · SONG07_AR.mp3/)).toBeInTheDocument();
   });
 
-  it('plays and seeks MusicXML piano playback with score cursor sync', async () => {
+  it('plays and seeks MusicXML piano playback with fixed score measure highlight sync', async () => {
     const user = userEvent.setup();
 
     render(
@@ -206,7 +210,38 @@ describe('PracticeStudioLayout', () => {
     fireEvent.change(screen.getByRole('slider', { name: '피아노 연주 위치' }), { target: { value: '1' } });
 
     expect(pianoMocks.player.seek).toHaveBeenCalledWith(1);
-    expect(pianoMocks.scoreController.goToMeasure).toHaveBeenCalledWith(2);
+    expect(pianoMocks.scoreController.highlightMeasure).toHaveBeenCalledWith(2);
+    expect(pianoMocks.scoreController.goToMeasure).not.toHaveBeenCalled();
+  });
+
+  it('lets users choose score measure rendering density and control lane sound', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PracticeStudioLayout
+        data={practiceStudioPrototype}
+        scoreSources={{
+          'song07-lie': { url: '/api/prototype-assets/song07-lie/musicxml', label: 'SONG07_MUSIC_SHEET.musicxml.xml' },
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('radio', { name: '균형' })).toBeChecked();
+
+    await user.click(screen.getByRole('radio', { name: '가사 크게' }));
+
+    expect(screen.getByRole('radio', { name: '가사 크게' })).toBeChecked();
+
+    await user.click(screen.getByRole('button', { name: '피아노 연주' }));
+    await user.click(screen.getByRole('button', { name: '피아노 연주 소리 끄기' }));
+
+    expect(screen.getByRole('button', { name: '피아노 연주 소리 켜기' })).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.change(screen.getByRole('slider', { name: '피아노 연주 소리 볼륨' }), { target: { value: '42' } });
+
+    expect(pianoMocks.player.setVolume).toHaveBeenCalledWith(0);
+    await user.click(screen.getByRole('button', { name: '피아노 연주 소리 켜기' }));
+    expect(pianoMocks.player.setVolume).toHaveBeenCalledWith(42);
   });
 
   it('allows every member to select any number from the left list', async () => {
@@ -254,8 +289,8 @@ describe('PracticeStudioLayout', () => {
   it('shows recording tracks, device controls, and unsupported recording state', () => {
     render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
 
-    expect(screen.getByText('MR Track')).toBeInTheDocument();
-    expect(screen.getByText('Recording')).toBeInTheDocument();
+    expect(screen.getByLabelText('MR 소리 끄기')).toBeInTheDocument();
+    expect(screen.getByLabelText('Recording 소리 끄기')).toBeInTheDocument();
     expect(screen.getByLabelText('녹음 시작')).toBeInTheDocument();
     expect(screen.getByLabelText('녹음 저장')).toBeDisabled();
     expect(screen.getByLabelText('Microphone')).toBeInTheDocument();
