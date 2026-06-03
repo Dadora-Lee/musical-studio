@@ -50,6 +50,29 @@ jieun0610(Codex CLI)이 **자기 작업(미push 로컬 개선분 포함) 위에 
 
 상세 근거·수정안·file:line은 각 PR 본문(종합)과 인라인 코멘트에 있습니다.
 
+## 🔁 Round 2 재검증 (2026-06-03) — PR #1 수정 확인
+
+jieun0610(Codex CLI)이 PR #1에 수정 3커밋 push (`ba7c068..8ec296d`): REC-WEBM·MXML backup/forward·REC-UNMOUNT
+수정 + 테스트. Owner가 ultracode 적대적 재검증(코드+실행+테스트 3면, 11 에이전트) 수행 → **PR #1에 후속 리뷰 코멘트 게시** (review id 4419770008, 인라인 4건). PR #2(studio)는 아직 변동 없음.
+
+**해결 확인 (회귀 0):**
+- ✅ REC-WEBM (high) **resolved** — `createSilentWav` 삭제, webm/mp4 `decodeAudioData` 실경로, 실패 시 error UI.
+- ✅ MXML backup/forward (high) **resolved** — `Array.from(measure.children)` 문서순 + 커서 가감, 다성부 정확.
+- ✅ REC-UNMOUNT (medium) **resolved** — onstop null화→stop + 가드로 post-unmount leak 차단.
+- ⚠️ MXML-TIE (medium) **partial** — 재타격 차단했으나 지속시간 미병합(`playback-events.ts:110`) → tie 음 잘려 재생.
+
+**jieun0610에게 이번 라운드 추가 요청 (PR #1 인라인 참조):**
+1. **[med·머지 전 필수] decode-failure 테스트** `PracticeStudio.test.tsx:491` — `decodeAudioData` reject/timeout 시 take 미생성+error 단언(무음 재도입 회귀 미잠금).
+2. **[low] REC-UNMOUNT 테스트 강화** — 현재 단언 vacuous, 캡처 onstop 수동 호출 검증으로 교체.
+3. **[med·후속] MXML-TIE 지속시간 병합** `playback-events.ts:110`.
+4. **[high·deferred] MIG RLS** `migrations/…initial_schema.sql` + **[high·deferred] ASSET-ROUTE 인증** `route.ts:12`
+   — 이번 라운드 함께 반영 요청. **단 보안/마이그레이션 영향 → Owner(Dadora-Lee) 승인 + 약속된
+   migration-strategy ADR / assets-security-plan 문서 선행** 필요(코드와 병행).
+5. **[med] `/mnt/e` 하드코딩 6곳** `prototype-source.server.ts:24,28,36,41,48,53` — 여력 되면 함께.
+
+**Ready 전환 게이트:** decode-failure 테스트 + 보류 HIGH 2건(MIG-RLS·ASSET-ROUTE) 반영 후. 그 전까지
+deferred-high 트래킹, **cloud-ready 마킹 금지**.
+
 ## 협업 방식 결정 (이번 세션 확정)
 
 1. 대상 브랜치: **둘 다**
