@@ -67,18 +67,43 @@ export function parseMusicXmlPlaybackEvents(xml: string): MusicXmlPlaybackMap {
 
       const measureNumber = readMeasureNumber(measure, measureIndex);
       const measureStart = partTime;
-      let measureDuration = 0;
+      let measureEnd = measureStart;
       let lastNoteStart = partTime;
+      let noteIndex = 0;
 
-      measure.querySelectorAll(':scope > note').forEach((note, noteIndex) => {
+      Array.from(measure.children).forEach((child) => {
+        const tagName = child.localName;
+
+        if (tagName === 'backup') {
+          const duration = readDurationSeconds(child, divisions, secondsPerQuarter);
+          partTime = Math.max(measureStart, partTime - duration);
+          lastNoteStart = partTime;
+          return;
+        }
+
+        if (tagName === 'forward') {
+          const duration = readDurationSeconds(child, divisions, secondsPerQuarter);
+          partTime += duration;
+          lastNoteStart = partTime;
+          measureEnd = Math.max(measureEnd, partTime);
+          return;
+        }
+
+        if (tagName !== 'note') return;
+
+        const note = child;
+        const currentNoteIndex = noteIndex;
+        noteIndex += 1;
         const duration = readDurationSeconds(note, divisions, secondsPerQuarter);
         const isChord = Boolean(note.querySelector(':scope > chord'));
         const startsAt = isChord ? lastNoteStart : partTime;
         const pitch = readPitch(note);
+        const hasTieStop = hasTie(note, 'stop');
+        const hasTieStart = hasTie(note, 'start');
 
-        if (pitch) {
+        if (pitch && !(hasTieStop && !hasTieStart)) {
           events.push({
-            id: `${partId}-m${measureNumber}-n${noteIndex}`,
+            id: `${partId}-m${measureNumber}-n${currentNoteIndex}`,
             partId,
             measureNumber,
             startSeconds: roundSeconds(startsAt),
@@ -92,14 +117,16 @@ export function parseMusicXmlPlaybackEvents(xml: string): MusicXmlPlaybackMap {
         if (!isChord) {
           lastNoteStart = partTime;
           partTime += duration;
-          measureDuration += duration;
         }
+
+        measureEnd = Math.max(measureEnd, startsAt + duration);
       });
 
+      partTime = Math.max(partTime, measureEnd);
       const currentMeasure = measureTimings.get(measureNumber);
       const nextTiming = {
         startSeconds: roundSeconds(currentMeasure ? Math.min(currentMeasure.startSeconds, measureStart) : measureStart),
-        durationSeconds: roundSeconds(Math.max(currentMeasure?.durationSeconds ?? 0, measureDuration)),
+        durationSeconds: roundSeconds(Math.max(currentMeasure?.durationSeconds ?? 0, measureEnd - measureStart)),
       };
       measureTimings.set(measureNumber, nextTiming);
     });
@@ -136,6 +163,10 @@ function readDurationSeconds(note: Element, divisions: number, secondsPerQuarter
   const duration = Number(note.querySelector(':scope > duration')?.textContent);
   if (!Number.isFinite(duration) || duration <= 0) return 0;
   return (duration / divisions) * secondsPerQuarter;
+}
+
+function hasTie(note: Element, type: 'start' | 'stop') {
+  return Array.from(note.querySelectorAll(':scope > tie')).some((tie) => tie.getAttribute('type') === type);
 }
 
 function readPitch(note: Element) {
