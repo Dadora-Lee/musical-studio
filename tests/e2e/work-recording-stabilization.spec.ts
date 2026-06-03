@@ -39,6 +39,21 @@ test.describe('Practice Studio recording stabilization', () => {
       }
 
       Object.defineProperty(window, 'MediaRecorder', { configurable: true, value: FakeMediaRecorder });
+      class FakeAudioContext {
+        async decodeAudioData() {
+          return {
+            numberOfChannels: 1,
+            sampleRate: 44100,
+            length: 4,
+            getChannelData: () => new Float32Array([0, 0.35, -0.25, 0.12]),
+          };
+        }
+
+        async close() {}
+      }
+
+      Object.defineProperty(window, 'AudioContext', { configurable: true, value: FakeAudioContext });
+      Object.defineProperty(window, 'webkitAudioContext', { configurable: true, value: FakeAudioContext });
       Object.defineProperty(navigator, 'mediaDevices', {
         configurable: true,
         value: {

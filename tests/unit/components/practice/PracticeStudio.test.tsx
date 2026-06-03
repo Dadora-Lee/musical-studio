@@ -71,6 +71,7 @@ vi.mock('@/lib/audio-engine/musicxml-piano-player', () => ({
 
 class FakeMediaRecorder {
   static isTypeSupported = () => true;
+  static stopSpy = vi.fn();
   state: RecordingState = 'inactive';
   mimeType = 'audio/webm';
   ondataavailable: ((event: BlobEvent) => void) | null = null;
@@ -91,27 +92,49 @@ class FakeMediaRecorder {
   }
 
   stop() {
+    FakeMediaRecorder.stopSpy();
     this.state = 'inactive';
     this.ondataavailable?.({ data: new Blob(['recording'], { type: 'audio/webm' }) } as BlobEvent);
     this.onstop?.();
   }
 }
 
+async function readWavPcmSamples(blob: Blob) {
+  const buffer = await readBlobForTest(blob);
+  const view = new DataView(buffer);
+  const samples: number[] = [];
+  for (let offset = 44; offset < view.byteLength; offset += 2) {
+    samples.push(view.getInt16(offset, true));
+  }
+  return samples;
+}
+
+function readBlobForTest(blob: Blob) {
+  return new Promise<ArrayBuffer>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error ?? new Error('Blob 읽기에 실패했습니다.'));
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.readAsArrayBuffer(blob);
+  });
+}
+
 function installRecorderMocks() {
   const stop = vi.fn();
+  const recorderStop = vi.fn();
+  FakeMediaRecorder.stopSpy = recorderStop;
   const getUserMedia = vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] });
   const enumerateDevices = vi.fn().mockResolvedValue([
     { kind: 'audioinput', deviceId: 'mic-1', label: 'USB Mic' },
     { kind: 'audiooutput', deviceId: 'out-1', label: 'Headphones' },
   ]);
-  const createObjectURL = vi.fn(() => 'blob:local-take');
+  const createObjectURL = vi.fn<(blob: Blob) => string>(() => 'blob:local-take');
   const revokeObjectURL = vi.fn();
   const close = vi.fn().mockResolvedValue(undefined);
   const decodeAudioData = vi.fn().mockResolvedValue({
     numberOfChannels: 1,
     sampleRate: 44100,
     length: 4,
-    getChannelData: () => new Float32Array([0, 0.1, -0.1, 0]),
+    getChannelData: () => new Float32Array([0, 0.35, -0.25, 0.12]),
   });
   class FakeAudioContext {
     decodeAudioData = decodeAudioData;
@@ -122,14 +145,10 @@ function installRecorderMocks() {
   Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia, enumerateDevices } });
   Object.defineProperty(window.URL, 'createObjectURL', { configurable: true, value: createObjectURL });
   Object.defineProperty(window.URL, 'revokeObjectURL', { configurable: true, value: revokeObjectURL });
-  Object.defineProperty(Blob.prototype, 'arrayBuffer', {
-    configurable: true,
-    value: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
-  });
   Object.defineProperty(window, 'AudioContext', { configurable: true, value: FakeAudioContext });
   Object.defineProperty(window, 'webkitAudioContext', { configurable: true, value: FakeAudioContext });
 
-  return { getUserMedia, enumerateDevices, createObjectURL, revokeObjectURL, stop };
+  return { getUserMedia, enumerateDevices, createObjectURL, revokeObjectURL, stop, recorderStop, decodeAudioData };
 }
 
 afterEach(() => {
@@ -468,6 +487,30 @@ describe('PracticeStudioLayout', () => {
 
     play.mockRestore();
   });
+
+  it('saves decoded recording audio as a non-silent WAV', async () => {
+    const user = userEvent.setup();
+    const play = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+    const mocks = installRecorderMocks();
+
+    render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
+
+    await waitFor(() => expect(screen.getByLabelText('녹음 시작')).toBeEnabled());
+    await user.click(screen.getByLabelText('녹음 시작'));
+    await user.click(screen.getByLabelText('녹음 정지'));
+
+    await waitFor(() => expect(mocks.createObjectURL).toHaveBeenCalledWith(expect.any(Blob)));
+
+    const wavBlob = mocks.createObjectURL.mock.calls.at(-1)?.[0] as Blob;
+    const samples = await readWavPcmSamples(wavBlob);
+
+    expect(mocks.decodeAudioData).toHaveBeenCalled();
+    expect(wavBlob.type).toBe('audio/wav');
+    expect(samples.some((sample) => sample !== 0)).toBe(true);
+
+    play.mockRestore();
+  });
+
   it('records with the selected piano source and synchronizes pause and resume', async () => {
     const user = userEvent.setup();
     const mocks = installRecorderMocks();
@@ -509,6 +552,25 @@ describe('PracticeStudioLayout', () => {
 
     await waitFor(() => expect(mocks.stop).toHaveBeenCalled());
     expect(pianoMocks.player.pause).toHaveBeenCalled();
+  });
+
+  it('does not finalize a recording after unmount while recorder is active', async () => {
+    const user = userEvent.setup();
+    const play = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+    const mocks = installRecorderMocks();
+
+    const { unmount } = render(<PracticeStudioLayout data={practiceStudioPrototype} score={<div>Score preview</div>} />);
+
+    await waitFor(() => expect(screen.getByLabelText('녹음 시작')).toBeEnabled());
+    await user.click(screen.getByLabelText('녹음 시작'));
+
+    unmount();
+
+    expect(mocks.stop).toHaveBeenCalled();
+    expect(mocks.recorderStop).toHaveBeenCalled();
+    expect(mocks.createObjectURL).not.toHaveBeenCalled();
+
+    play.mockRestore();
   });
 
   it('shows a recording error when microphone permission fails', async () => {

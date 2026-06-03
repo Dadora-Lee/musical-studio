@@ -485,9 +485,24 @@ function PracticeTransport({
 
   useEffect(() => {
     return () => {
-      clearRecordingTimer();
-      clearFinalizeTimer();
-      stopStream();
+      recordingFinalizedRef.current = true;
+      if (finalizeTimerRef.current !== null) {
+        window.clearTimeout(finalizeTimerRef.current);
+        finalizeTimerRef.current = null;
+      }
+      if (recordingTimerRef.current !== null) {
+        window.clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      const recorder = recorderRef.current;
+      if (recorder && recorder.state !== 'inactive') {
+        recorder.ondataavailable = null;
+        recorder.onstop = null;
+        recorder.stop();
+      }
+      recorderRef.current = null;
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
       if (readyRecordingRef.current) window.URL.revokeObjectURL(readyRecordingRef.current.url);
     };
   }, []);
@@ -713,7 +728,7 @@ function PracticeTransport({
     try {
       const captured = new Blob(chunksRef.current, { type: mimeType });
       const duration = recordingTime || elapsedRecordingSeconds();
-      const wav = await transcodeRecordingToWav(captured, duration);
+      const wav = await transcodeRecordingToWav(captured);
       const url = window.URL.createObjectURL(wav);
       if (readyRecordingRef.current) window.URL.revokeObjectURL(readyRecordingRef.current.url);
       setReadyRecording({ blob: wav, url, duration });
@@ -722,7 +737,7 @@ function PracticeTransport({
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       setRecorderState('error');
-      setRecorderMessage(`WAV 변환에 실패했습니다: ${message}`);
+      setRecorderMessage(`녹음 파일을 WAV로 변환하지 못했습니다. 다시 녹음해주세요: ${message}`);
     } finally {
       recorderRef.current = null;
       stopStream();
@@ -1078,23 +1093,20 @@ async function transcodeToWav(blob: Blob) {
   if (!AudioContextConstructor) throw new Error('AudioContext를 사용할 수 없습니다.');
   const context = new AudioContextConstructor();
   try {
-    const buffer = await context.decodeAudioData(await blob.arrayBuffer());
+    const buffer = await context.decodeAudioData(await readBlobArrayBuffer(blob));
     return audioBufferToWav(buffer);
   } finally {
     await context.close();
   }
 }
 
-async function transcodeRecordingToWav(blob: Blob, durationSeconds: number) {
-  if (blob.type.includes('webm')) {
-    return createSilentWav(Math.max(1, durationSeconds));
-  }
+async function readBlobArrayBuffer(blob: Blob) {
+  if (typeof blob.arrayBuffer === 'function') return blob.arrayBuffer();
+  return new Response(blob).arrayBuffer();
+}
 
-  try {
-    return await withPromiseTimeout(transcodeToWav(blob), 4000, 'WAV 변환 시간이 초과되었습니다.');
-  } catch {
-    return createSilentWav(Math.max(1, durationSeconds));
-  }
+async function transcodeRecordingToWav(blob: Blob) {
+  return withPromiseTimeout(transcodeToWav(blob), 4000, 'WAV 변환 시간이 초과되었습니다.');
 }
 
 async function withPromiseTimeout<T>(promise: Promise<T>, ms: number, message: string) {
@@ -1108,29 +1120,6 @@ async function withPromiseTimeout<T>(promise: Promise<T>, ms: number, message: s
   } finally {
     if (timeoutId !== undefined) window.clearTimeout(timeoutId);
   }
-}
-
-function createSilentWav(durationSeconds: number) {
-  const sampleRate = 44100;
-  const sampleCount = Math.max(1, Math.round(durationSeconds * sampleRate));
-  const byteLength = 44 + sampleCount * 2;
-  const arrayBuffer = new ArrayBuffer(byteLength);
-  const view = new DataView(arrayBuffer);
-  let offset = 0;
-  writeString(view, offset, 'RIFF'); offset += 4;
-  view.setUint32(offset, byteLength - 8, true); offset += 4;
-  writeString(view, offset, 'WAVE'); offset += 4;
-  writeString(view, offset, 'fmt '); offset += 4;
-  view.setUint32(offset, 16, true); offset += 4;
-  view.setUint16(offset, 1, true); offset += 2;
-  view.setUint16(offset, 1, true); offset += 2;
-  view.setUint32(offset, sampleRate, true); offset += 4;
-  view.setUint32(offset, sampleRate * 2, true); offset += 4;
-  view.setUint16(offset, 2, true); offset += 2;
-  view.setUint16(offset, 16, true); offset += 2;
-  writeString(view, offset, 'data'); offset += 4;
-  view.setUint32(offset, sampleCount * 2, true);
-  return new Blob([view], { type: 'audio/wav' });
 }
 
 type AudioContextConstructor = new () => AudioContext;
