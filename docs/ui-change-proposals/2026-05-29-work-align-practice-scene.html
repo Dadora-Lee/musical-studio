@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Musical Studio /work UI 변경 제안서</title>
+    <style>
+      :root {
+        --ink: #172033;
+        --muted: #647084;
+        --line: #d8dee8;
+        --paper: #f5f7fa;
+        --panel: #ffffff;
+        --blue: #2563eb;
+        --blue-soft: #eaf1ff;
+        --green: #0f766e;
+        --green-soft: #e7f6f3;
+        --amber: #b45309;
+        --amber-soft: #fff3dc;
+        --red: #b91c1c;
+        --red-soft: #fee2e2;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+        line-height: 1.5;
+      }
+
+      main {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 28px 20px 56px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 32px;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        font-size: 21px;
+        margin-bottom: 12px;
+      }
+
+      h3 {
+        font-size: 15px;
+        margin-bottom: 8px;
+      }
+
+      .hero,
+      .section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .hero {
+        padding: 24px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .section {
+        margin-top: 16px;
+        padding: 20px;
+      }
+
+      .eyebrow {
+        color: var(--blue);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .notice {
+        border: 1px solid #f4c7c7;
+        background: var(--red-soft);
+        color: var(--red);
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-weight: 700;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .mock {
+        border: 1px solid var(--line);
+        background: #f8fafc;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .mock-title {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        background: #fff;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .before-shell {
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .before-header {
+        height: 62px;
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 8px;
+      }
+
+      .before-grid {
+        min-height: 360px;
+        display: grid;
+        grid-template-columns: 24% 1fr 29%;
+        gap: 10px;
+      }
+
+      .before-card,
+      .after-panel {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 8px;
+      }
+
+      .before-card {
+        padding: 10px;
+        display: grid;
+        gap: 8px;
+        align-content: start;
+      }
+
+      .big-row {
+        height: 54px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f9fafb;
+      }
+
+      .paper-old {
+        height: 210px;
+        margin: 8px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: linear-gradient(#fff, #fff) padding-box;
+      }
+
+      .transport-old {
+        height: 76px;
+        margin: 8px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+
+      .after-app {
+        min-height: 420px;
+        display: grid;
+        grid-template-rows: 48px 1fr;
+        background: #eef2f7;
+      }
+
+      .after-topbar {
+        display: grid;
+        grid-template-columns: 1fr 160px;
+        gap: 10px;
+        align-items: center;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .brand-line,
+      .member-select {
+        height: 28px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #f8fafc;
+      }
+
+      .after-grid {
+        display: grid;
+        grid-template-columns: 28% 1fr 31%;
+        gap: 0;
+        min-height: 372px;
+      }
+
+      .after-panel {
+        border-radius: 0;
+        border-top: 0;
+        border-bottom: 0;
+        border-left: 0;
+        padding: 10px;
+      }
+
+      .number-row {
+        height: 34px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #fff;
+      }
+
+      .number-row.active {
+        background: var(--blue-soft);
+        box-shadow: inset 3px 0 0 var(--blue);
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-rows: 50px 1fr 120px;
+        padding: 0;
+      }
+
+      .nowbar {
+        border-bottom: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .score-frame {
+        background: #dfe5ee;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+      }
+
+      .a4 {
+        width: 62%;
+        aspect-ratio: 210 / 297;
+        max-height: 210px;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16);
+      }
+
+      .transport-new {
+        border-top: 1px solid var(--line);
+        background: #fff;
+        padding: 10px;
+      }
+
+      .button-strip {
+        height: 30px;
+        margin-left: auto;
+        width: 180px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+
+      .tracks {
+        margin-top: 8px;
+        display: grid;
+        gap: 6px;
+      }
+
+      .track {
+        height: 18px;
+        border-radius: 5px;
+        background: var(--green-soft);
+        border: 1px solid #b7ddd8;
+      }
+
+      .side-stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .side-block {
+        min-height: 86px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 9px 10px;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f8fafc;
+        text-align: left;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 2px 7px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .ok {
+        color: var(--green);
+        background: var(--green-soft);
+        border-color: #a7ddd6;
+      }
+
+      .hold {
+        color: var(--amber);
+        background: var(--amber-soft);
+        border-color: #f5d08a;
+      }
+
+      ul {
+        margin: 8px 0 0;
+        padding-left: 20px;
+      }
+
+      li {
+        margin: 4px 0;
+      }
+
+      @media (max-width: 920px) {
+        .grid-2,
+        .before-grid,
+        .after-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .after-app {
+          min-height: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <p class="eyebrow">승인용 UI 변경 제안서</p>
+        <h1>/work 화면을 practice-studio-scene.html 기준으로 정렬</h1>
+        <p>
+          이 문서는 구현 전에 확인하는 변경 전/후 제안서입니다. 승인 전에는 기존
+          `/work` 화면의 배치, 컴포넌트 위치, 사용자-facing 문구를 변경하지 않습니다.
+        </p>
+        <div class="notice">
+          구현 범위가 아니라 승인 범위입니다. 사용자가 승인하면 아래 범위 안에서만
+          UI를 수정합니다.
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>1. 핵심 판단</h2>
+        <p>
+          현재 `/work`는 기능 구현 중심으로 확장되면서 `practice-studio-scene.html`의
+          앱형 레이아웃과 다르게 보입니다. 사용자가 원한 기준은 HTML 시안의 구조이므로,
+          기능은 유지하고 화면 골격만 시안에 맞춰 되돌리는 방향을 제안합니다.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>1-1. 확정 구현 기준</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>확정 방향</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>시안 반영 수준</td>
+              <td>
+                `practice-studio-scene.html`의 레이아웃, 색상, 간격, 컴포넌트 밀도를
+                거의 그대로 맞춥니다. 단, 기존 기능 동작을 깨뜨리는 시각 요소는 기능
+                안정성을 우선합니다.
+              </td>
+            </tr>
+            <tr>
+              <td>A4 MusicXML Viewer</td>
+              <td>
+                중앙 영역 안에서 A4 비율을 유지합니다. 악보는 세로 스크롤로 보고,
+                페이지 사이의 여백은 고정해서 흔들리거나 동적으로 튀지 않게 합니다.
+              </td>
+            </tr>
+            <tr>
+              <td>Transport / Recording</td>
+              <td>
+                MR/AR/악보재생, 아이콘 버튼, MRTracker, Recording 트랙, 볼륨 조절은
+                하단 transport 안에 유지합니다. 장치 선택은 이번 골격 변경에서는
+                접힘 패널 또는 추후 설정값으로 분리합니다.
+              </td>
+            </tr>
+            <tr>
+              <td>Feedback / Comment</td>
+              <td>
+                우측 패널에서 제출된 recording을 클릭했을 때 해당 recording의
+                Feedback/Comment가 보이도록 합니다. 기본 상태에서는 recording 목록을
+                우선 보여줍니다.
+              </td>
+            </tr>
+            <tr>
+              <td>이번 단계의 목표</td>
+              <td>
+                먼저 `/work`의 골격과 레이아웃을 시안 기준으로 정렬합니다. 세부 기능
+                추가나 DB/Supabase 연동은 이 정렬이 끝난 뒤 다시 별도 단계로 진행합니다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>2. 변경 전 / 변경 후 와이어프레임</h2>
+        <div class="grid-2">
+          <div class="mock">
+            <div class="mock-title">변경 전: 현재 /work 카드형 확장 화면</div>
+            <div class="before-shell">
+              <div class="before-header"></div>
+              <div class="before-grid">
+                <div class="before-card">
+                  <div class="big-row"></div>
+                  <div class="big-row"></div>
+                  <div class="big-row"></div>
+                  <div class="big-row"></div>
+                </div>
+                <div class="before-card">
+                  <div class="paper-old"></div>
+                  <div class="transport-old"></div>
+                </div>
+                <div class="before-card">
+                  <div class="big-row"></div>
+                  <div class="big-row"></div>
+                  <div class="big-row"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mock">
+            <div class="mock-title">변경 후: practice-studio-scene.html 기반 앱형 화면</div>
+            <div class="after-app">
+              <div class="after-topbar">
+                <div class="brand-line"></div>
+                <div class="member-select"></div>
+              </div>
+              <div class="after-grid">
+                <div class="after-panel">
+                  <div class="number-row active"></div>
+                  <div class="number-row"></div>
+                  <div class="number-row"></div>
+                  <div class="number-row"></div>
+                  <div class="number-row"></div>
+                  <div class="number-row"></div>
+                </div>
+                <div class="after-panel workspace">
+                  <div class="nowbar"></div>
+                  <div class="score-frame"><div class="a4"></div></div>
+                  <div class="transport-new">
+                    <div class="button-strip"></div>
+                    <div class="tracks">
+                      <div class="track"></div>
+                      <div class="track"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="after-panel">
+                  <div class="side-stack">
+                    <div class="side-block"></div>
+                    <div class="side-block"></div>
+                    <div class="side-block"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>3. 컴포넌트별 변경 내용</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>영역</th>
+              <th>현재 상태</th>
+              <th>변경 후 제안</th>
+              <th>보존 조건</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>HeaderLayout</td>
+              <td>상단 설명/상태 정보가 비교적 크게 보이는 형태</td>
+              <td>
+                시안처럼 56px 정도의 얇은 topbar로 정리합니다. 우측에는 테스트용
+                Member NickName 콤보박스를 유지합니다.
+              </td>
+              <td><span class="tag ok">Member 선택 유지</span></td>
+            </tr>
+            <tr>
+              <td>Number List</td>
+              <td>카드형 버튼과 넓은 행 높이</td>
+              <td>
+                `practice-studio-scene.html`처럼 엑셀/파일 리스트에 가까운 compact row로
+                변경합니다. 선택된 넘버는 좌측 컬러 라인과 배경으로 표시합니다.
+              </td>
+              <td><span class="tag ok">좌측 목록 삭제 금지</span></td>
+            </tr>
+            <tr>
+              <td>MusicXML Viewer</td>
+              <td>A4 악보는 들어갔지만 주변 레이아웃이 시안과 다름</td>
+              <td>
+                가운데 workspace 안에 A4 용지 프레임을 고정합니다. 악보 자체는 기존
+                OSMD/MusicXML 로딩 방식을 유지합니다.
+              </td>
+              <td><span class="tag ok">실제 MusicXML 유지</span></td>
+            </tr>
+            <tr>
+              <td>Transport</td>
+              <td>MR/AR/악보재생 기능과 녹음 UI가 기능 중심으로 배치됨</td>
+              <td>
+                우측 아이콘 버튼 묶음, MRTracker, Recording 트랙을 시안 하단 transport
+                패널 안에 정렬합니다.
+              </td>
+              <td><span class="tag ok">MR/AR/악보재생 유지</span></td>
+            </tr>
+            <tr>
+              <td>Right Panel</td>
+              <td>녹음/제출/Feedback 카드들이 현재 스타일로 존재</td>
+              <td>
+                시안의 `.side` 영역처럼 제출 상태, Take 목록, Feedback 패널을 세로로
+                유지합니다. 제출 목록 클릭 시 Comment/Feedback을 보는 흐름은 유지합니다.
+              </td>
+              <td><span class="tag ok">Feedback 접근 유지</span></td>
+            </tr>
+            <tr>
+              <td>추가 Content</td>
+              <td>마감일, 상태, 장치 선택 등 추가 여지가 있음</td>
+              <td>
+                이번 변경에는 새 content를 추가하지 않습니다. 마감 날짜 등록 같은 새
+                컴포넌트는 별도 변경 전/후 제안서를 만든 뒤 진행합니다.
+              </td>
+              <td><span class="tag hold">추가 기능 보류</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>4. 구현 시 지켜야 할 범위</h2>
+        <ul>
+          <li>기능 로직은 가능한 유지하고, 레이아웃과 시각 구조만 시안 기준으로 맞춥니다.</li>
+          <li>좌측 곡 리스트, 중앙 악보, 하단 transport, 우측 제출/Feedback 흐름을 제거하지 않습니다.</li>
+          <li>MusicXML은 기존 `src/lib/musicxml/` 경로의 로딩/파싱 흐름을 유지합니다.</li>
+          <li>MR/AR 파일 라우트, 녹음, WAV 변환, Take 생성 흐름은 이번 제안의 변경 대상이 아닙니다.</li>
+          <li>Supabase, DB schema, 인증/로그인 전환은 이번 제안 범위에서 제외합니다.</li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>5. 승인 후 검증 기준</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>검증 항목</th>
+              <th>성공 기준</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>화면 구조</td>
+              <td>좌측 Number List, 중앙 A4 악보, 하단 Transport, 우측 Feedback 패널이 한 화면에 유지됩니다.</td>
+            </tr>
+            <tr>
+              <td>악보 가시성</td>
+              <td>A4 프레임이 흔들리지 않고, MusicXML 로딩 후 페이지형 악보가 안정적으로 보입니다.</td>
+            </tr>
+            <tr>
+              <td>오디오 조작</td>
+              <td>MR/AR/악보재생 선택과 10초 전/재생/일시정지/정지/10초 후 아이콘 버튼이 유지됩니다.</td>
+            </tr>
+            <tr>
+              <td>테스트</td>
+              <td>`pnpm lint`, `pnpm typecheck`, `pnpm test`를 통과하고 `/work`에서 브라우저 확인을 진행합니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>6. 승인 요청</h2>
+        <p>
+          이 제안이 맞다면 다음 단계에서 위 범위 안에서만 `/work` UI를
+          `practice-studio-scene.html` 기반으로 정렬합니다. 범위 밖의 새 기능이나 새
+          content는 별도 제안서로 분리합니다.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

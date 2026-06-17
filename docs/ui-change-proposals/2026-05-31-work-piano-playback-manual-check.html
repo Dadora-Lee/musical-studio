@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Practice Studio 피아노 연주 수동 확인 계획</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d7dfeb;
+      --blue: #2563eb;
+      --green: #047857;
+      --amber: #b45309;
+      --rose: #be123c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    main { max-width: 1180px; margin: 0 auto; padding: 24px; }
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+    h1, h2, h3 { letter-spacing: 0; }
+    h1 { margin: 0; font-size: 24px; }
+    h2 { margin: 0 0 10px; font-size: 16px; }
+    h3 { margin: 0 0 8px; font-size: 14px; }
+    p { margin: 0; color: var(--muted); }
+    a { color: var(--blue); font-weight: 700; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      border: 1px solid #dbe3ee;
+      border-radius: 4px;
+      background: #f8fafc;
+      padding: 1px 5px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+    }
+    ol, ul { margin: 0; padding-left: 20px; color: #344054; }
+    li + li { margin-top: 6px; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td {
+      border: 1px solid #dbe3ee;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      word-break: keep-all;
+    }
+    th { width: 180px; background: #f8fafc; color: #344054; font-size: 12px; }
+    .stack { display: grid; gap: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      padding: 0 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .pass { border-color: #99f6e4; background: #ecfdf5; color: var(--green); }
+    .warn { border-color: #fde68a; background: #fffbeb; color: #78350f; }
+    .fail { border-color: #fecdd3; background: #fff1f2; color: #881337; }
+    .checklist li {
+      padding: 8px 10px;
+      border: 1px solid #dbe3ee;
+      border-radius: 6px;
+      background: #f8fafc;
+    }
+    @media (max-width: 880px) {
+      main { padding: 14px; }
+      header, .grid { grid-template-columns: 1fr; }
+      th { width: 130px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stack">
+    <header>
+      <div>
+        <h1>Practice Studio 피아노 연주 수동 확인 계획</h1>
+        <p>작성일: 2026-05-31 · 대상 화면 <code>/work</code> · 기능 <code>MusicXML 피아노 연주</code></p>
+      </div>
+      <span class="badge">사용자 확인용</span>
+    </header>
+
+    <section class="panel">
+      <h2>확인 링크</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>실제 앱</th>
+            <td><a href="http://localhost:3000/work">http://localhost:3000/work</a></td>
+          </tr>
+          <tr>
+            <th>검증 결과</th>
+            <td><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/ui-change-proposals/2026-05-31-work-piano-playback-verification.html">2026-05-31-work-piano-playback-verification.html</a></td>
+          </tr>
+          <tr>
+            <th>변경 전/후</th>
+            <td><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/ui-change-proposals/2026-05-31-work-piano-playback-before-after.html">2026-05-31-work-piano-playback-before-after.html</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>1차 확인 순서</h2>
+        <ol class="checklist">
+          <li><a href="http://localhost:3000/work">/work</a>에 접속한다.</li>
+          <li>좌측 Number 목록, 상단 NickName, 중앙 악보, 하단 Transport, 우측 제출/Feedback 영역 위치가 유지되는지 확인한다.</li>
+          <li>중앙 MusicXML 악보가 A4 영역 안에 표시되는지 확인한다.</li>
+          <li>하단 source 버튼이 <code>MR</code>, <code>AR</code>, <code>피아노 연주</code>로 보이는지 확인한다.</li>
+          <li><code>피아노 연주</code>를 선택한다.</li>
+          <li>슬라이더 라벨이 <code>피아노 연주</code>로 바뀌고 활성화되는지 확인한다.</li>
+          <li>재생 버튼을 눌러 피아노 계열 소리가 나는지 직접 청음한다.</li>
+        </ol>
+      </article>
+
+      <article class="panel">
+        <h2>조작 확인</h2>
+        <ol class="checklist">
+          <li><code>재생</code>을 눌렀을 때 현재 시간이 증가하는지 확인한다.</li>
+          <li><code>일시정지</code>를 눌렀을 때 시간이 멈추는지 확인한다.</li>
+          <li><code>정지</code>를 눌렀을 때 시간이 <code>00:00</code>으로 돌아가는지 확인한다.</li>
+          <li><code>10초 전</code>, <code>10초 후</code> 버튼이 피아노 연주 위치를 이동시키는지 확인한다.</li>
+          <li>슬라이더를 드래그했을 때 해당 위치로 이동하는지 확인한다.</li>
+          <li>피아노 연주 위치 이동에 따라 악보 cursor/page가 따라가는지 확인한다.</li>
+        </ol>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="panel pass">
+        <h2>정상 기준</h2>
+        <ul>
+          <li>피아노 연주 선택 시 앱이 멈추지 않는다.</li>
+          <li>피아노 계열 reference 소리가 들린다.</li>
+          <li>슬라이더와 시간 표시가 같은 위치를 가리킨다.</li>
+          <li>MR/AR source로 다시 바꿔도 기존 MR/AR 재생이 유지된다.</li>
+          <li>Recording 버튼과 Take/Feedback 영역이 기존 위치에 남아있다.</li>
+        </ul>
+      </article>
+
+      <article class="panel fail">
+        <h2>문제 기록 기준</h2>
+        <ul>
+          <li>피아노 소리가 나지 않으면 브라우저, 볼륨, source, 선택한 Number를 기록한다.</li>
+          <li>악보 cursor가 따라가지 않으면 어느 시점에서 멈췄는지 기록한다.</li>
+          <li>MR/AR 전환 후 소리가 겹치면 어떤 source에서 어떤 source로 바꿨는지 기록한다.</li>
+          <li>브라우저 콘솔에 <code>play() request was interrupted</code>가 뜨면 재현 순서를 기록한다.</li>
+          <li>악보가 로딩되지 않으면 선택한 Number와 화면의 오류 문구를 기록한다.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="panel warn">
+      <h2>참고</h2>
+      <p>현재 피아노 연주는 1차 prototype이다. MusicXML 전체 part를 간단히 병합해 Tone.js synth로 재생하므로, 실제 피아노 샘플 음색이나 정교한 repeat/dynamic/articulation 처리는 후속 단계에서 다룬다.</p>
+    </section>
+  </main>
+</body>
+</html>

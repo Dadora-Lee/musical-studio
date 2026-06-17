@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>A안 확정 변경 전/후 - Practice Studio UX</title>
+  <style>
+    body { margin: 0; background: #eef3f8; color: #172033; font-family: Arial, "Noto Sans KR", sans-serif; letter-spacing: 0; }
+    main { max-width: 1220px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0; font-size: 24px; }
+    h2 { margin: 0 0 10px; font-size: 18px; }
+    p, li, td, th { font-size: 13px; line-height: 1.7; }
+    .sub { color: #667085; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+    .card { border: 1px solid #d7dee8; border-radius: 8px; background: #fff; padding: 16px; box-shadow: 0 12px 30px rgba(23, 32, 51, 0.08); }
+    .mock { display: grid; grid-template-columns: 118px minmax(0, 1fr) 140px; height: 410px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; }
+    .left { border-right: 1px solid #d7dee8; background: #fff; }
+    .left div { height: 34px; border-bottom: 1px solid #e2e8f0; padding: 8px; font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .left .on { background: #eaf3ff; box-shadow: inset 3px 0 0 #2f6fdf; }
+    .center { display: grid; grid-template-rows: 42px minmax(0, 1fr) 124px; min-width: 0; background: #dfe6ef; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid #cbd5e1; background: #fff; padding: 7px 9px; font-size: 11px; font-weight: 800; }
+    .radio { display: inline-flex; gap: 4px; align-items: center; }
+    .pill { border: 1px solid #cbd5e1; border-radius: 999px; background: #fff; padding: 3px 8px; color: #475569; }
+    .pill.on { border-color: #2f6fdf; background: #eaf3ff; color: #1e4fae; }
+    .paperbox { display: grid; place-items: center; min-height: 0; padding: 12px; overflow: hidden; }
+    .paper { position: relative; width: min(100%, 210px); aspect-ratio: 210 / 297; border: 1px solid #cbd5e1; background: #fff; box-shadow: 0 10px 24px rgba(23,32,51,.12); padding: 18px 16px; overflow: hidden; }
+    .title { width: 56%; height: 9px; margin: 0 auto 14px; border-radius: 99px; background: #253044; }
+    .sys { position: relative; height: 36px; margin-bottom: 17px; border-top: 1px solid #334155; border-bottom: 1px solid #334155; }
+    .sys:before,.sys:after { content: ""; position: absolute; left: 0; right: 0; height: 1px; background: #334155; }
+    .sys:before { top: 11px; } .sys:after { top: 23px; }
+    .bar { position: absolute; top: 0; bottom: 0; width: 1px; background: #94a3b8; }
+    .b1 { left: 25%; } .b2 { left: 50%; } .b3 { left: 75%; }
+    .note { position: absolute; width: 6px; height: 5px; border-radius: 999px; background: #1f2937; }
+    .highlight { position: absolute; left: 50%; top: -5px; bottom: -5px; width: 25%; border: 2px solid rgba(47,111,223,.82); border-radius: 4px; background: rgba(47,111,223,.1); }
+    .lyric { position: absolute; top: 37px; height: 7px; border-radius: 99px; background: #64748b; opacity: .75; }
+    .transport { border-top: 1px solid #cbd5e1; background: #fff; padding: 8px; }
+    .row { display: grid; grid-template-columns: 104px minmax(0,1fr) 54px; gap: 7px; align-items: center; margin-top: 6px; font-size: 10px; color: #475569; }
+    .row.old { grid-template-columns: 60px minmax(0,1fr) 54px; }
+    .lane-control { display: grid; grid-template-columns: 24px minmax(0,1fr); gap: 5px; align-items: center; }
+    .sound { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid #2f6fdf; border-radius: 6px; background: #eaf3ff; color: #1e4fae; font-weight: 900; }
+    .sound.off { border-color: #cbd5e1; background: #f8fafc; color: #94a3b8; }
+    .vol { height: 5px; border-radius: 99px; background: linear-gradient(90deg, #2f6fdf 72%, #e2e8f0 72%); }
+    .line { position: relative; height: 16px; border-radius: 99px; background: #dbeafe; overflow: hidden; }
+    .fill { width: 43%; height: 100%; background: linear-gradient(90deg, #2f6fdf, #24a88f); }
+    .head { position: absolute; left: 43%; top: -4px; bottom: -4px; width: 2px; background: #111827; }
+    .buttons { display: flex; justify-content: flex-end; gap: 4px; margin-bottom: 7px; }
+    .btn { display: grid; place-items: center; width: 28px; height: 26px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; font-size: 10px; font-weight: 900; }
+    .btn.primary { border-color: #176b61; background: #176b61; color: #fff; }
+    .right { border-left: 1px solid #d7dee8; background: #f8fafc; padding: 8px; font-size: 10px; }
+    .mini-card { border: 1px solid #d7dee8; border-radius: 7px; background: #fff; padding: 8px; margin-bottom: 8px; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; margin-top: 18px; background: #fff; border: 1px solid #d7dee8; }
+    th, td { border: 1px solid #d7dee8; padding: 9px 10px; text-align: left; vertical-align: top; }
+    th { background: #f8fafc; }
+    code { border: 1px solid #d7dee8; border-radius: 5px; background: #f8fafc; padding: 2px 5px; }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>A안 확정 변경 전/후</h1>
+    <p class="sub">피드백 반영판. 앱 코드는 이 문서 기준으로만 변경한다. 좌측 Number 목록, HeaderLayout, 중앙 악보, 하단 transport, 우측 제출/Feedback 위치는 유지한다.</p>
+
+    <section class="grid">
+      <article class="card">
+        <h2>변경 전</h2>
+        <div class="mock">
+          <aside class="left"><div class="on">SONG07_거짓말</div><div>SONG08_신인탄생</div><div>SONG09_글자</div><div>SONG10_MUSE</div></aside>
+          <section class="center">
+            <div class="toolbar"><span>MusicXML 악보</span><span>Page 1 / 3</span></div>
+            <div class="paperbox">
+              <div class="paper">
+                <div class="title"></div>
+                <div class="sys"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div><span class="note" style="left:18%;top:12px"></span><span class="note" style="left:40%;top:18px"></span><span class="note" style="left:67%;top:10px"></span></div>
+                <div class="sys"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div><span class="note" style="left:30%;top:14px"></span><span class="note" style="left:58%;top:20px"></span><span class="lyric" style="left:50%;width:19%"></span></div>
+                <div class="sys"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div><span class="note" style="left:23%;top:16px"></span><span class="note" style="left:72%;top:11px"></span></div>
+              </div>
+            </div>
+            <div class="transport">
+              <div class="buttons"><span class="btn">-10</span><span class="btn primary">▶</span><span class="btn">Ⅱ</span><span class="btn">■</span><span class="btn">+10</span></div>
+              <div class="row old"><span>MR</span><div class="line"><div class="fill"></div><div class="head"></div></div><span>01:12</span></div>
+              <div class="row old"><span>Rec</span><div class="line"><div class="fill" style="width:28%;background:#f0a3b4"></div></div><span>00:48</span></div>
+              <div class="row old"><span>Volume</span><div class="vol"></div><span>70%</span></div>
+            </div>
+          </section>
+          <aside class="right"><div class="mini-card"><strong>제출 상태</strong><br>미제출</div><div class="mini-card">Take 목록</div></aside>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>변경 후</h2>
+        <div class="mock">
+          <aside class="left"><div class="on">SONG07_거짓말</div><div>SONG08_신인탄생</div><div>SONG09_글자</div><div>SONG10_MUSE</div></aside>
+          <section class="center">
+            <div class="toolbar">
+              <span>MusicXML 악보</span>
+              <span class="radio"><span class="pill">가사 크게</span><span class="pill on">균형</span><span class="pill">전체</span></span>
+            </div>
+            <div class="paperbox">
+              <div class="paper">
+                <div class="title"></div>
+                <div class="sys"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div><span class="note" style="left:18%;top:12px"></span><span class="note" style="left:40%;top:18px"></span><span class="note" style="left:67%;top:10px"></span></div>
+                <div class="sys"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div><div class="highlight"></div><span class="note" style="left:30%;top:14px"></span><span class="note" style="left:58%;top:20px;background:#e03667"></span><span class="lyric" style="left:50%;width:19%"></span></div>
+                <div class="sys"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div><span class="note" style="left:23%;top:16px"></span><span class="note" style="left:72%;top:11px"></span></div>
+              </div>
+            </div>
+            <div class="transport">
+              <div class="buttons"><span class="btn">-10</span><span class="btn primary">Ⅱ</span><span class="btn">■</span><span class="btn">+10</span><span class="btn">REC</span></div>
+              <div class="row"><span class="lane-control"><span class="sound">♪</span><span><strong>72%</strong><div class="vol"></div></span></span><div class="line"><div class="fill"></div><div class="head"></div></div><span>01:12</span></div>
+              <div class="row"><span class="lane-control"><span class="sound off">M</span><span><strong>0%</strong><div class="vol" style="background:#e2e8f0"></div></span></span><div class="line"><div class="fill" style="width:28%;background:#f0a3b4"></div></div><span>00:48</span></div>
+            </div>
+          </section>
+          <aside class="right"><div class="mini-card"><strong>제출 상태</strong><br>미제출</div><div class="mini-card">Take 목록</div></aside>
+        </div>
+      </article>
+    </section>
+
+    <table>
+      <thead><tr><th>항목</th><th>확정 방향</th><th>되돌릴 기준</th></tr></thead>
+      <tbody>
+        <tr><td>악보 tracking</td><td>피아노 재생 중 악보 페이지는 움직이지 않고 현재 마디만 하이라이트한다. 수동 페이지 이동은 유지한다.</td><td>하이라이트가 곡마다 불안정하면 cursor line만 표시하는 방식으로 축소한다.</td></tr>
+        <tr><td>악보 렌더링 라디오</td><td>악보 pager 우측에 <code>가사 크게</code>, <code>균형</code>, <code>전체</code> 라디오를 둔다. 각각 3/4/5마디 기준으로 렌더링한다.</td><td>렌더링 변경 시 흔들림이 심하면 기본값 균형만 유지한다.</td></tr>
+        <tr><td>볼륨/소리 토글</td><td>각 track 왼쪽에 소리 활성/비활성 토글, 볼륨 슬라이더, % 표시를 둔다. 현재는 active source와 Recording lane부터 POC 적용한다.</td><td>하단이 좁아지면 슬라이더를 짧게 줄이고 %를 유지한다.</td></tr>
+        <tr><td>재생 상태</td><td>재생/일시정지는 하나의 primary 버튼으로 합치고 현재 상태를 버튼 모양에 반영한다.</td><td>브라우저 자동재생 오류가 재발하면 play/pause promise 처리부터 복구한다.</td></tr>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

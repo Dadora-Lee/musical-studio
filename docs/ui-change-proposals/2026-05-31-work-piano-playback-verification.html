@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Practice Studio 피아노 연주 검증 결과</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d7dfeb;
+      --green: #047857;
+      --blue: #2563eb;
+      --amber: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    main { max-width: 1180px; margin: 0 auto; padding: 24px; }
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+    h1, h2 { letter-spacing: 0; }
+    h1 { margin: 0; font-size: 24px; }
+    h2 { margin: 0 0 10px; font-size: 16px; }
+    p { margin: 0; color: var(--muted); }
+    code {
+      border: 1px solid #dbe3ee;
+      border-radius: 4px;
+      background: #f8fafc;
+      padding: 1px 5px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+    }
+    pre {
+      margin: 0;
+      overflow: auto;
+      border-radius: 8px;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 14px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+    ul { margin: 0; padding-left: 18px; color: #344054; }
+    li + li { margin-top: 5px; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td {
+      border: 1px solid #dbe3ee;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      word-break: keep-all;
+    }
+    th { width: 190px; background: #f8fafc; color: #344054; font-size: 12px; }
+    a { color: var(--blue); font-weight: 700; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .stack { display: grid; gap: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      border: 1px solid #99f6e4;
+      border-radius: 6px;
+      background: #ecfdf5;
+      color: var(--green);
+      padding: 0 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .warn { border-color: #fde68a; background: #fffbeb; color: #78350f; }
+    .shot {
+      width: 100%;
+      max-height: 620px;
+      object-fit: contain;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+    }
+    @media (max-width: 880px) {
+      main { padding: 14px; }
+      header, .grid { grid-template-columns: 1fr; }
+      th { width: 140px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stack">
+    <header>
+      <div>
+        <h1>Practice Studio 피아노 연주 검증 결과</h1>
+        <p>작성일: 2026-05-31 · 대상 화면 <code>/work</code> · 기준 브랜치 <code>codex/local-db-prototype</code></p>
+      </div>
+      <span class="badge">검증 통과</span>
+    </header>
+
+    <section class="panel">
+      <h2>구현 요약</h2>
+      <ul>
+        <li><code>악보재생</code> source를 <code>피아노 연주</code> source로 전환했다.</li>
+        <li>MusicXML raw string을 <code>ScoreViewer</code>와 piano parser가 공유하도록 <code>onMusicXmlLoaded</code> callback을 추가했다.</li>
+        <li>MusicXML note/rest/chord/measure/tempo를 playback event map으로 변환하는 parser를 추가했다.</li>
+        <li>기존 dependency인 Tone.js를 client-only dynamic import로 사용하는 piano player wrapper를 추가했다.</li>
+        <li>피아노 연주의 play, pause, stop, 10초 이동, slider seek, measure 기반 cursor/page sync를 연결했다.</li>
+      </ul>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>자동 검증</h2>
+        <table>
+          <tbody>
+            <tr><th>lint</th><td><code>pnpm lint</code> 통과</td></tr>
+            <tr><th>typecheck</th><td><code>pnpm typecheck</code> 통과</td></tr>
+            <tr><th>unit test</th><td><code>pnpm test</code> 통과 — 11 files, 48 tests</td></tr>
+            <tr><th>Playwright</th><td><code>tests/e2e/work-piano-playback.spec.ts --project=chromium</code> 통과</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="panel warn">
+        <h2>검증 한계</h2>
+        <ul>
+          <li>자동 검증은 실제 스피커 음량을 직접 판정하지 않는다.</li>
+          <li>자동 검증은 MusicXML SVG 렌더링, <code>피아노 연주</code> source 표시, slider 활성화, 재생 클릭, console play interruption 미발생을 확인한다.</li>
+          <li>실제 피아노 계열 소리 청음은 브라우저에서 수동 확인 항목으로 남긴다.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>Playwright 결과</h2>
+      <pre>Running 1 test using 1 worker
+[chromium] › tests/e2e/work-piano-playback.spec.ts › Practice Studio piano playback › renders MusicXML and exposes piano playback transport
+1 passed (6.6s)</pre>
+    </section>
+
+    <section class="panel">
+      <h2>스크린샷</h2>
+      <p style="margin-bottom: 10px;">실제 <code>http://localhost:3000/work</code> 화면 캡처.</p>
+      <img class="shot" src="./2026-05-31-work-piano-playback.png" alt="Practice Studio 피아노 연주 검증 화면" />
+    </section>
+
+    <section class="panel">
+      <h2>관련 파일</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>변경 전/후</th>
+            <td><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/ui-change-proposals/2026-05-31-work-piano-playback-before-after.html">2026-05-31-work-piano-playback-before-after.html</a></td>
+          </tr>
+          <tr>
+            <th>계획 문서</th>
+            <td><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/superpowers/plans/2026-05-31-musicxml-piano-playback-plan.md">2026-05-31-musicxml-piano-playback-plan.md</a></td>
+          </tr>
+          <tr>
+            <th>스크린샷</th>
+            <td><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/ui-change-proposals/2026-05-31-work-piano-playback.png">2026-05-31-work-piano-playback.png</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Musical Studio Local DB Snapshot</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --line: #cfd7e3;
+      --head: #edf3fb;
+      --subhead: #f7f9fc;
+      --text: #172033;
+      --muted: #667085;
+      --ok: #0f7a45;
+      --empty: #9aa4b2;
+      --warn: #a35b00;
+      --bg: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 18px;
+      background: #f4f6f9;
+      color: var(--text);
+      font-family: Arial, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      font-size: 13px;
+    }
+
+    header {
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 18px 0 6px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0 0;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      background: var(--bg);
+      border-radius: 4px;
+      padding: 3px 7px;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+
+    .sheet {
+      overflow: auto;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      max-height: 520px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 12px;
+      line-height: 1.15;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--line);
+      padding: 3px 6px;
+      height: 24px;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: #fff;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--head);
+      font-weight: 700;
+      text-align: left;
+    }
+
+    tr:nth-child(even) td {
+      background: #fbfcfe;
+    }
+
+    .num { text-align: right; color: var(--muted); }
+    .center { text-align: center; }
+    .ok { color: var(--ok); font-weight: 700; }
+    .empty { color: var(--empty); }
+    .warn { color: var(--warn); font-weight: 700; }
+
+    a {
+      color: #155eef;
+      text-decoration: none;
+    }
+
+    a:hover { text-decoration: underline; }
+
+    .note {
+      margin: 6px 0 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .w-id { width: 46px; }
+    .w-title { width: 230px; }
+    .w-short { width: 96px; }
+    .w-file { width: 170px; }
+    .w-type { width: 86px; }
+    .w-cast { width: 140px; }
+    .w-text { width: 520px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Musical Studio Local DB Snapshot</h1>
+    <div class="meta">
+      <span class="pill">Source: Supabase Local Stack</span>
+      <span class="pill">numbers: 22</span>
+      <span class="pill">members: 21</span>
+      <span class="pill">works: 2</span>
+      <span class="pill">comments: 2</span>
+      <span class="pill">remote Supabase: not touched</span>
+    </div>
+  </header>
+
+  <h2>numbers</h2>
+  <p class="note">셀에는 파일명만 표시합니다. 링크/hover에는 DB에 저장된 전체 URL 값이 들어 있습니다. vocal_url은 MIDI_ALL 기준입니다.</p>
+  <div class="sheet">
+    <table>
+      <thead>
+        <tr>
+          <th class="w-id">id</th>
+          <th class="w-title">title</th>
+          <th class="w-file">musicxml_url</th>
+          <th class="w-file">ar_url</th>
+          <th class="w-file">mr_url</th>
+          <th class="w-file">vocal_url</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><td>SONG01_유고집</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG01_유고집/SONG01_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG01_유고집/SONG01_AR.mp3">SONG01_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG01_유고집/SONG01_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG01_유고집/SONG01_MR.mp3">SONG01_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">2</td><td>SONG02_그녀의탄생과죽음</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG02_그녀의탄생과죽음/SONG02_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG02_그녀의탄생과죽음/SONG02_AR.mp3">SONG02_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG02_그녀의탄생과죽음/SONG02_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG02_그녀의탄생과죽음/SONG02_MR.mp3">SONG02_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">3</td><td>SONG03_아무도모른다</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG03_아무도모른다/SONG03_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG03_아무도모른다/SONG03_AR.mp3">SONG03_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG03_아무도모른다/SONG03_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG03_아무도모른다/SONG03_MR.mp3">SONG03_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">4</td><td>SONG04_NUMBER7</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG04_NUMBER7/SONG04_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG04_NUMBER7/SONG04_AR.mp3">SONG04_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG04_NUMBER7/SONG04_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG04_NUMBER7/SONG04_MR.mp3">SONG04_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">5</td><td>SONG05_눈물이나</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG05_눈물이나/SONG05_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG05_눈물이나/SONG05_AR.mp3">SONG05_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG05_눈물이나/SONG05_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG05_눈물이나/SONG05_MR.mp3">SONG05_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">6</td><td>SONG06_그녀를만나면</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG06_그녀를만나면/SONG06_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG06_그녀를만나면/SONG06_AR.mp3">SONG06_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG06_그녀를만나면/SONG06_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG06_그녀를만나면/SONG06_MR.mp3">SONG06_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">7</td><td>SONG07_거짓말이아니야</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG07_거짓말이아니야/SONG07_MUSIC_SHEET.musicxml.xml" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG07_거짓말이아니야/SONG07_MUSIC_SHEET.musicxml.xml">SONG07_MUSIC_SHEET.musicxml.xml</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG07_거짓말이아니야/SONG07_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG07_거짓말이아니야/SONG07_AR.mp3">SONG07_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG07_거짓말이아니야/SONG07_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG07_거짓말이아니야/SONG07_MR.mp3">SONG07_MR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG07_거짓말이아니야/SONG07_MIDI_ALL.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG07_거짓말이아니야/SONG07_MIDI_ALL.mp3">SONG07_MIDI_ALL.mp3</a></td></tr>
+        <tr><td class="num">8</td><td>SONG08_신인탄생</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG08_신인탄생/SONG08_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG08_신인탄생/SONG08_AR.mp3">SONG08_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG08_신인탄생/SONG08_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG08_신인탄생/SONG08_MR.mp3">SONG08_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">9</td><td>SONG09_글자그대로</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG09_글자그대로/SONG09_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG09_글자그대로/SONG09_AR.mp3">SONG09_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG09_글자그대로/SONG09_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG09_글자그대로/SONG09_MR.mp3">SONG09_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">10</td><td>SONG10_MUSE</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG10_MUSE/SONG10_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG10_MUSE/SONG10_AR.mp3">SONG10_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG10_MUSE/SONG10_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG10_MUSE/SONG10_MR.mp3">SONG10_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">11</td><td>SONG11_섬세한팬레터</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG11_섬세한팬레터/SONG11_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG11_섬세한팬레터/SONG11_AR.mp3">SONG11_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG11_섬세한팬레터/SONG11_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG11_섬세한팬레터/SONG11_MR.mp3">SONG11_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">12</td><td>SONG12_투서</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG12_투서/SONG12_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG12_투서/SONG12_AR.mp3">SONG12_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG12_투서/SONG12_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG12_투서/SONG12_MR.mp3">SONG12_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">13</td><td>SONG13_글자그대로Rep</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG13_글자그대로Rep/SONG13_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG13_글자그대로Rep/SONG13_AR.mp3">SONG13_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG13_글자그대로Rep/SONG13_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG13_글자그대로Rep/SONG13_MR.mp3">SONG13_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">14</td><td>SONG14_별이반짝이는시간</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG14_별이반짝이는시간/SONG14_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG14_별이반짝이는시간/SONG14_AR.mp3">SONG14_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG14_별이반짝이는시간/SONG14_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG14_별이반짝이는시간/SONG14_MR.mp3">SONG14_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">15</td><td>SONG15_생의반려</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG15_생의반려/SONG15_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG15_생의반려/SONG15_AR.mp3">SONG15_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG15_생의반려/SONG15_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG15_생의반려/SONG15_MR.mp3">SONG15_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">16</td><td>SONG16_거울</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG16_거울/SONG16_MUSIC_SHEET.musicxml.xml" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG16_거울/SONG16_MUSIC_SHEET.musicxml.xml">SONG16_MUSIC_SHEET.musicxml.xml</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG16_거울/SONG16_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG16_거울/SONG16_AR.mp3">SONG16_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG16_거울/SONG16_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG16_거울/SONG16_MR.mp3">SONG16_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">17</td><td>SONG17_고백</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG17_고백/SONG17_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG17_고백/SONG17_AR.mp3">SONG17_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG17_고백/SONG17_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG17_고백/SONG17_MR.mp3">SONG17_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">18</td><td>SONG18_해진의편지</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG18_해진의편지/SONG18_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG18_해진의편지/SONG18_AR.mp3">SONG18_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG18_해진의편지/SONG18_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG18_해진의편지/SONG18_MR.mp3">SONG18_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">19</td><td>SONG19_내가죽었을때</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG19_내가죽었을때/SONG19_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG19_내가죽었을때/SONG19_AR.mp3">SONG19_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG19_내가죽었을때/SONG19_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG19_내가죽었을때/SONG19_MR.mp3">SONG19_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">20</td><td>SONG20_CURTAINCALL</td><td class="empty">NULL</td><td class="empty">NULL</td><td class="empty">NULL</td><td class="empty">NULL</td></tr>
+        <tr><td class="num">151</td><td>SONG15a_별이반짝이는시간Rep</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG15a_별이반짝이는시간Rep/SONG15a_AR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG15a_별이반짝이는시간Rep/SONG15a_AR.mp3">SONG15a_AR.mp3</a></td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG15a_별이반짝이는시간Rep/SONG15a_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG15a_별이반짝이는시간Rep/SONG15a_MR.mp3">SONG15a_MR.mp3</a></td><td class="empty">NULL</td></tr>
+        <tr><td class="num">99</td><td>SONG99_ETC</td><td class="empty">NULL</td><td class="empty">NULL</td><td><a href="file:///E:/04.Musical/08.팬레터/01.넘버/SONG99_ETC/SONG_ETC_MuseRep_MR.mp3" title="file:///E:/04.Musical/08.팬레터/01.넘버/SONG99_ETC/SONG_ETC_MuseRep_MR.mp3">SONG_ETC_MuseRep_MR.mp3</a></td><td class="empty">NULL</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>members</h2>
+  <div class="sheet">
+    <table>
+      <thead>
+        <tr>
+          <th class="w-id">id</th>
+          <th class="w-short">nickname</th>
+          <th class="w-type">member_type</th>
+          <th class="w-cast">castings</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><td>주언</td><td>player</td><td>김환태</td></tr>
+        <tr><td class="num">2</td><td>카일</td><td>player</td><td>정세훈</td></tr>
+        <tr><td class="num">3</td><td>기묘</td><td>player</td><td>정세훈</td></tr>
+        <tr><td class="num">4</td><td>재럼</td><td>player</td><td>김해진</td></tr>
+        <tr><td class="num">5</td><td>두기 이켄가</td><td>player</td><td>김해진</td></tr>
+        <tr><td class="num">6</td><td>듀이</td><td>player</td><td>히카루</td></tr>
+        <tr><td class="num">7</td><td>폴라리스</td><td>player</td><td>히카루</td></tr>
+        <tr><td class="num">8</td><td>까미</td><td>player</td><td>이윤</td></tr>
+        <tr><td class="num">9</td><td>종욱</td><td>player</td><td>이윤</td></tr>
+        <tr><td class="num">10</td><td>윤슬</td><td>player</td><td>이태준</td></tr>
+        <tr><td class="num">11</td><td>북구</td><td>player</td><td>이태준</td></tr>
+        <tr><td class="num">12</td><td>죠죠</td><td>player</td><td>김수남</td></tr>
+        <tr><td class="num">13</td><td>지예</td><td>player</td><td>김수남</td></tr>
+        <tr><td class="num">14</td><td>앙리</td><td>direction</td><td>메인</td></tr>
+        <tr><td class="num">15</td><td>도마</td><td>direction</td><td>극본</td></tr>
+        <tr><td class="num">16</td><td>에반</td><td>direction</td><td>시각</td></tr>
+        <tr><td class="num">17</td><td>레이</td><td>direction</td><td>미정</td></tr>
+        <tr><td class="num">18</td><td>머피</td><td>direction</td><td>음향</td></tr>
+        <tr><td class="num">19</td><td>타니</td><td>direction</td><td>엔지니어</td></tr>
+        <tr><td class="num">20</td><td>아리</td><td>direction</td><td>운영</td></tr>
+        <tr><td class="num">21</td><td>뇽뇽</td><td>direction</td><td>미정</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>works</h2>
+  <div class="sheet">
+    <table>
+      <thead>
+        <tr>
+          <th class="w-id">id</th>
+          <th class="w-title">number</th>
+          <th class="w-short">member</th>
+          <th class="w-short">casting_name</th>
+          <th class="w-file">file_name</th>
+          <th class="w-file">file_url</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><td>SONG01_유고집</td><td>듀이</td><td>히카루</td><td>take_03.wav</td><td>/recordings/dewey/song01/take_03.wav</td></tr>
+        <tr><td class="num">2</td><td>SONG01_유고집</td><td>폴라리스</td><td>히카루</td><td>take_01.wav</td><td>/recordings/polaris/song01/take_01.wav</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>comments</h2>
+  <div class="sheet">
+    <table>
+      <thead>
+        <tr>
+          <th class="w-id">id</th>
+          <th class="w-file">work</th>
+          <th class="w-short">member</th>
+          <th class="w-text">text</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><td>take_03.wav</td><td>앙리</td><td>첫 호흡은 안정적입니다. 12마디 전 자음 타이밍을 더 선명하게 맞춰주세요.</td></tr>
+        <tr><td class="num">2</td><td>take_03.wav</td><td>타니</td><td>후렴 에너지는 좋습니다. 마지막 음은 조금 더 가볍게 정리해보면 좋겠습니다.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>quick notes</h2>
+  <div class="sheet">
+    <table>
+      <thead><tr><th class="w-title">item</th><th>note</th></tr></thead>
+      <tbody>
+        <tr><td>vocal_url</td><td>`MIDI_ALL` 기준으로 저장. 현재 발견된 MIDI_ALL 파일은 SONG07 하나입니다.</td></tr>
+        <tr><td>MusicXML</td><td>현재 파일 시스템에서 발견된 MusicXML은 SONG07, SONG16입니다.</td></tr>
+        <tr><td>SONG20</td><td>폴더는 있지만 AR/MR/MIDI/MusicXML 파일이 아직 없습니다.</td></tr>
+        <tr><td>SONG99</td><td>ETC 폴더에는 MuseRep MR만 `mr_url`로 반영했습니다.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Practice Studio Next Workflow 실행 문서</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d7dfeb;
+      --blue: #2563eb;
+      --teal: #0f766e;
+      --green-bg: #ecfdf5;
+      --green-line: #99f6e4;
+      --amber-bg: #fffbeb;
+      --amber-line: #fde68a;
+      --slate: #263244;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    main {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+    h1, h2, h3 { letter-spacing: 0; }
+    h1 { margin: 0; font-size: 24px; }
+    h2 { margin: 0 0 10px; font-size: 16px; }
+    h3 { margin: 0 0 8px; font-size: 14px; }
+    p { margin: 0; color: var(--muted); }
+    code {
+      border: 1px solid #dbe3ee;
+      border-radius: 4px;
+      background: #f8fafc;
+      padding: 1px 5px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+    }
+    pre {
+      margin: 0;
+      overflow: auto;
+      border-radius: 8px;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 14px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+    a { color: var(--blue); font-weight: 700; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { margin: 0; padding-left: 18px; color: #344054; }
+    li + li { margin-top: 5px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #dbe3ee;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      word-break: keep-all;
+    }
+    th {
+      width: 168px;
+      background: #f8fafc;
+      color: #344054;
+      font-size: 12px;
+    }
+    .stack { display: grid; gap: 12px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .three {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      border: 1px solid var(--green-line);
+      border-radius: 6px;
+      background: var(--green-bg);
+      color: var(--teal);
+      padding: 0 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .note {
+      border-color: #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+    }
+    .warn {
+      border-color: var(--amber-line);
+      background: var(--amber-bg);
+      color: #78350f;
+    }
+    .phase {
+      display: grid;
+      gap: 8px;
+      min-height: 180px;
+    }
+    .phase-number {
+      display: inline-flex;
+      width: 28px;
+      height: 28px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-weight: 700;
+    }
+    .checklist {
+      display: grid;
+      gap: 6px;
+      color: #344054;
+    }
+    .checklist div::before {
+      content: "□";
+      margin-right: 8px;
+      color: #475467;
+    }
+    @media (max-width: 920px) {
+      main { padding: 14px; }
+      header, .grid, .three { grid-template-columns: 1fr; }
+      th { width: 132px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stack">
+    <header>
+      <div>
+        <h1>Practice Studio Next Workflow 실행 문서</h1>
+        <p>작성일: 2026-05-31 · 기준 브랜치 <code>codex/local-db-prototype</code> · 기준 커밋 <code>53a3670</code> · 목표 화면 <code>/work</code></p>
+      </div>
+      <span class="badge">목표 달성용</span>
+    </header>
+
+    <section class="panel note">
+      <h2>이 문서의 목적</h2>
+      <p>상단 계획서를 실제 작업자가 따라갈 수 있는 workflow 단위로 쪼갠 문서다. md 원본은 agent 실행용, 이 HTML은 사용자와 git 공유자가 빠르게 검토하기 위한 보기용 문서다.</p>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>최종 목표</h2>
+        <ul>
+          <li><code>/work</code>에서 B형 균등 연습형 MusicXML 악보를 볼 수 있다.</li>
+          <li>MR/AR을 재생, 정지, 일시정지, 10초 이동, slider seek로 조작할 수 있다.</li>
+          <li>Recording 시작, 일시정지, 재개, 정지, 저장 흐름이 끊기지 않는다.</li>
+          <li>제출된 recording을 클릭하면 Feedback 기준을 이해할 수 있다.</li>
+          <li>검증 결과와 공유 문서가 최신 상태로 남는다.</li>
+        </ul>
+      </article>
+      <article class="panel">
+        <h2>변경 금지/보류</h2>
+        <ul>
+          <li>좌측 Number 목록, 상단 NickName, 중앙 MusicXML, 하단 Transport/Recording, 우측 제출/Feedback 위치를 이동하지 않는다.</li>
+          <li>실제 MusicXML/MR/AR 파일은 git에 포함하지 않는다.</li>
+          <li>DB schema, Supabase migration, 새 dependency는 이번 단계에서 변경하지 않는다.</li>
+          <li><code>git add .</code>는 사용하지 않는다.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>Workflow 단위</h2>
+      <div class="three">
+        <article class="phase">
+          <span class="phase-number">0</span>
+          <h3>시작 점검</h3>
+          <ul>
+            <li>WSL 레포와 브랜치 확인</li>
+            <li><code>AGENTS.md</code>, <code>AGENTS.override.md</code> 확인</li>
+            <li>기존 진행 요약과 B형 결정 문서 확인</li>
+          </ul>
+        </article>
+        <article class="phase">
+          <span class="phase-number">1</span>
+          <h3>B형 변경 전/후 HTML</h3>
+          <ul>
+            <li>구현 전 사용자 공유 문서 작성</li>
+            <li>유지되는 UI 위치와 되돌릴 기준 기록</li>
+            <li>OSMD 한계와 측정 기준 명시</li>
+          </ul>
+        </article>
+        <article class="phase">
+          <span class="phase-number">2</span>
+          <h3>B형 악보 TDD</h3>
+          <ul>
+            <li>실패 테스트 작성</li>
+            <li>한 줄 4마디, 12~16마디/page metadata 적용</li>
+            <li>title과 A4 fit 유지 검증</li>
+          </ul>
+        </article>
+        <article class="phase">
+          <span class="phase-number">3</span>
+          <h3>MR/AR 재생 UX</h3>
+          <ul>
+            <li>play/pause/stop/10초 이동 검증</li>
+            <li>slider drag seek 검증</li>
+            <li>source 전환 시 이전 audio pause/reset</li>
+          </ul>
+        </article>
+        <article class="phase">
+          <span class="phase-number">4</span>
+          <h3>Recording 흐름</h3>
+          <ul>
+            <li>start/pause/resume/stop/save 검증</li>
+            <li>MR/AR과 Recording lane 동기 UX 확인</li>
+            <li>local take 추가와 재생 가능 여부 확인</li>
+          </ul>
+        </article>
+        <article class="phase">
+          <span class="phase-number">5</span>
+          <h3>Feedback 기준</h3>
+          <ul>
+            <li>v1: take 전체 comment</li>
+            <li>v1.5: timestamp comment</li>
+            <li>v2: 마디 번호 + 시간 위치 comment</li>
+          </ul>
+        </article>
+        <article class="phase">
+          <span class="phase-number">6</span>
+          <h3>실제 화면 검증</h3>
+          <ul>
+            <li>Playwright로 <code>/work</code> 확인</li>
+            <li>MusicXML, title, A4, MR/AR seek, Recording 확인</li>
+            <li>console error 수집</li>
+          </ul>
+        </article>
+        <article class="phase">
+          <span class="phase-number">7</span>
+          <h3>문서 갱신</h3>
+          <ul>
+            <li>current progress 갱신</li>
+            <li>git branch status 갱신</li>
+            <li>B형 실제 적용 결과 문서 작성</li>
+          </ul>
+        </article>
+        <article class="phase">
+          <span class="phase-number">8</span>
+          <h3>최종 검증/commit</h3>
+          <ul>
+            <li><code>pnpm lint</code></li>
+            <li><code>pnpm typecheck</code></li>
+            <li><code>pnpm test</code></li>
+            <li>명시 파일 stage 후 Conventional Commit</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>실행 체크리스트</h2>
+      <div class="checklist">
+        <div>현재 브랜치가 <code>codex/local-db-prototype</code>인지 확인한다.</div>
+        <div>기준 커밋이 <code>53a3670</code> 이후인지 확인한다.</div>
+        <div>UI 변경 전/후 HTML을 먼저 남긴다.</div>
+        <div>B형 악보 적용 테스트를 먼저 실패시킨다.</div>
+        <div>구현 후 unit test를 통과시킨다.</div>
+        <div>Playwright로 실제 <code>/work</code> 화면을 검증한다.</div>
+        <div>검증 결과와 screenshot을 문서화한다.</div>
+        <div>실제 MusicXML/MR/AR, env, secret 파일이 stage되지 않았는지 확인한다.</div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>필수 검증 명령</h2>
+        <pre>pnpm lint
+pnpm typecheck
+pnpm test</pre>
+      </article>
+      <article class="panel">
+        <h2>주요 대상 파일</h2>
+        <table>
+          <tbody>
+            <tr>
+              <th>악보</th>
+              <td><code>src/components/score/ScoreViewer.tsx</code></td>
+            </tr>
+            <tr>
+              <th>연습 화면</th>
+              <td><code>src/components/practice/PracticeStudioLayout.tsx</code></td>
+            </tr>
+            <tr>
+              <th>테스트</th>
+              <td><code>tests/unit/components/practice/</code></td>
+            </tr>
+            <tr>
+              <th>공유 문서</th>
+              <td><code>docs/ui-change-proposals/</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+
+    <section class="panel warn">
+      <h2>목표 달성용 실행 프롬프트</h2>
+      <pre>Musical Studio repository에서 다음 workflow를 목표 달성까지 진행해줘.
+
+반드시 한국어로 응답해줘.
+작업 전 AGENTS.md와 AGENTS.override.md를 확인해줘.
+실제 작업 위치는 WSL repo /home/jieun/projects/musical-studio 이야.
+기준 브랜치는 codex/local-db-prototype이고, 기준 커밋은 53a3670 이후야.
+
+목표:
+1. B형 균등 연습형 악보를 실제 /work MusicXML 렌더링에 적용한다.
+2. MR/AR 재생 UX를 안정화한다.
+3. Recording 시작-일시정지-재개-정지-저장 흐름을 안정화한다.
+4. 제출/Feedback 위치 기준을 문서화한다.
+5. 검증 결과와 공유 문서를 최신화한다.
+
+진행 방식:
+1. 현재 git 상태, AGENTS.md, AGENTS.override.md, 기존 진행 문서를 확인한다.
+2. UI 변경 전 docs/ui-change-proposals/2026-05-31-work-b-uniform-score-implementation.html에 변경 전/후를 기록한다.
+3. TDD로 B형 악보 적용 테스트를 먼저 작성하고 실패를 확인한다.
+4. ScoreViewer에서 한 줄 4마디, 페이지당 12~16마디 목표, MusicXML title 유지, A4 fit을 적용한다.
+5. MR/AR play/pause/stop/10초 이동/slider drag seek/source 전환을 검증하고 필요한 버그를 수정한다.
+6. Recording start/pause/resume/stop/save 흐름을 unit test와 실제 화면 검증으로 안정화한다.
+7. Feedback 기준은 v1=take 전체 comment, v1.5=시간 위치, v2=마디+시간 위치로 문서화한다.
+8. DB schema, Supabase migration, 새 dependency는 변경하지 않는다.
+9. current-progress-summary.html, git-branch-status-visualization.html, B형 검증 문서를 최신화한다.
+10. pnpm lint, pnpm typecheck, pnpm test를 실행하고 결과를 기록한다.
+11. git add . 없이 필요한 파일만 stage하고 Conventional Commit + Co-Authored-By trailer로 commit한다.
+
+성공 기준:
+- /work에서 B형 균등 연습형 악보가 적용되어 보인다.
+- MusicXML title이 유지된다.
+- A4 안에서 악보가 잘리지 않는다.
+- MR/AR seek와 재생 상태가 일관된다.
+- 녹음 시작부터 저장까지 prototype 흐름이 끊기지 않는다.
+- 모든 테스트와 Playwright 검증이 통과한다.
+- 공유용 HTML 문서가 최신 상태를 설명한다.</pre>
+    </section>
+
+    <section class="panel">
+      <h2>원본 문서</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>Markdown</th>
+            <td><code>docs/superpowers/plans/2026-05-31-practice-studio-next-workflow-prompt.md</code></td>
+          </tr>
+          <tr>
+            <th>HTML</th>
+            <td><code>docs/ui-change-proposals/2026-05-31-practice-studio-next-workflow-prompt.html</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>/work 좌측 Number 목록 보존 변경안</title>
+  <style>
+    :root { --bg:#eef2f6; --paper:#fff; --line:#cbd5e1; --text:#172033; --muted:#64748b; --teal:#0f766e; --rose:#be123c; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:Arial,"Malgun Gothic",sans-serif; font-size:14px; }
+    main { max-width:1180px; margin:0 auto; padding:24px; }
+    h1 { margin:0 0 8px; font-size:24px; }
+    p { line-height:1.7; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:18px; }
+    .panel { border:1px solid var(--line); background:var(--paper); }
+    .head { padding:12px 14px; border-bottom:1px solid var(--line); font-weight:900; }
+    .body { padding:14px; }
+    .mock { display:grid; gap:8px; min-height:300px; border:1px dashed var(--line); padding:10px; background:#f8fafc; }
+    .current { grid-template-columns:1fr; }
+    .proposed { grid-template-columns:220px minmax(0,1fr) 260px; }
+    .box { display:grid; place-items:center; min-height:70px; border:1px solid var(--line); background:#fff; font-weight:900; text-align:center; }
+    .number { border-color:#7dd3c7; background:#ecfdf5; color:#115e59; }
+    .score { min-height:180px; }
+    .warn { color:var(--rose); font-weight:900; }
+    .ok { color:var(--teal); font-weight:900; }
+    ul { line-height:1.8; }
+    code { background:#f1f5f9; border:1px solid #dbe3ee; padding:1px 5px; }
+    @media (max-width:900px) { .grid { grid-template-columns:1fr; } .proposed { grid-template-columns:160px minmax(0,1fr); } .proposed .right { grid-column:1 / -1; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>/work 좌측 Number 목록 보존 변경안</h1>
+    <p>이 문서는 실제 UI 코드를 변경하기 전에 확인하기 위한 변경 전/변경 후 비교안입니다. 승인 전에는 코드 변경을 진행하지 않습니다.</p>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="head">변경 전: 현재 문제 상태</div>
+        <div class="body">
+          <div class="mock current">
+            <div class="box number">Number 목록<br><small>화면 폭에 따라 위/아래로 밀릴 수 있음</small></div>
+            <div class="box score">MusicXML 악보 + 페이지 탐색</div>
+            <div class="box">MR / AR / 악보재생 Transport</div>
+            <div class="box right">제출 / Feedback</div>
+          </div>
+          <p class="warn">문제: 사용자가 기대한 “옆에 있는 곡 List” 위치가 보존되지 않아 사라진 것처럼 느껴질 수 있음.</p>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="head">변경 후 제안: 기존 좌측 목록 위치 보존</div>
+        <div class="body">
+          <div class="mock proposed">
+            <div class="box number">좌측 Number 목록<br><small>항상 주요 화면 옆에 유지</small></div>
+            <div class="box score">MusicXML 악보<br>페이지 탐색 유지</div>
+            <div class="box right">제출 / Feedback</div>
+            <div class="box" style="grid-column:2 / -1">MR / AR / 악보재생 Transport</div>
+          </div>
+          <p class="ok">목표: 악보 페이지/재생 기능은 유지하되, 기존 좌측 곡 목록 UX는 이동/삭제하지 않음.</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel" style="margin-top:16px">
+      <div class="head">변경 범위</div>
+      <div class="body">
+        <ul>
+          <li>유지: 좌측 Number 목록, Header, 악보 영역, 제출/Feedback 영역</li>
+          <li>유지: MR / AR / 악보재생 transport 기능</li>
+          <li>변경: 화면 grid 기준을 조정해서 좌측 Number 목록이 더 안정적으로 보이도록 함</li>
+          <li>추가 콘텐츠 없음: 마감일/상태 배지/안내 문구는 이번 복구안에서 새로 추가하지 않음</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

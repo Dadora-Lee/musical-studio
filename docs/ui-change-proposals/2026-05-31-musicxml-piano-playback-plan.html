@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MusicXML 피아노 연주 기능 계획</title>
+  <style>
+    :root { --bg:#f3f6fb; --panel:#fff; --ink:#172033; --muted:#667085; --line:#d7dfeb; --blue:#2563eb; --teal:#0f766e; --amber:#b45309; --rose:#be123c; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Arial, "Noto Sans KR", sans-serif; font-size:13px; line-height:1.5; }
+    main { max-width:1240px; margin:0 auto; padding:24px; }
+    header { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; align-items:end; margin-bottom:16px; }
+    h1,h2,h3 { letter-spacing:0; } h1 { margin:0; font-size:24px; } h2 { margin:0 0 10px; font-size:16px; } h3 { margin:0 0 8px; font-size:14px; }
+    p { margin:0; color:var(--muted); } a { color:var(--blue); font-weight:700; text-decoration:none; } a:hover { text-decoration:underline; }
+    code { border:1px solid #dbe3ee; border-radius:4px; background:#f8fafc; padding:1px 5px; font-family:Consolas,"Courier New",monospace; font-size:12px; }
+    pre { margin:0; overflow:auto; border-radius:8px; background:#111827; color:#e5e7eb; padding:14px; font-family:Consolas,"Courier New",monospace; font-size:12px; line-height:1.55; white-space:pre-wrap; }
+    ul,ol { margin:0; padding-left:18px; color:#344054; } li + li { margin-top:5px; }
+    table { width:100%; border-collapse:collapse; table-layout:fixed; } th,td { border:1px solid #dbe3ee; padding:8px 10px; text-align:left; vertical-align:top; word-break:keep-all; } th { width:180px; background:#f8fafc; color:#344054; font-size:12px; }
+    .stack { display:grid; gap:12px; } .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .three { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .panel { border:1px solid var(--line); border-radius:8px; background:var(--panel); padding:16px; box-shadow:0 1px 2px rgba(15,23,42,.05); }
+    .badge { display:inline-flex; align-items:center; min-height:30px; border:1px solid #99f6e4; border-radius:6px; background:#ecfdf5; color:var(--teal); padding:0 10px; font-weight:700; white-space:nowrap; }
+    .note { border-color:#bfdbfe; background:#eff6ff; color:#1e3a8a; } .warn { border-color:#fde68a; background:#fffbeb; color:#78350f; } .danger { border-color:#fecdd3; background:#fff1f2; color:#881337; }
+    .phase { display:grid; gap:8px; min-height:150px; }
+    .num { display:inline-flex; width:28px; height:28px; align-items:center; justify-content:center; border-radius:999px; background:#e0f2fe; color:#0369a1; font-weight:700; }
+    .flow { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; } .flow div { border:1px solid #dbe3ee; border-radius:8px; background:#f8fafc; padding:10px; text-align:center; font-weight:700; color:#344054; }
+    @media (max-width:920px) { main { padding:14px; } header,.grid,.three,.flow { grid-template-columns:1fr; } th { width:140px; } }
+  </style>
+</head>
+<body>
+  <main class="stack">
+    <header>
+      <div>
+        <h1>MusicXML 피아노 연주 기능 계획</h1>
+        <p>작성일: 2026-05-31 · 대상 화면 <code>/work</code> · 기준 브랜치 <code>codex/local-db-prototype</code></p>
+      </div>
+      <span class="badge">최종 검토 반영</span>
+    </header>
+    <section class="panel note"><h2>목표</h2><p>현재 소리 없는 <code>악보재생</code>을 실제 MusicXML note event 기반 <code>피아노 연주</code> prototype으로 전환한다. Tone.js로 피아노 계열 synth를 재생하고 현재 연주 위치를 OSMD cursor/page와 동기화한다.</p></section>
+    <section class="grid"><article class="panel"><h2>기술 선택</h2><ul><li><strong>Tone.js</strong>: 이미 dependency에 있으므로 새 dependency 없이 사용한다.</li><li><strong>OSMD</strong>: 기존 MusicXML 렌더링과 cursor 표시를 유지한다.</li><li><strong>src/lib/musicxml</strong>: MusicXML 파싱 단일 진입점으로 확장한다.</li><li><strong>src/lib/audio-engine</strong>: Tone.js wrapper를 분리한다.</li></ul></article><article class="panel danger"><h2>이번 단계에서 제외</h2><ul><li>새 npm dependency 추가 없음</li><li>실제 MusicXML/MR/AR 파일 git 추가 없음</li><li>DB schema, Supabase migration 변경 없음</li><li>고품질 piano sample pack은 후속 승인 후 검토</li></ul></article></section>
+    <section class="panel"><h2>기능 흐름</h2><div class="flow"><div>MusicXML</div><div>Note Event 변환</div><div>Tone.js Piano</div><div>Transport 제어</div><div>OSMD Cursor Sync</div></div></section>
+    <section class="panel"><h2>실행 Phase</h2><div class="three"><article class="phase"><span class="num">0</span><h3>시작 점검</h3><ul><li>WSL 레포와 브랜치 확인</li><li>AGENTS 규칙 확인</li><li>Tone.js dependency 확인</li></ul></article><article class="phase"><span class="num">1</span><h3>변경 전/후 HTML</h3><ul><li>악보재생 → 피아노 연주 UI 변경 기록</li><li>유지되는 UI 위치 명시</li><li>승인 전 UI 코드 변경 금지</li></ul></article><article class="phase"><span class="num">2</span><h3>MusicXML Parser</h3><ul><li>note/rest/chord/tempo/measure 추출</li><li>playback event map 생성</li><li>Vitest TDD</li></ul></article><article class="phase"><span class="num">3</span><h3>Tone Player</h3><ul><li>client-only dynamic import</li><li>play/pause/stop/seek/dispose</li><li>current measure callback</li></ul></article><article class="phase"><span class="num">4</span><h3>ScoreViewer Sync</h3><ul><li>raw XML 공유 callback</li><li>measure 기반 cursor 이동 API</li><li>page 자동 전환</li></ul></article><article class="phase"><span class="num">5</span><h3>Practice Transport</h3><ul><li>피아노 연주 source 연결</li><li>MR/AR와 같은 버튼 UX</li><li>slider seek 연결</li></ul></article><article class="phase"><span class="num">6</span><h3>Recording 회귀</h3><ul><li>MR/AR recording 흐름 유지</li><li>피아노 연주와 recording 정책 분리</li><li>기존 test 유지</li></ul></article><article class="phase"><span class="num">7</span><h3>Playwright 검증</h3><ul><li>/work 실제 화면</li><li>playback state와 scheduling</li><li>cursor/page sync</li></ul></article><article class="phase"><span class="num">8</span><h3>최종 검증</h3><ul><li><code>pnpm lint</code></li><li><code>pnpm typecheck</code></li><li><code>pnpm test</code></li></ul></article></div></section>
+    <section class="panel warn"><h2>최종 재검토 결과</h2><ul><li>계획은 진행해도 된다. 핵심 구조는 MusicXML parser → Tone player wrapper → Practice transport → OSMD cursor sync 순서가 맞다.</li><li>테스트 파일 위치는 <code>tests/unit/lib/musicxml/playback-events.test.ts</code>로 고정한다.</li><li>1차 기본값은 <code>전체 간단 재생</code>이다. 모든 part를 병합하되 polyphony cap과 max event guard를 둔다.</li><li>source, number, MusicXML raw string이 바뀌면 기존 Tone object와 scheduler를 반드시 <code>dispose()</code>한다.</li><li>자동 검증은 실제 소리 자체가 아니라 scheduling, player state, current time 증가, seek 결과로 판단한다. 실제 소리는 수동 청음으로 확인한다.</li><li>UI label이나 버튼 배치가 보이게 바뀌면 구현 전 변경 전/후 HTML 승인 문서를 먼저 작성한다.</li></ul></section>
+    <section class="panel"><h2>Acceptance Criteria</h2><ul><li><code>/work</code>에 <code>피아노 연주</code> source가 표시된다.</li><li>MusicXML에서 추출한 note event가 Tone.js로 scheduling된다.</li><li>브라우저 수동 확인에서 피아노 계열 소리가 난다.</li><li>play, pause, stop, 10초 이동, slider seek가 동작한다.</li><li>현재 연주 위치에 따라 ScoreViewer cursor/page가 이동한다.</li><li>기존 MR/AR playback과 Recording 흐름이 깨지지 않는다.</li><li><code>pnpm lint</code>, <code>pnpm typecheck</code>, <code>pnpm test</code>가 통과한다.</li></ul></section>
+    <section class="panel warn"><h2>목표 달성용 실행 프롬프트</h2><pre>Musical Studio repository에서 MusicXML 피아노 연주 기능을 구현해줘.
+
+반드시 한국어로 응답하고, 작업 전 AGENTS.md와 AGENTS.override.md를 확인해줘.
+실제 작업 위치는 WSL repo /home/jieun/projects/musical-studio 이야.
+기준 브랜치는 codex/local-db-prototype 이야.
+
+먼저 아래 계획 문서를 읽고, Final Review Corrections를 기준으로 task 단위로 진행해줘.
+문서:
+file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/superpowers/plans/2026-05-31-musicxml-piano-playback-plan.md
+
+목표:
+1. 현재 소리 없는 악보재생을 실제 MusicXML 기반 피아노 연주 prototype으로 전환한다.
+2. MusicXML note/rest/chord/measure/tempo를 playback event로 변환한다.
+3. 기존 dependency인 Tone.js로 피아노 음을 재생한다. 새 dependency는 추가하지 않는다.
+4. MR/AR와 동일한 transport UX로 play/pause/stop/10초 이동/slider seek를 지원한다.
+5. 현재 연주 위치에 맞춰 OSMD cursor와 page를 동기화한다.
+6. 기존 MR/AR 재생과 Recording 흐름을 깨지 않는다.
+7. 검증 결과와 공유 HTML 문서를 최신화한다.</pre></section>
+    <section class="panel"><h2>원본 문서</h2><table><tbody><tr><th>Markdown</th><td><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/superpowers/plans/2026-05-31-musicxml-piano-playback-plan.md">2026-05-31-musicxml-piano-playback-plan.md</a></td></tr><tr><th>HTML</th><td><a href="file://wsl.localhost/Ubuntu-24.04/home/jieun/projects/musical-studio/docs/ui-change-proposals/2026-05-31-musicxml-piano-playback-plan.html">2026-05-31-musicxml-piano-playback-plan.html</a></td></tr></tbody></table></section>
+  </main>
+</body>
+</html>

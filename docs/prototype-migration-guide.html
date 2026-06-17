@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Musical Studio Prototype 환경 적용 및 DB 마이그레이션 지침</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef2f7;
+      --panel: #ffffff;
+      --line: #cbd5e1;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --blue: #2563eb;
+      --green: #047857;
+      --red: #be123c;
+      --orange: #b45309;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 28px; letter-spacing: 0; }
+    h2 { margin-top: 28px; font-size: 18px; }
+    h3 { font-size: 14px; }
+
+    .lead {
+      margin-top: 8px;
+      max-width: 900px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .card {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    code, pre {
+      border: 1px solid #dbe3ef;
+      border-radius: 6px;
+      background: #f8fafc;
+      color: #1e3a8a;
+      font-size: 12px;
+    }
+
+    code { padding: 1px 5px; }
+    pre {
+      overflow: auto;
+      padding: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 12px;
+      border-collapse: collapse;
+      background: white;
+      border: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 7px 9px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #334155;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    td { color: #334155; font-weight: 700; }
+    tr:last-child td { border-bottom: 0; }
+    td:last-child, th:last-child { border-right: 0; }
+
+    .tag {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .required { background: #fee2e2; color: #991b1b; }
+    .local { background: #dbeafe; color: #1d4ed8; }
+    .prod { background: #dcfce7; color: #166534; }
+    .warn { background: #ffedd5; color: #9a3412; }
+
+    .note {
+      margin-top: 14px;
+      border-left: 4px solid var(--blue);
+      background: white;
+      padding: 12px 14px;
+      color: #1e3a8a;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Prototype 환경 적용 및 DB 마이그레이션 지침</h1>
+    <p class="lead">
+      이 문서는 현재 Musical Studio prototype을 다른 WSL/개발 환경에서 실행하고, local DB schema를 Supabase 환경으로 옮길 때 확인해야 할 절차를 정리합니다. 실제 MusicXML/MR/AR 파일은 저작권 및 용량 문제로 git에 넣지 않고 외부 저장소 또는 로컬 경로로 연결합니다.
+    </p>
+
+    <h2>1. 환경 전제</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>항목</th>
+          <th>현재 기준</th>
+          <th>다른 환경 적용 방법</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Node / pnpm</td>
+          <td><code>/home/jieun/.nvm/versions/node/v22.22.3/bin</code> 하위 Node와 pnpm 사용</td>
+          <td>동일 major Node를 설치하고 <code>pnpm install</code>을 실행합니다.</td>
+        </tr>
+        <tr>
+          <td>WSL Repo</td>
+          <td><code>/home/jieun/projects/musical-studio</code></td>
+          <td>Windows 복사본이 아니라 WSL checkout을 source of truth로 사용합니다.</td>
+        </tr>
+        <tr>
+          <td>Prototype Assets</td>
+          <td><code>/mnt/e/04.Musical/08.팬레터/01.넘버</code></td>
+          <td>같은 경로를 mount하거나, <code>src/lib/musicxml/prototype-source.server.ts</code>의 path를 환경에 맞게 조정합니다.</td>
+        </tr>
+        <tr>
+          <td>Secrets</td>
+          <td><span class="tag required">커밋 금지</span></td>
+          <td><code>.env*</code>, <code>.env/</code>, credential JSON, key 파일은 git에 넣지 않습니다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. 실행 절차</h2>
+    <div class="grid">
+      <section class="card">
+        <span class="tag local">Local App</span>
+        <h3>Next 개발 서버</h3>
+        <pre>cd /home/jieun/projects/musical-studio
+export PATH=/home/jieun/.nvm/versions/node/v22.22.3/bin:/home/jieun/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+pnpm install
+pnpm dev --hostname 0.0.0.0</pre>
+        <p class="lead">브라우저는 <code>http://localhost:3000/work</code>를 권장합니다. <code>127.0.0.1</code>에서는 HMR websocket이 불안정할 수 있습니다.</p>
+      </section>
+      <section class="card">
+        <span class="tag local">Validation</span>
+        <h3>검증 명령</h3>
+        <pre>pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build</pre>
+        <p class="lead">빌드에서 <code>prototype-source.server.ts</code>의 동적 파일 경로 때문에 Turbopack NFT warning이 발생할 수 있습니다. 현재는 빌드 실패가 아닌 경고입니다.</p>
+      </section>
+    </div>
+
+    <h2>3. Prototype Asset 연결</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Number ID</th>
+          <th>MusicXML</th>
+          <th>MR</th>
+          <th>AR</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>song07-lie</code></td>
+          <td><code>SONG07_MUSIC_SHEET.musicxml.xml</code></td>
+          <td><code>SONG07_MR.mp3</code></td>
+          <td><code>SONG07_AR.mp3</code></td>
+        </tr>
+        <tr>
+          <td><code>song16-mirror</code></td>
+          <td><code>SONG16_MUSIC_SHEET.musicxml.xml</code></td>
+          <td><code>SONG16_MR.mp3</code></td>
+          <td><code>SONG16_AR.mp3</code></td>
+        </tr>
+        <tr>
+          <td><code>song05-tears</code></td>
+          <td><span class="tag warn">미등록</span></td>
+          <td><span class="tag warn">미등록</span></td>
+          <td><span class="tag warn">미등록</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">
+      임시 prototype에서는 서버 route가 로컬 파일을 읽습니다. 운영 환경에서는 이 부분을 Supabase Storage public/signed URL 또는 Google Drive read-only URL로 대체해야 합니다.
+    </p>
+
+    <h2>4. DB Schema 마이그레이션</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Table</th>
+          <th>주요 컬럼</th>
+          <th>용도</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>numbers</code></td>
+          <td><code>title</code>, <code>musicxml_url</code>, <code>ar_url</code>, <code>mr_url</code>, <code>vocal_url</code></td>
+          <td>뮤지컬 Number와 외부 asset URL을 저장합니다.</td>
+        </tr>
+        <tr>
+          <td><code>members</code></td>
+          <td><code>nickname</code>, <code>member_type</code>, <code>castings</code></td>
+          <td>배우/연출/guest와 casting 정보를 prototype 수준으로 관리합니다.</td>
+        </tr>
+        <tr>
+          <td><code>works</code></td>
+          <td><code>number_id</code>, <code>member_id</code>, <code>casting_name</code>, <code>file_name</code>, <code>file_url</code></td>
+          <td>사용자 녹음 제출물을 저장합니다.</td>
+        </tr>
+        <tr>
+          <td><code>comments</code></td>
+          <td><code>work_id</code>, <code>member_id</code>, <code>text</code></td>
+          <td>제출된 work에 대한 Feedback/Comment를 저장합니다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>5. Supabase로 옮길 때 절차</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>순서</th>
+          <th>작업</th>
+          <th>주의점</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><code>supabase/migrations/20260527000000_initial_schema.sql</code>을 리뷰합니다.</td>
+          <td>Auth/RLS policy는 아직 prototype 범위 밖입니다. 실제 배포 전 별도 ADR이 필요합니다.</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Supabase project에 migration을 적용합니다.</td>
+          <td>자동 실행하지 말고 사람이 Supabase CLI 또는 Dashboard에서 실행합니다.</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><code>supabase/seed.sql</code>로 prototype row를 입력합니다.</td>
+          <td>실제 asset URL은 Storage/Drive URL로 치환합니다.</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>recordings bucket을 확인합니다.</td>
+          <td>녹음 원본은 WAV가 sync truth이며, bucket은 <code>recordings</code>입니다.</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>앱의 데이터 소스를 fixture에서 Supabase query로 전환합니다.</td>
+          <td><code>practiceStudioPrototype</code>는 UI prototype 검증용으로 유지하거나 test fixture로 이동합니다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>6. 다른 환경에서 꼭 바꿀 값</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>대상</th>
+          <th>현재</th>
+          <th>변경 방법</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>MusicXML/MR/AR 파일 경로</td>
+          <td><code>/mnt/e/04.Musical/08.팬레터/01.넘버/...</code></td>
+          <td><code>prototype-source.server.ts</code>의 map을 환경별 source로 바꿉니다.</td>
+        </tr>
+        <tr>
+          <td>Supabase URL/key</td>
+          <td>커밋되지 않음</td>
+          <td><code>.env.local</code> 또는 <code>.env/</code> 하위 로컬 파일로만 관리합니다.</td>
+        </tr>
+        <tr>
+          <td>실제 Member/Auth</td>
+          <td>NickName select</td>
+          <td>Google OAuth 이후 로그인 사용자와 <code>members</code> row를 연결합니다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="note">
+      마이그레이션 원칙: prototype schema는 가볍게 유지합니다. 인증, RLS, Storage policy, 역할 권한이 들어가는 순간에는 DB 변경으로 간주하고, 실행 전에 별도 검토와 사용자 승인을 받아야 합니다.
+    </p>
+  </main>
+</body>
+</html>

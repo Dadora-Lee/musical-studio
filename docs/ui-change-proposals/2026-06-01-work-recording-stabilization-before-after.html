@@ -1,0 +1,90 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recording 안정화 변경 전/후 검토</title>
+  <style>
+    :root { --ink:#1f2937; --muted:#667085; --line:#d8dee9; --bg:#eef2f7; --panel:#fff; --soft:#f8fafc; --accent:#2563eb; --good:#047857; --warn:#b45309; --danger:#b91c1c; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Arial, "Noto Sans KR", sans-serif; line-height:1.55; }
+    header { padding:28px 36px 22px; background:#fff; border-bottom:1px solid var(--line); }
+    main { max-width:1180px; margin:0 auto; padding:22px; }
+    h1 { margin:0 0 8px; font-size:28px; letter-spacing:0; }
+    h2 { margin:0 0 12px; font-size:18px; }
+    p { margin:0 0 10px; }
+    ul { margin:8px 0 0 20px; padding:0; }
+    li { margin:4px 0; }
+    code { padding:2px 5px; border-radius:4px; background:#eef2ff; font-family:"Cascadia Mono", Consolas, monospace; font-size:12px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { border:1px solid var(--line); padding:8px; text-align:left; vertical-align:top; }
+    th { background:var(--soft); }
+    .meta { color:var(--muted); font-size:13px; }
+    .grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+    .panel { margin-bottom:14px; padding:16px; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+    .wide { grid-column:1 / -1; }
+    .tag { display:inline-block; margin:0 6px 6px 0; padding:3px 8px; border:1px solid var(--line); border-radius:999px; background:var(--soft); font-size:12px; }
+    .good { color:var(--good); } .warn { color:var(--warn); } .danger { color:var(--danger); }
+    .flow { display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:8px; margin-top:10px; }
+    .step { min-height:74px; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--soft); font-size:13px; }
+    .step strong { display:block; margin-bottom:4px; color:var(--accent); }
+    @media (max-width:900px) { .grid, .flow { grid-template-columns:1fr; } header { padding:22px; } main { padding:16px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Recording 안정화 변경 전/후 검토</h1>
+    <p class="meta">작성일: 2026-06-01 · 대상 화면: <code>/work</code> · 대상 브랜치: <code>codex/local-db-prototype</code></p>
+  </header>
+  <main>
+    <section class="panel">
+      <h2>검토 목적</h2>
+      <p>이번 변경은 기존 레이아웃을 유지하면서 Recording POC의 실제 사용 흐름을 안정화하는 작업입니다. 사용자가 MR/AR/Piano 중 하나를 기준으로 녹음하고, 결과를 local take로 저장한 뒤 다시 재생할 수 있게 만드는 것이 목표입니다.</p>
+      <span class="tag good">기존 배치 유지</span><span class="tag good">DB 변경 없음</span><span class="tag good">Supabase 제외</span><span class="tag warn">Recording 동기화 보강</span>
+    </section>
+    <div class="grid">
+      <section class="panel">
+        <h2>변경 전</h2>
+        <ul>
+          <li>하단 Transport 영역에 MR/AR/Piano 선택, 재생, 정지, seek, 녹음 버튼이 존재합니다.</li>
+          <li>Recording lane과 볼륨 UI가 존재하지만, 녹음 흐름의 상태 모델은 <code>checking</code>, <code>idle</code>, <code>recording</code>, <code>paused</code>, <code>ready</code>, <code>unsupported</code>, <code>error</code> 중심입니다.</li>
+          <li>녹음 시작은 주로 MR/AR audio element와 함께 동작하며, Piano source까지 동일한 녹음 동기화 대상으로 보기에는 부족합니다.</li>
+          <li>녹음 일시정지/재개도 MR/AR audio 기준 처리가 강하고, Piano player pause/resume 처리는 보강이 필요합니다.</li>
+          <li>local take 저장은 가능하지만, 저장된 take 선택/재생/cleanup/권한 실패 시나리오 검증을 더 명확히 해야 합니다.</li>
+        </ul>
+      </section>
+      <section class="panel">
+        <h2>변경 후</h2>
+        <ul>
+          <li>Recording 상태 모델을 목표 상태에 맞게 명확히 정리합니다.</li>
+          <li>녹음 시작 시 현재 선택된 MR/AR/Piano source가 함께 시작됩니다.</li>
+          <li>녹음 일시정지 시 현재 source도 함께 멈춥니다.</li>
+          <li>녹음 재개 시 현재 source가 같은 흐름으로 이어집니다.</li>
+          <li>녹음 정지 후 local take 저장 대기 상태가 명확히 보입니다.</li>
+          <li>저장된 take는 우측 목록에서 선택하고 재생할 수 있습니다.</li>
+          <li>microphone permission 실패와 object URL/MediaStream cleanup을 테스트로 검증합니다.</li>
+        </ul>
+      </section>
+      <section class="panel wide">
+        <h2>유지되는 화면 구조</h2>
+        <table><thead><tr><th>영역</th><th>변경 여부</th><th>설명</th></tr></thead><tbody>
+          <tr><td>좌측 Number 목록</td><td class="good">유지</td><td>곡 선택 위치와 목록 접근 방식은 변경하지 않습니다.</td></tr>
+          <tr><td>상단 HeaderLayout / NickName 선택</td><td class="good">유지</td><td>테스트용 NickName 선택 콤보박스는 그대로 둡니다.</td></tr>
+          <tr><td>중앙 MusicXML</td><td class="good">유지</td><td>악보 렌더링, 페이지, 마디 렌더링 옵션은 이번 작업에서 구조 변경하지 않습니다.</td></tr>
+          <tr><td>하단 Transport / Recording</td><td class="warn">동작 보강</td><td>위치는 유지하고 Recording 상태/동기화/저장 흐름만 안정화합니다.</td></tr>
+          <tr><td>우측 submitted take / Feedback</td><td class="warn">연결 보강</td><td>위치는 유지하고 저장된 local take를 선택/재생할 수 있게 흐름을 명확히 합니다.</td></tr>
+        </tbody></table>
+      </section>
+      <section class="panel wide">
+        <h2>목표 사용자 흐름</h2>
+        <div class="flow"><div class="step"><strong>1</strong>MR/AR/Piano source 선택</div><div class="step"><strong>2</strong>녹음 시작과 source 동시 재생</div><div class="step"><strong>3</strong>Recording lane 진행</div><div class="step"><strong>4</strong>일시정지/재개 동기화</div><div class="step"><strong>5</strong>정지 후 저장 대기</div><div class="step"><strong>6</strong>Take 저장/선택/재생</div></div>
+      </section>
+      <section class="panel"><h2>수정 예정 파일</h2><ul><li><code>src/components/practice/PracticeStudioLayout.tsx</code></li><li><code>tests/unit/components/practice/PracticeStudio.test.tsx</code></li><li><code>tests/e2e/work-recording-stabilization.spec.ts</code></li><li><code>docs/ui-change-proposals/2026-06-01-work-recording-stabilization-result.html</code></li></ul></section>
+      <section class="panel"><h2>이번 작업 제외 범위</h2><ul><li>Supabase Storage 업로드</li><li>DB migration/Auth/RLS 변경</li><li>새 npm dependency 추가</li><li>정밀 waveform 분석</li><li>마디 단위 feedback DB 반영</li><li>MusicXML/MR/AR 실제 파일 commit</li></ul></section>
+      <section class="panel wide"><h2>승인 후 검증 기준</h2><ul><li><code>pnpm lint</code></li><li><code>pnpm typecheck</code></li><li><code>pnpm test</code></li><li><code>pnpm exec playwright test tests/e2e/work-recording-stabilization.spec.ts --project=chromium</code></li></ul></section>
+      <section class="panel wide"><h2>되돌릴 기준</h2><ul><li>좌측 Number 목록, 중앙 MusicXML, 하단 Transport, 우측 Feedback 배치가 바뀌면 되돌립니다.</li><li>MR/AR/Piano 기존 재생/seek가 퇴행하면 되돌립니다.</li><li>녹음 실패 시 사용자가 다음 행동을 알 수 없는 상태가 되면 되돌립니다.</li><li>DB/Supabase/Auth/RLS 변경이 발생하면 이번 작업 범위 밖이므로 되돌립니다.</li></ul></section>
+    </div>
+    <section class="panel"><h2>승인 요청</h2><p>이 문서의 방향이 맞다면, 다음 단계에서 TDD로 Recording 상태 모델, MR/AR/Piano 동기화, local take 저장/재생, cleanup 검증을 구현합니다. 승인 전에는 <code>src/</code> 코드를 수정하지 않습니다.</p></section>
+  </main>
+</body>
+</html>

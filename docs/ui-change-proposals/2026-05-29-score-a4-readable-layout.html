@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>악보 A4 가시성 개선 변경안</title>
+  <style>
+    :root {
+      --bg:#eef2f6; --paper:#fff; --line:#cbd5e1; --text:#172033; --muted:#64748b;
+      --teal:#0f766e; --teal-soft:#e6f6f1; --rose:#be123c; --amber:#a15c07;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:Arial,"Malgun Gothic",sans-serif; font-size:14px; }
+    main { max-width:1220px; margin:0 auto; padding:24px; }
+    h1 { margin:0 0 8px; font-size:24px; }
+    h2 { margin:0; font-size:16px; }
+    p { line-height:1.7; }
+    .notice { border:1px solid #99d7cb; background:var(--teal-soft); padding:12px 14px; margin:16px 0; font-weight:800; color:#115e59; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:18px; align-items:start; }
+    .panel { border:1px solid var(--line); background:var(--paper); }
+    .head { padding:12px 14px; border-bottom:1px solid var(--line); font-weight:900; display:flex; justify-content:space-between; gap:12px; }
+    .body { padding:14px; }
+    .mock-browser { border:1px solid var(--line); background:#f8fafc; padding:10px; min-height:420px; overflow:hidden; }
+    .current-score { width:100%; min-height:360px; border:1px dashed #94a3b8; background:#fff; padding:12px; transform-origin:top left; }
+    .dynamic-lines { display:grid; gap:18px; margin-top:18px; }
+    .dynamic-lines div { height:36px; border-top:2px solid #111827; border-bottom:2px solid #111827; background:repeating-linear-gradient(to bottom, transparent 0 7px, rgba(17,24,39,.35) 8px 9px); }
+    .a4-stage { display:grid; place-items:start center; min-height:520px; overflow:auto; background:#e2e8f0; padding:18px; }
+    .a4-paper { width:360px; aspect-ratio:210/297; background:#fff; border:1px solid #b8c2cf; box-shadow:0 2px 12px rgba(15,23,42,.16); padding:28px 26px; }
+    .staff { display:grid; gap:18px; margin-top:16px; }
+    .staff-row { height:38px; border-top:2px solid #111827; border-bottom:2px solid #111827; background:repeating-linear-gradient(to bottom, transparent 0 7px, rgba(17,24,39,.45) 8px 9px); position:relative; }
+    .staff-row::before, .staff-row::after { content:""; position:absolute; top:-2px; bottom:-2px; width:1px; background:#111827; }
+    .staff-row::before { left:33%; } .staff-row::after { left:66%; }
+    .tag { display:inline-flex; padding:3px 7px; border:1px solid var(--line); background:#fff; color:var(--muted); font-size:12px; font-weight:900; }
+    .bad { color:var(--rose); font-weight:900; }
+    .good { color:var(--teal); font-weight:900; }
+    ul { line-height:1.8; }
+    code { background:#f1f5f9; border:1px solid #dbe3ee; padding:1px 5px; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { border:1px solid var(--line); padding:8px; text-align:left; vertical-align:top; }
+    th { background:#f8fafc; }
+    @media (max-width:900px) { .grid { grid-template-columns:1fr; } .a4-paper { width:min(360px, 100%); } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>악보 A4 가시성 개선 변경안</h1>
+    <p>이 문서는 실제 UI 코드를 변경하기 전 확인용입니다. 승인 전에는 코드 변경을 진행하지 않습니다.</p>
+    <div class="notice">요청 요약: 악보가 동적으로 왔다갔다 움직이지 않고, A4 용지 크기 기준으로 안정적으로 보이며, 일반 음악 악보처럼 한 줄에 적당한 마디 수가 들어가야 합니다.</div>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="head"><span>변경 전: 현재 문제 상태</span><span class="tag">Dynamic fit</span></div>
+        <div class="body">
+          <div class="mock-browser">
+            <div class="current-score">
+              <strong>OSMD autoResize + compact</strong>
+              <p class="bad">컨테이너 폭/렌더 타이밍에 따라 악보가 다시 맞춰지면서 움직이는 느낌이 날 수 있음.</p>
+              <div class="dynamic-lines"><div></div><div></div><div></div><div></div></div>
+            </div>
+          </div>
+          <ul>
+            <li>악보가 화면 컨테이너에 맞춰지면서 폭이 유동적으로 보임</li>
+            <li>페이지 이동/렌더 이후 시각적 안정감이 떨어질 수 있음</li>
+            <li>일반 A4 악보처럼 “종이” 기준이 약함</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="head"><span>변경 후 제안: 고정 A4 Paper View</span><span class="tag">A4 stable</span></div>
+        <div class="body">
+          <div class="a4-stage">
+            <div class="a4-paper">
+              <strong>SONG07_거짓말이아니야</strong>
+              <p style="margin:4px 0 0;color:var(--muted);font-size:12px;font-weight:800">A4 portrait 기준, 중앙 정렬, 내부 스크롤</p>
+              <div class="staff"><div class="staff-row"></div><div class="staff-row"></div><div class="staff-row"></div><div class="staff-row"></div><div class="staff-row"></div><div class="staff-row"></div></div>
+            </div>
+          </div>
+          <ul>
+            <li class="good">A4 종이 비율을 유지하고 화면 중앙에 고정</li>
+            <li class="good">OSMD autoResize를 끄고 안정적인 zoom/pageFormat 기준 적용</li>
+            <li class="good">마디 수는 OSMD engraving/page layout 기준으로 너무 빽빽하지 않게 조정</li>
+          </ul>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel" style="margin-top:16px">
+      <div class="head">적용 제안</div>
+      <div class="body">
+        <table>
+          <thead><tr><th>항목</th><th>현재</th><th>변경 제안</th></tr></thead>
+          <tbody>
+            <tr><td>악보 크기</td><td>컨테이너 반응형</td><td><code>A4_P</code> 비율의 paper wrapper 안에 고정 표시</td></tr>
+            <tr><td>렌더 움직임</td><td><code>autoResize: true</code></td><td><code>autoResize: false</code>로 변경해서 흔들림 감소</td></tr>
+            <tr><td>확대 기준</td><td>OSMD 기본/compact</td><td>읽기 좋은 고정 zoom 기본값 적용</td></tr>
+            <tr><td>마디 밀도</td><td>compact라 다소 빽빽할 수 있음</td><td>기본 악보 수준의 여백/마디 밀도 방향으로 <code>drawingParameters</code> 조정</td></tr>
+            <tr><td>기존 UX</td><td>Number 목록/Transport/Feedback 존재</td><td>위치 변경 없음. 악보 panel 내부 표시 방식만 변경</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:16px">
+      <div class="head">변경 범위와 승인 필요 사항</div>
+      <div class="body">
+        <ul>
+          <li>변경 대상 컴포넌트: <code>ScoreViewer</code>의 OSMD 옵션과 악보 wrapper 스타일</li>
+          <li>변경하지 않을 것: 좌측 Number 목록, HeaderLayout, 제출/Feedback 위치, MR/AR/악보재생 transport 위치</li>
+          <li>추가 콘텐츠 없음: 마감 날짜, 상태 배지, 안내 문구 등 새 콘텐츠는 이번 변경에 추가하지 않음</li>
+          <li>되돌릴 기준: A4 paper view가 불편하면 기존 responsive score panel로 되돌림</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

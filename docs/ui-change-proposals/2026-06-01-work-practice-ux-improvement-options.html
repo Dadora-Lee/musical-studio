@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Practice UX 개선 선택안 - 2026-06-01</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d7dee8;
+      --paper: #ffffff;
+      --bg: #eef3f8;
+      --blue: #2f6fdf;
+      --teal: #188f8a;
+      --rose: #d34d67;
+      --amber: #b7791f;
+      --green: #18794e;
+      --shadow: 0 14px 34px rgba(23, 32, 51, 0.11);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      letter-spacing: 0;
+    }
+
+    .page {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.25;
+    }
+
+    .sub {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      border: 1px solid #b9cdf5;
+      border-radius: 999px;
+      background: #eef5ff;
+      color: #1e4fae;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .notice {
+      margin-bottom: 18px;
+      border: 1px solid #c5d2e2;
+      border-radius: 8px;
+      background: #fff;
+      padding: 14px 16px;
+      box-shadow: 0 6px 18px rgba(23, 32, 51, 0.05);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .option {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .option-head {
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #f9fbfe;
+    }
+
+    .option h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .recommend {
+      color: var(--green);
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .option-body {
+      padding: 14px;
+    }
+
+    .mini-app {
+      display: grid;
+      grid-template-columns: 90px minmax(0, 1fr) 104px;
+      height: 420px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .left {
+      background: #ffffff;
+      border-right: 1px solid #d6dde8;
+      overflow: hidden;
+    }
+
+    .left .item {
+      height: 34px;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 6px 7px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .left .item.active {
+      background: #eaf3ff;
+      box-shadow: inset 3px 0 0 var(--blue);
+    }
+
+    .center {
+      display: grid;
+      grid-template-rows: 34px minmax(0, 1fr) 96px;
+      min-width: 0;
+      background: #dfe6ef;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid #cbd5e1;
+      background: #fff;
+      padding: 6px 8px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .score-wrap {
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .paper {
+      position: relative;
+      width: min(100%, 185px);
+      aspect-ratio: 210 / 297;
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 8px 20px rgba(23, 32, 51, 0.12);
+      padding: 16px 15px;
+      overflow: hidden;
+    }
+
+    .title {
+      height: 10px;
+      margin: 0 auto 12px;
+      width: 54%;
+      border-radius: 6px;
+      background: #253044;
+    }
+
+    .system {
+      position: relative;
+      height: 34px;
+      margin-bottom: 15px;
+      border-top: 1px solid #394150;
+      border-bottom: 1px solid #394150;
+    }
+
+    .system::before,
+    .system::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #394150;
+    }
+
+    .system::before { top: 10px; }
+    .system::after { top: 22px; }
+
+    .bar {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #758195;
+    }
+
+    .bar.b1 { left: 25%; }
+    .bar.b2 { left: 50%; }
+    .bar.b3 { left: 75%; }
+
+    .measure-highlight {
+      position: absolute;
+      top: -5px;
+      bottom: -5px;
+      left: 50%;
+      width: 25%;
+      border: 2px solid rgba(47, 111, 223, 0.82);
+      background: rgba(47, 111, 223, 0.11);
+      border-radius: 4px;
+    }
+
+    .note {
+      position: absolute;
+      width: 6px;
+      height: 5px;
+      border-radius: 999px;
+      background: #1f2937;
+    }
+
+    .note.active {
+      background: #e03667;
+      box-shadow: 0 0 0 3px rgba(224, 54, 103, 0.15);
+    }
+
+    .lyric {
+      position: absolute;
+      top: 35px;
+      height: 7px;
+      border-radius: 4px;
+      background: #64748b;
+      opacity: 0.75;
+    }
+
+    .controls {
+      border-top: 1px solid #cbd5e1;
+      background: #fff;
+      padding: 7px;
+    }
+
+    .transport {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 7px;
+    }
+
+    .seg {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 1fr);
+      width: 116px;
+      height: 24px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      overflow: hidden;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .seg span {
+      display: grid;
+      place-items: center;
+      background: #fff;
+    }
+
+    .seg .on {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .icons {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .icon {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #fff;
+      color: #334155;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .icon.primary {
+      background: #176b61;
+      border-color: #176b61;
+      color: #fff;
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
+    }
+
+    .icon.active {
+      background: #eaf3ff;
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .track {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr) 48px;
+      align-items: center;
+      gap: 5px;
+      margin-top: 5px;
+      font-size: 10px;
+      color: #475569;
+    }
+
+    .line {
+      position: relative;
+      height: 14px;
+      border-radius: 999px;
+      background: #dbeafe;
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      width: 43%;
+      background: linear-gradient(90deg, #2f6fdf, #24a88f);
+    }
+
+    .playhead {
+      position: absolute;
+      top: -3px;
+      bottom: -3px;
+      left: 43%;
+      width: 2px;
+      background: #111827;
+    }
+
+    .volume-pop {
+      position: absolute;
+      right: 8px;
+      bottom: 68px;
+      width: 118px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 12px 26px rgba(23, 32, 51, 0.18);
+      padding: 8px;
+      font-size: 10px;
+      color: #475569;
+    }
+
+    .fake-slider {
+      height: 6px;
+      margin: 6px 0 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #2f6fdf 68%, #e2e8f0 68%);
+    }
+
+    .wave {
+      height: 44px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background:
+        linear-gradient(90deg, transparent 0 10%, rgba(47,111,223,.28) 10% 12%, transparent 12% 20%, rgba(47,111,223,.45) 20% 23%, transparent 23% 31%, rgba(47,111,223,.18) 31% 33%, transparent 33% 41%, rgba(47,111,223,.5) 41% 44%, transparent 44% 53%, rgba(47,111,223,.3) 53% 57%, transparent 57% 64%, rgba(47,111,223,.42) 64% 67%, transparent 67% 76%, rgba(47,111,223,.24) 76% 79%, transparent 79% 100%),
+        #f8fafc;
+    }
+
+    .right {
+      border-left: 1px solid #d6dde8;
+      background: #f8fafc;
+      padding: 8px;
+      font-size: 10px;
+    }
+
+    .card {
+      border: 1px solid #d6dde8;
+      border-radius: 7px;
+      background: #fff;
+      padding: 8px;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .summary {
+      margin-top: 12px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .summary h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+    }
+
+    ul {
+      margin: 7px 0 0;
+      padding-left: 18px;
+    }
+
+    li { margin: 4px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 18px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 13px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.6;
+    }
+
+    th {
+      background: #f8fafc;
+      font-size: 12px;
+      color: #344054;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .footer {
+      margin-top: 18px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 1180px) {
+      .grid { grid-template-columns: 1fr; }
+      .mini-app { height: 430px; }
+      .paper { width: min(100%, 220px); }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <h1>Practice Studio UX 개선 선택안</h1>
+        <p class="sub">대상 화면: <strong>/work</strong>. 기존 합의된 좌측 Number 목록, 중앙 MusicXML, 하단 Transport/Recording, 우측 제출/Feedback 위치는 유지한다.</p>
+      </div>
+      <span class="badge">2026-06-01 · 승인 전 제안서</span>
+    </header>
+
+    <section class="notice">
+      <strong>문제 요약:</strong> 피아노 연주 중 악보가 자동으로 움직여 위치를 잃기 쉽고, 가사가 작게 보여 연습성이 떨어진다. 볼륨 컨트롤은 공간을 많이 차지하며, 재생/정지/일시정지 아이콘은 현재 상태를 충분히 보여주지 못한다.
+    </section>
+
+    <section class="grid" aria-label="선택 가능한 프로토타입">
+      <article class="option">
+        <div class="option-head">
+          <h2>A형 · 고정 악보 + 현재 마디 하이라이트</h2>
+          <div class="recommend">추천</div>
+        </div>
+        <div class="option-body">
+          <div class="mini-app">
+            <aside class="left">
+              <div class="item active">SONG06_그녀를...</div>
+              <div class="item">SONG07_거짓말</div>
+              <div class="item">SONG08_신인탄생</div>
+              <div class="item">SONG09_글자</div>
+              <div class="item">SONG10_MUSE</div>
+            </aside>
+            <section class="center">
+              <div class="topbar"><span>MusicXML 악보</span><span>Page 1 / 3</span></div>
+              <div class="score-wrap">
+                <div class="paper">
+                  <div class="title"></div>
+                  <div class="system">
+                    <div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div>
+                    <span class="note" style="left:12%;top:12px"></span>
+                    <span class="note" style="left:31%;top:18px"></span>
+                    <span class="note active" style="left:57%;top:8px"></span>
+                    <span class="note" style="left:81%;top:17px"></span>
+                    <span class="lyric" style="left:50%;width:18%"></span>
+                  </div>
+                  <div class="system">
+                    <div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div>
+                    <div class="measure-highlight"></div>
+                    <span class="note" style="left:14%;top:17px"></span>
+                    <span class="note" style="left:36%;top:9px"></span>
+                    <span class="note active" style="left:57%;top:16px"></span>
+                    <span class="note" style="left:78%;top:11px"></span>
+                    <span class="lyric" style="left:50%;width:20%"></span>
+                  </div>
+                  <div class="system">
+                    <div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div>
+                    <span class="note" style="left:15%;top:12px"></span>
+                    <span class="note" style="left:42%;top:19px"></span>
+                    <span class="note" style="left:68%;top:13px"></span>
+                    <span class="note" style="left:86%;top:20px"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="controls">
+                <div class="transport">
+                  <div class="seg"><span>MR</span><span>AR</span><span class="on">Piano</span></div>
+                  <div class="icons"><span class="icon">-10</span><span class="icon primary">Ⅱ</span><span class="icon">■</span><span class="icon">+10</span><span class="icon active">🔊</span></div>
+                </div>
+                <div class="track"><span>Piano</span><div class="line"><div class="fill"></div><div class="playhead"></div></div><span>01:12/03:18</span></div>
+                <div class="track"><span>Rec</span><div class="line"><div class="fill" style="width:28%;background:#f0a3b4"></div></div><span>00:48</span></div>
+                <div class="volume-pop"><strong>Volume</strong><div>MR / AR</div><div class="fake-slider"></div><div>Monitor</div><div class="fake-slider" style="background:linear-gradient(90deg,#24a88f 54%,#e2e8f0 54%)"></div></div>
+              </div>
+            </section>
+            <aside class="right">
+              <div class="card"><strong>제출 상태</strong><br>미제출 · D-3</div>
+              <div class="card"><strong>Take 목록</strong><br>take_0412.wav<br>take_0921.wav</div>
+              <div class="card">제출된 recording 클릭 시 Feedback 표시</div>
+            </aside>
+          </div>
+          <div class="summary">
+            <h3>핵심</h3>
+            <ul>
+              <li>피아노 재생 중 악보 페이지는 움직이지 않고, 현재 마디 또는 음표만 색상으로 표시한다.</li>
+              <li>볼륨은 스피커 아이콘 팝업으로 접어 하단 높이를 줄인다.</li>
+              <li>재생 버튼은 현재 상태에 따라 Play/Pause 한 버튼으로 바뀐다.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="option">
+        <div class="option-head">
+          <h2>B형 · 가사 가독성 우선 Reader</h2>
+        </div>
+        <div class="option-body">
+          <div class="mini-app">
+            <aside class="left">
+              <div class="item active">SONG06_그녀를...</div>
+              <div class="item">SONG07_거짓말</div>
+              <div class="item">SONG08_신인탄생</div>
+              <div class="item">SONG09_글자</div>
+              <div class="item">SONG10_MUSE</div>
+            </aside>
+            <section class="center">
+              <div class="topbar"><span>Zoom 125% · 3마디/줄</span><span>Page 1 / 5</span></div>
+              <div class="score-wrap">
+                <div class="paper" style="width:min(100%,230px);padding:18px 16px">
+                  <div class="title"></div>
+                  <div class="system" style="height:42px;margin-bottom:21px">
+                    <div class="bar" style="left:33%"></div><div class="bar" style="left:66%"></div>
+                    <span class="note active" style="left:17%;top:12px"></span>
+                    <span class="note" style="left:45%;top:20px"></span>
+                    <span class="note" style="left:78%;top:12px"></span>
+                    <span class="lyric" style="left:6%;top:43px;width:24%;height:8px"></span>
+                    <span class="lyric" style="left:39%;top:43px;width:24%;height:8px"></span>
+                  </div>
+                  <div class="system" style="height:42px;margin-bottom:21px">
+                    <div class="bar" style="left:33%"></div><div class="bar" style="left:66%"></div>
+                    <div class="measure-highlight" style="left:33%;width:33%"></div>
+                    <span class="note" style="left:13%;top:18px"></span>
+                    <span class="note active" style="left:48%;top:10px"></span>
+                    <span class="note" style="left:83%;top:18px"></span>
+                    <span class="lyric" style="left:39%;top:43px;width:24%;height:8px"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="controls">
+                <div class="transport">
+                  <div class="seg"><span>90</span><span class="on">125</span><span>150</span></div>
+                  <div class="icons"><span class="icon">-</span><span class="icon primary">▶</span><span class="icon">+</span><span class="icon">🔊</span></div>
+                </div>
+                <div class="track"><span>Piano</span><div class="line"><div class="fill" style="width:34%"></div><div class="playhead" style="left:34%"></div></div><span>00:54/03:18</span></div>
+              </div>
+            </section>
+            <aside class="right">
+              <div class="card"><strong>가독성 설정</strong><br>2/3/4 마디<br>90/125/150%</div>
+              <div class="card">설정 변경 시 악보 재렌더링</div>
+            </aside>
+          </div>
+          <div class="summary">
+            <h3>핵심</h3>
+            <ul>
+              <li>가사와 음표를 더 크게 보기 위해 한 줄 마디 수를 2~4개로 조절한다.</li>
+              <li>페이지 수는 늘어나지만 실제 연습 중 읽기 편해진다.</li>
+              <li>A형보다 구현과 검증 범위가 조금 더 크다.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="option">
+        <div class="option-head">
+          <h2>C형 · 오디오 작업대형 하단 Lane</h2>
+        </div>
+        <div class="option-body">
+          <div class="mini-app">
+            <aside class="left">
+              <div class="item active">SONG06_그녀를...</div>
+              <div class="item">SONG07_거짓말</div>
+              <div class="item">SONG08_신인탄생</div>
+              <div class="item">SONG09_글자</div>
+              <div class="item">SONG10_MUSE</div>
+            </aside>
+            <section class="center" style="grid-template-rows:34px minmax(0,1fr)132px">
+              <div class="topbar"><span>MusicXML 악보</span><span>Page 1 / 3</span></div>
+              <div class="score-wrap">
+                <div class="paper">
+                  <div class="title"></div>
+                  <div class="system">
+                    <div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div>
+                    <span class="note" style="left:16%;top:12px"></span>
+                    <span class="note active" style="left:38%;top:18px"></span>
+                    <span class="note" style="left:62%;top:9px"></span>
+                    <span class="note" style="left:82%;top:17px"></span>
+                  </div>
+                  <div class="system">
+                    <div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div>
+                    <div class="measure-highlight" style="left:25%;width:25%"></div>
+                    <span class="note active" style="left:37%;top:10px"></span>
+                    <span class="lyric" style="left:25%;width:20%"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="controls">
+                <div class="transport">
+                  <div class="seg"><span class="on">MR</span><span>AR</span><span>Piano</span></div>
+                  <div class="icons"><span class="icon">-10</span><span class="icon primary">Ⅱ</span><span class="icon">■</span><span class="icon">+10</span><span class="icon">🔊</span></div>
+                </div>
+                <div class="track"><span>MR</span><div class="wave"></div><span>01:12/03:18</span></div>
+                <div class="track"><span>Voice</span><div class="wave" style="background-color:#fff5f7"></div><span>00:48</span></div>
+              </div>
+            </section>
+            <aside class="right">
+              <div class="card"><strong>제출 상태</strong><br>미제출 · D-3</div>
+              <div class="card"><strong>Feedback</strong><br>Take 선택 후 표시</div>
+            </aside>
+          </div>
+          <div class="summary">
+            <h3>핵심</h3>
+            <ul>
+              <li>하단 영역을 조금 키워 MR/Voice 진폭을 보여주는 방향이다.</li>
+              <li>오디오 작업 프로그램처럼 보이지만, 첫 구현에는 waveform 생성 로직이 추가된다.</li>
+              <li>녹음 품질 확인에는 좋으나, 악보 가독성 개선과 동시에 하기엔 범위가 크다.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <table aria-label="선택안 비교">
+      <thead>
+        <tr>
+          <th>항목</th>
+          <th>A형 고정 악보</th>
+          <th>B형 Reader</th>
+          <th>C형 오디오 작업대</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>악보 이동 문제</td>
+          <td>자동 스크롤을 끄고 현재 마디/음표만 강조한다.</td>
+          <td>A형과 동일하게 하되 확대/마디 수 변경도 같이 제공한다.</td>
+          <td>A형과 동일하나 하단 오디오 영역이 더 커진다.</td>
+        </tr>
+        <tr>
+          <td>가사 가독성</td>
+          <td>1차로 Zoom 100/125/150과 3/4마디 설정을 추가한다.</td>
+          <td>가사 중심으로 2/3/4마디 설정을 더 적극적으로 사용한다.</td>
+          <td>가사 개선은 약하고, 오디오 진폭 확인이 중심이다.</td>
+        </tr>
+        <tr>
+          <td>볼륨 컨트롤</td>
+          <td>YouTube처럼 스피커 아이콘 팝업으로 접는다.</td>
+          <td>동일. 가독성 설정 버튼도 함께 둔다.</td>
+          <td>볼륨 팝업 + waveform lane으로 하단을 확장한다.</td>
+        </tr>
+        <tr>
+          <td>상태 표시</td>
+          <td>재생/일시정지를 하나의 토글 버튼으로 합치고 active 상태를 보여준다.</td>
+          <td>동일.</td>
+          <td>동일.</td>
+        </tr>
+        <tr>
+          <td>추천 순서</td>
+          <td>1순위. 현재 문제를 가장 작고 명확하게 해결한다.</td>
+          <td>2순위. 가사 문제가 계속 크면 바로 확장한다.</td>
+          <td>3순위. 녹음 품질 분석 단계에서 진행한다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <section class="footer">
+      <strong>권장 결정:</strong> A형을 먼저 승인하고 구현한다. 단, A형 안에 최소 가독성 기능으로 <strong>Zoom 100/125/150</strong>과 <strong>3/4마디 per line</strong>만 포함한다. C형 waveform은 실제 녹음 흐름이 안정화된 다음 단계에서 추가한다.
+    </section>
+  </main>
+</body>
+</html>

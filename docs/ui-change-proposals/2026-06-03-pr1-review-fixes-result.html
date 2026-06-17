@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PR #1 리뷰 수정 결과</title>
+  <style>
+    :root { --bg:#eef2f7; --panel:#fff; --ink:#1f2937; --muted:#64748b; --line:#d8dee9; --good:#047857; --warn:#b45309; --bad:#b91c1c; --blue:#2563eb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Arial, "Noto Sans KR", sans-serif; line-height:1.55; }
+    header { padding:28px 36px 22px; background:#fff; border-bottom:1px solid var(--line); }
+    main { max-width:1160px; margin:0 auto; padding:22px; }
+    h1 { margin:0 0 8px; font-size:28px; letter-spacing:0; }
+    h2 { margin:0 0 12px; font-size:18px; }
+    p { margin:0 0 10px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { border:1px solid var(--line); padding:8px; text-align:left; vertical-align:top; }
+    th { background:#f8fafc; }
+    code { padding:2px 5px; border-radius:4px; background:#eef2ff; font-family:"Cascadia Mono", Consolas, monospace; font-size:12px; }
+    ul { margin:8px 0 0 20px; padding:0; }
+    li { margin:4px 0; }
+    .meta { color:var(--muted); font-size:13px; }
+    .panel { margin-bottom:14px; padding:16px; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+    .tag { display:inline-block; margin:0 6px 6px 0; padding:3px 8px; border:1px solid var(--line); border-radius:999px; background:#f8fafc; font-size:12px; }
+    .pass { color:var(--good); font-weight:700; }
+    .pending { color:var(--warn); font-weight:700; }
+    .fail { color:var(--bad); font-weight:700; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>PR #1 리뷰 수정 결과</h1>
+    <p class="meta">작성일: 2026-06-03 · 브랜치: <code>codex/local-db-prototype</code> · 대상 PR: <code>#1</code></p>
+  </header>
+  <main>
+    <section class="panel">
+      <h2>요약</h2>
+      <p>PR #1 리뷰의 high blocker인 Recording WAV 저장 문제와 MusicXML playback timing 문제를 우선 수정했다. DB/Auth/env/path 관련 항목은 승인 게이트로 유지하며 이번 구현에는 포함하지 않았다.</p>
+      <span class="tag">UI 위치 변경 없음</span>
+      <span class="tag">DB schema 변경 없음</span>
+      <span class="tag">새 dependency 없음</span>
+      <span class="tag">실제 MusicXML/MR/AR asset commit 없음</span>
+    </section>
+
+    <section class="panel">
+      <h2>수정한 리뷰 항목</h2>
+      <table>
+        <thead><tr><th>리뷰 항목</th><th>처리 결과</th><th>검증 증거</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>REC-WEBM 무음 저장</td>
+            <td>webm recording blob을 silent WAV로 성공 처리하던 fallback을 제거하고, decode-first WAV 변환으로 변경했다. 변환 실패 시 local take를 만들지 않고 사용자 error를 표시한다.</td>
+            <td><code>PracticeStudio.test.tsx</code>에 non-silent WAV PCM 검증 추가</td>
+          </tr>
+          <tr>
+            <td>REC-UNMOUNT race</td>
+            <td>unmount 중 active MediaRecorder의 handler를 끊고 stop한 뒤 stream track을 정리한다. 뒤늦은 finalize/save를 차단한다.</td>
+            <td><code>PracticeStudio.test.tsx</code>에 unmount 중 recorder cleanup 검증 추가</td>
+          </tr>
+          <tr>
+            <td>MXML backup/forward timing</td>
+            <td>MusicXML measure child node를 문서순으로 순회하고, <code>backup</code>/<code>forward</code>로 playback cursor를 조정한다. measure duration은 cursor end max 기준으로 계산한다.</td>
+            <td><code>playback-events.test.ts</code>에 multi-voice/forward 회귀 테스트 추가</td>
+          </tr>
+          <tr>
+            <td>Tie continuation duplicate</td>
+            <td><code>tie type="stop"</code> continuation note는 새 event로 재타격하지 않고 cursor만 전진한다. sustain duration 병합은 후속 범위로 남겼다.</td>
+            <td><code>playback-events.test.ts</code>에 tied continuation 테스트 추가</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>검증 결과</h2>
+      <table>
+        <thead><tr><th>명령</th><th>상태</th><th>결과</th></tr></thead>
+        <tbody>
+          <tr><td><code>pnpm test tests/unit/components/practice/PracticeStudio.test.tsx tests/unit/lib/musicxml/playback-events.test.ts</code></td><td class="pass">PASS</td><td>2 files / 25 tests 통과</td></tr>
+          <tr><td><code>pnpm lint</code></td><td class="pass">PASS</td><td>ESLint 0 errors / 0 warnings</td></tr>
+          <tr><td><code>pnpm typecheck</code></td><td class="pass">PASS</td><td><code>tsc --noEmit</code> 통과</td></tr>
+          <tr><td><code>pnpm test</code></td><td class="pass">PASS</td><td>11 files / 57 tests 통과</td></tr>
+          <tr><td><code>CI=1 E2E_BASE_URL=http://localhost:3000 pnpm exec playwright test tests/e2e/work-recording-stabilization.spec.ts --project=chromium</code></td><td class="pass">PASS</td><td>1 test 통과. 수동 dev server에 연결해 webServer 자동 기동 충돌을 피함.</td></tr>
+          <tr><td><code>CI=1 E2E_BASE_URL=http://localhost:3000 pnpm exec playwright test tests/e2e/work-piano-playback.spec.ts --project=chromium</code></td><td class="pass">PASS</td><td>1 test 통과. 수동 dev server에 연결해 검증.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>보류 / 승인 필요 항목</h2>
+      <ul>
+        <li>DB migration/RLS: schema/RLS 변경이므로 별도 ADR과 사용자 승인 후 진행한다.</li>
+        <li>Asset route auth: public/dev-only/authenticated 정책 선택이 필요하므로 별도 HTML 제안 후 진행한다.</li>
+        <li><code>/mnt/e</code> path/env: env var 추가 또는 fallback 전략 선택이 필요하므로 승인 전 변경하지 않는다.</li>
+        <li><code>sync-env.sh</code>: env tooling behavior 변경이므로 사용자 선택 후 별도 처리한다.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>UI 영향</h2>
+      <p>이번 수정은 녹음 변환/cleanup과 MusicXML playback map 계산 로직에 한정된다. 좌측 Number 목록, 상단 NickName, 중앙 MusicXML, 하단 Transport/Recording, 우측 submitted take/Feedback 위치는 변경하지 않았다.</p>
+    </section>
+  </main>
+</body>
+</html>
